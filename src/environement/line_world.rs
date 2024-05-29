@@ -45,8 +45,8 @@ impl Environement for LineWorld {
         assert_eq!(self.available_action().iter().any(|&x| x == action), true);
 
         match action {
-            0 => self.agent_pos += 1,
-            1 => self.agent_pos -= 1,
+            0 => self.agent_pos -= 1,
+            1 => self.agent_pos += 1,
             _ => {}
         }
     }
