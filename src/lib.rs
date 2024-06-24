@@ -8,7 +8,7 @@ pub fn add(left: usize, right: usize) -> usize {
 
 #[cfg(test)]
 mod tests {
-    use crate::environement::environement::Environement;
+    use crate::environement::environment::Environment;
     use crate::environement::line_world::LineWorld;
     use super::*;
 

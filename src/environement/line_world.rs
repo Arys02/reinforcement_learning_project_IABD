@@ -3,17 +3,49 @@ extern crate rand;
 use ndarray::{array, Array1};
 use rand::{Rng, SeedableRng};
 use rand::prelude::StdRng;
-use crate::environement::environement::Environement;
+
+use crate::environement::environment::Environment;
 
 pub struct LineWorld {
-    agent_pos: i32,
+    agent_pos: usize,
 }
 
-impl Environement for LineWorld {
+impl Environment for LineWorld {
+    fn num_states() -> usize {
+        5
+    }
+
+    fn num_actions() -> usize {
+        2
+    }
+
+    fn num_rewards() -> usize {
+        3
+    }
+
+    fn get_reward(i: usize) -> f32 {
+        match i {
+            0 => -1.,
+            1 => 0.,
+            2 => 1.,
+            _ => panic!("reward is out of range")
+        }
+    }
+
+    fn get_transition_probability(_: usize, _: usize, _: usize, _: usize) -> f32 {
+        todo!()
+    }
+
     fn reset_random_state(&mut self, seed: u64) {
         let mut rng = StdRng::seed_from_u64(seed);
-        let agent_pos_: i32 = rng.gen_range(1..4);
+        let agent_pos_: usize = rng.gen_range(1..4);
         self.agent_pos = agent_pos_
+    }
+
+    fn from_random_state() -> Self {
+        let mut rng = rand::thread_rng();
+        let agent_pos_: usize = rng.gen_range(1..4);
+        return LineWorld { agent_pos: agent_pos_ }
     }
 
     fn new() -> Self {
@@ -21,11 +53,15 @@ impl Environement for LineWorld {
     }
 
 
-    fn available_action(&self) -> Array1<i32> {
+    fn available_action(&self) -> Array1<usize> {
         match self.agent_pos {
             1 | 2 | 3 => array![0, 1],
             _ => array![]
         }
+    }
+
+    fn available_action_delete(&self) {
+        todo!()
     }
 
 
@@ -36,11 +72,15 @@ impl Environement for LineWorld {
         }
     }
 
-    fn state_id(&self) -> i32 {
+    fn state_id(&self) -> usize {
         self.agent_pos
     }
 
-    fn step(&mut self, action: i32) {
+    fn is_forbidden(&self, state: usize) -> bool {
+        todo!("{}", state)
+    }
+
+    fn step(&mut self, action: usize) {
         assert_eq!(self.is_terminal(), false);
         assert_eq!(self.available_action().iter().any(|&x| x == action), true);
 
@@ -49,6 +89,10 @@ impl Environement for LineWorld {
             1 => self.agent_pos += 1,
             _ => {}
         }
+    }
+
+    fn delete(&mut self) {
+        todo!()
     }
 
     fn score(&self) -> f64 {
@@ -67,6 +111,10 @@ impl Environement for LineWorld {
             }
         }
         println!()
+    }
+
+    fn reset(&mut self) {
+        self.agent_pos = 2
     }
 }
 

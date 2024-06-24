@@ -4,21 +4,21 @@ use ndarray_rand::rand::SeedableRng;
 use rand::prelude::{IteratorRandom, StdRng};
 use rand::Rng;
 
-use crate::environement::environement::Environement;
+use crate::environement::environment::Environment;
 
 pub fn monte_carlo_with_exploring_start(
-    mut env: impl Environement,
+    mut env: impl Environment,
     gamma: f64,
     nb_iter: i32,
     max_steps: i32,
     seed: u64,
-) -> HashMap<i32, i32> {
+) -> HashMap<usize, usize> {
     let mut rng = StdRng::seed_from_u64(seed);
     let mut pi = HashMap::new();
     let mut Q = HashMap::new();
     let mut returns = HashMap::new();
 
-    for i in 0..nb_iter {
+    for _ in 0..nb_iter {
         env.reset_random_state(seed);
 
         let mut trajectory = Vec::new();
@@ -33,7 +33,7 @@ pub fn monte_carlo_with_exploring_start(
                 pi.insert(state, *available_action.iter().choose(&mut rng).unwrap());
             }
 
-            let mut a: i32;
+            let a: usize;
             if is_first_action {
                 //a = get_random_value(&available_action, &rng);
                 a = *available_action.iter().choose(&mut rng).unwrap();
@@ -84,7 +84,7 @@ mod tests {
 
     #[test]
     fn monte_carlo_with_exploring_start_returns_correct_policy() {
-        let mut lw = LineWorld::new();
+        let lw = LineWorld::new();
 
         let policy = monte_carlo_with_exploring_start(lw, 0.999, 10, 10, 42);
         println!("{:?}", policy)
