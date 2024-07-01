@@ -27,7 +27,6 @@ pub trait Environment {
 
     fn is_terminal(&self) -> bool;
 
-
     fn is_forbidden(&self, state: usize) -> bool;
 
     fn step(&mut self, action: usize);

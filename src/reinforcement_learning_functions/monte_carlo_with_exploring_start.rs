@@ -6,8 +6,8 @@ use rand::Rng;
 
 use crate::environement::environment::Environment;
 
-pub fn monte_carlo_with_exploring_start(
-    mut env: impl Environment,
+pub fn monte_carlo_with_exploring_start<E: Environment>(
+    mut env: E,
     gamma: f64,
     nb_iter: i32,
     max_steps: i32,
@@ -28,6 +28,8 @@ pub fn monte_carlo_with_exploring_start(
         while !env.is_terminal() && step_count < max_steps {
             let state = env.state_id();
             let available_action = env.available_action();
+            //println!("state : {:?}", state);
+            //println!("available action : {:?}", available_action);
 
             if !pi.contains_key(&state) {
                 pi.insert(state, *available_action.iter().choose(&mut rng).unwrap());
@@ -45,10 +47,11 @@ pub fn monte_carlo_with_exploring_start(
             let prev_score = env.score();
             env.step(a);
             let r = env.score() - prev_score;
-
             trajectory.push((state, a, r, available_action));
             step_count += 1;
         }
+
+        println!("{:?}", trajectory);
 
         let mut g = 0.;
 
@@ -79,6 +82,7 @@ pub fn monte_carlo_with_exploring_start(
 #[cfg(test)]
 mod tests {
     use crate::environement::line_world::LineWorld;
+    use crate::environement::grid_world::GridWorld;
     use super::*;
 
 
@@ -86,7 +90,20 @@ mod tests {
     fn monte_carlo_with_exploring_start_returns_correct_policy() {
         let lw = LineWorld::new();
 
-        let policy = monte_carlo_with_exploring_start(lw, 0.999, 10, 10, 42);
+        println!("stat ID :{:?}", lw.state_id());
+
+        let policy = monte_carlo_with_exploring_start(lw, 0.999, 100, 10, 42);
+        println!("{:?}", policy)
+    }
+
+    #[test]
+    fn monte_carlo_with_exploring_start_returns_correct_policy_grid_world() {println!("gridworld : ");
+        let gw= GridWorld::new();
+
+        println!("stat ID :{:?}", gw.state_id());
+
+        let policy = monte_carlo_with_exploring_start(gw, 0.999, 10, 10, 42);
+
         println!("{:?}", policy)
     }
 }
