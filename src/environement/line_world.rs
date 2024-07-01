@@ -50,6 +50,20 @@ impl Environment for LineWorld {
         self.agent_pos
     }
 
+    fn available_actions(i: usize) -> Array1<usize> {
+        match i {
+            0 | 1 | 2 | 3 | 4 => array![0, 1],
+            _ => array![]
+        }
+    }
+
+    fn is_terminal_state(state: usize) -> bool {
+        match state{
+            1 | 2 | 3 => false,
+            _ => true
+        }
+    }
+
     fn from_random_state() -> Self {
         let mut rng = rand::thread_rng();
         let agent_pos_: usize = rng.gen_range(1..4);

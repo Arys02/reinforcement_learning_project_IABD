@@ -99,6 +99,14 @@ impl Environment for SecretEnv0 {
         let secret_env_0_reset: libloading::Symbol<unsafe extern fn(*mut c_void)> = unsafe { LIB.get(b"secret_env_0_reset") }.expect("Failed to load function `secret_env_0_reset`");
         unsafe { secret_env_0_reset(self.env) };
     }
+
+    fn available_actions(i: usize) -> Array1<usize> {
+        todo!()
+    }
+
+    fn is_terminal_state(state: usize) -> bool {
+        todo!()
+    }
 }
 
 #[cfg(test)]

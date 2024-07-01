@@ -1,7 +1,5 @@
 extern crate rand;
 
-use std::ops::Add;
-
 use ndarray::{array, Array1, Array4, ArrayBase, Ix4, OwnedRepr};
 use ndarray_rand::rand::SeedableRng;
 use rand::prelude::StdRng;
@@ -61,6 +59,30 @@ impl Environment for GridWorld {
 
     fn state_id(&self) -> usize {
         self.agent_pos as usize
+    }
+
+    fn available_actions(i: usize) -> Array1<usize> {
+        let mut array_vec: Vec<usize> = Vec::new();
+        if i % 5 != 0 {
+            array_vec.push(0);
+        }
+        if i % 5 != 4 {
+            array_vec.push(1);
+        }
+        if i < 20 {
+            array_vec.push(2)
+        }
+        if i > 5 {
+            array_vec.push(3)
+        }
+
+        //    [g, d, b, h]
+        Array1::from(array_vec)
+        //return array![0, 1, 2, 3]
+    }
+
+    fn is_terminal_state(state: usize) -> bool {
+        todo!()
     }
 
     fn from_random_state() -> Self {

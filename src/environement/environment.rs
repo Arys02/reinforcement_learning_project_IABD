@@ -5,6 +5,9 @@ pub trait Environment {
 
     fn state_id(&self) -> usize;
 
+    fn available_actions(i: usize) -> Array1<usize>;
+    fn is_terminal_state(state: usize) -> bool;
+
     fn from_random_state() -> Self;
 
     fn reset(&mut self);
