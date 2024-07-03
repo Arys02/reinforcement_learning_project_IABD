@@ -110,7 +110,7 @@ mod tests {
         let lw = LineWorld::new();
         println!("stat ID :{:?}", lw.state_id());
 
-        let v = policy_iteration::<LineWorld>(0.999, 0.00001, 42);
+        let v = policy_iteration::<LineWorld>(0.999, 0.0000001, 42);
 
         println!("{:?}", v);
 
