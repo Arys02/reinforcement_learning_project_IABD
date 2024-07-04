@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use ndarray::Array1;
 
 pub trait Environment {
@@ -6,6 +8,7 @@ pub trait Environment {
     fn state_id(&self) -> usize;
 
     fn available_actions(i: usize) -> Array1<usize>;
+
     fn is_terminal_state(state: usize) -> bool;
 
     fn from_random_state() -> Self;
@@ -19,8 +22,9 @@ pub trait Environment {
     fn num_rewards() -> usize;
 
     fn get_reward(i: usize) -> f32;
+    fn build_transition_probability(s: usize, a: usize, s_p: usize, r: usize) -> f32;
 
-    fn get_transition_probability(s: usize, a: usize, s_p: usize, r: usize) -> f32;
+    fn get_transition_probability(&mut self, s: usize, a: usize, s_p: usize, r: usize) -> f32;
 
     fn reset_random_state(&mut self, seed: u64);
 
@@ -39,4 +43,5 @@ pub trait Environment {
     fn score(&self) -> f64;
 
     fn display(&self);
+    fn play_strategy(&mut self, strategy: HashMap<usize, usize>);
 }

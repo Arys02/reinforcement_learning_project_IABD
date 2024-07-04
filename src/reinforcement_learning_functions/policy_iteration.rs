@@ -8,6 +8,7 @@ use rand::prelude::{SliceRandom, StdRng};
 use crate::environement::environment::Environment;
 
 pub fn policy_iteration<E: Environment>(
+    mut env: E,
     gamma: f32,
     theta: f32,
     seed: u64,
@@ -15,6 +16,7 @@ pub fn policy_iteration<E: Environment>(
     let num_states = E::num_states();
     let num_actions = E::num_actions();
     let num_rewards = E::num_rewards();
+
 
     let mut rng = StdRng::seed_from_u64(seed);
 
@@ -39,20 +41,26 @@ pub fn policy_iteration<E: Environment>(
         loop {
             let mut delta: f32 = 0.;
             for s in 0..num_states {
+                let a = pi[s];
+                if s % 7 == 1 {
+                    print!("8");
+                }
                 let mut v = V[s];
                 let mut total = 0.;
                 for s_p in 0..num_states {
                     for r in 0..num_rewards {
-                        total += E::get_transition_probability(s, pi[s], s_p, r) * (E::get_reward(r) + gamma * V[s_p])
+                        let p = env.get_transition_probability(s, a, s_p, r);
+                        total += p * (E::get_reward(r) + gamma * V[s_p])
                     }
                 }
                 V[s] = total;
-                delta = delta.max(abs(v - V[s]))
+                delta = delta.max((v - V[s]).abs())
             }
             if delta < theta {
                 break
             }
         }
+
 
         println!("{:?}", V);
 
@@ -66,14 +74,14 @@ pub fn policy_iteration<E: Environment>(
             let old_action = pi[s];
 
             let mut best_a: Option<usize> = None;
-            let mut best_action_score = -9999999.;
+            let mut best_action_score = -9999.;
 
             for a in 0..num_actions {
                 let mut total = 0.;
 
                 for s_p in 0..num_states {
                     for r_index in 0..num_rewards {
-                        total += E::get_transition_probability(s, a, s_p, r_index) * (E::get_reward(r_index) + gamma * V[s_p])
+                        total += env.get_transition_probability(s, a, s_p, r_index) * (E::get_reward(r_index) + gamma * V[s_p])
                     }
                 }
 
@@ -89,31 +97,40 @@ pub fn policy_iteration<E: Environment>(
             }
         }
         if policy_stable {
-            break
+            return pi
         }
     }
-
-    return pi
 }
 
 #[cfg(test)]
 mod tests {
     use crate::environement::line_world::LineWorld;
+    use crate::environement::grid_world::GridWorld;
 
     use super::*;
 
     #[test]
-    fn policy_evaluation_line_world() {
+    fn policy_iteration_line_world() {
         println!("start");
 
 
         let lw = LineWorld::new();
         println!("stat ID :{:?}", lw.state_id());
 
-        let v = policy_iteration::<LineWorld>(0.999, 0.0000001, 42);
+        let v = policy_iteration::<LineWorld>(lw, 0.999, 0.000001, 42);
 
         println!("{:?}", v);
+        assert_eq!(1, 1)
+    }
 
+    #[test]
+    fn policy_iteration_grid_world() {
+        println!("start");
+        let mut env = GridWorld::new();
+
+        let v = policy_iteration::<GridWorld>(env, 0.999, 0.0001, 42);
+
+        println!("{:?}", v);
         assert_eq!(1, 1)
     }
 }

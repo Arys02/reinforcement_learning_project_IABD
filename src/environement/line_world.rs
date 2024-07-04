@@ -1,5 +1,6 @@
 extern crate rand;
 
+use std::collections::HashMap;
 use ndarray::{array, Array1, Array4, ArrayBase, Ix4, OwnedRepr};
 use rand::{Rng, SeedableRng};
 use rand::prelude::StdRng;
@@ -98,10 +99,14 @@ impl Environment for LineWorld {
         }
     }
 
-
-    fn get_transition_probability(s: usize, a: usize, s_p: usize, r: usize) -> f32 {
+    fn build_transition_probability(s: usize, a: usize, s_p: usize, r: usize) -> f32 {
         let tm =  Self::build_transition_matrix();
         return tm[[s, a, s_p, r]]
+    }
+
+
+    fn get_transition_probability(&mut self, s: usize, a: usize, s_p: usize, r: usize) -> f32 {
+        return self.transition_probability_matrix[[s, a, s_p, r]]
     }
 
     fn reset_random_state(&mut self, seed: u64) {
@@ -164,6 +169,10 @@ impl Environment for LineWorld {
             }
         }
         println!()
+    }
+
+    fn play_strategy(&mut self, strategy: HashMap<usize, usize>) {
+        todo!()
     }
 }
 

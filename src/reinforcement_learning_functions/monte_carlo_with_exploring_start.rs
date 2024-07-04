@@ -7,11 +7,11 @@ use rand::Rng;
 use crate::environement::environment::Environment;
 
 pub fn monte_carlo_with_exploring_start<E: Environment>(
-    mut env: E,
+    mut env: &mut E,
     gamma: f64,
     nb_iter: i32,
     max_steps: i32,
-    seed: u64,
+    mut seed: u64,
 ) -> HashMap<usize, usize> {
     let mut rng = StdRng::seed_from_u64(seed);
     let mut pi = HashMap::new();
@@ -19,6 +19,7 @@ pub fn monte_carlo_with_exploring_start<E: Environment>(
     let mut returns = HashMap::new();
 
     for _ in 0..nb_iter {
+        seed += 1;
         env.reset_random_state(seed);
 
         let mut trajectory = Vec::new();
@@ -51,7 +52,6 @@ pub fn monte_carlo_with_exploring_start<E: Environment>(
             step_count += 1;
         }
 
-        println!("{:?}", trajectory);
 
         let mut g = 0.;
 
@@ -88,22 +88,27 @@ mod tests {
 
     #[test]
     fn monte_carlo_with_exploring_start_returns_correct_policy() {
-        let lw = LineWorld::new();
+        let mut lw = LineWorld::new();
 
         println!("stat ID :{:?}", lw.state_id());
 
-        let policy = monte_carlo_with_exploring_start(lw, 0.999, 100, 10, 42);
+        let policy = monte_carlo_with_exploring_start(&mut lw, 0.999, 100, 10, 42);
         println!("{:?}", policy)
     }
 
     #[test]
-    fn monte_carlo_with_exploring_start_returns_correct_policy_grid_world() {println!("gridworld : ");
-        let gw= GridWorld::new();
+    fn monte_carlo_with_exploring_start_returns_correct_policy_grid_world() {
+        println!("gridworld : ");
+        let mut gw = GridWorld::new();
 
         println!("stat ID :{:?}", gw.state_id());
 
-        let policy = monte_carlo_with_exploring_start(gw, 0.999, 10, 10, 42);
+        let policy = monte_carlo_with_exploring_start(&mut gw, 0.999, 100000, 100000, 42);
 
-        println!("{:?}", policy)
+        println!("{:?}", policy);
+
+        let mut gw2 = GridWorld::new();
+        gw2.play_strategy(policy.clone());
+        assert_eq!(1, 1)
     }
 }

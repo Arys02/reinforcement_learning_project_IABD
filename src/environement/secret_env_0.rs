@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::ffi::c_void;
 
 use ndarray::Array1;
@@ -44,7 +45,7 @@ impl Environment for SecretEnv0 {
         return unsafe { secret_env_0_reward(i) }
     }
 
-    fn get_transition_probability(s: usize, a: usize, s_p: usize, r: usize) -> f32 {
+    fn get_transition_probability(&mut self, s: usize, a: usize, s_p: usize, r: usize) -> f32 {
         let secret_env_0_transition_probability: libloading::Symbol<unsafe extern fn(usize, usize, usize, usize) -> f32> = unsafe { LIB.get(b"secret_env_0_transition_probability") }.expect("Failed to load function `secret_env_0_transition_probability`");
         return unsafe { secret_env_0_transition_probability(s, a, s_p, r) }
     }
@@ -107,6 +108,15 @@ impl Environment for SecretEnv0 {
     fn is_terminal_state(state: usize) -> bool {
         todo!()
     }
+
+    fn play_strategy(&mut self, strategy: HashMap<usize, usize>) {
+        todo!()
+    }
+
+    fn build_transition_probability(s: usize, a: usize, s_p: usize, r: usize) -> f32 {
+        let secret_env_0_transition_probability: libloading::Symbol<unsafe extern fn(usize, usize, usize, usize) -> f32> = unsafe { LIB.get(b"secret_env_0_transition_probability") }.expect("Failed to load function `secret_env_0_transition_probability`");
+        return unsafe { secret_env_0_transition_probability(s, a, s_p, r) }
+    }
 }
 
 #[cfg(test)]
@@ -130,10 +140,10 @@ mod tests {
         assert_eq!(SecretEnv0::get_reward(1), 0.0);
         assert_eq!(SecretEnv0::get_reward(2), 1.0);
 
-        let env = SecretEnv0::new();
+        let mut env = SecretEnv0::new();
         dbg!(env.state_id());
 
-        assert_eq!(SecretEnv0::get_transition_probability(0, 0, 0, 0), 0.0);
+        assert_eq!(SecretEnv0::get_transition_probability(&mut env,0, 0, 0, 0), 0.0);
 
         let secret_env_0_state_id: libloading::Symbol<unsafe extern fn(*const c_void) -> usize> =
             unsafe { LIB.get(b"secret_env_0_state_id") }.expect("Failed to load function `secret_env_0_state_id`");

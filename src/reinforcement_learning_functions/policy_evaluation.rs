@@ -25,7 +25,7 @@ pub fn policy_evaluation<E: Environment>(
                 let mut pi_s_a: f32 = policy[[s, a]] as f32;
                 for s_p in 0..num_states {
                     for r in 0..num_rewards {
-                        total += pi_s_a * E::get_transition_probability(s, a, s_p, r) * (E::get_reward(r) + gamma + V[s_p])
+                        total += pi_s_a * E::build_transition_probability(s, a, s_p, r) * (E::get_reward(r) + gamma * V[s_p])
                     }
                 }
             }
