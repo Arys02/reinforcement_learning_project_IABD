@@ -40,7 +40,7 @@ pub trait Environment {
 
     fn delete(&mut self);
 
-    fn score(&self) -> f64;
+    fn score(&self) -> f32;
 
     fn display(&self);
     fn play_strategy(&mut self, strategy: HashMap<usize, usize>);

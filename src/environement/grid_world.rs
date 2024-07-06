@@ -121,7 +121,7 @@ impl Environment for GridWorld {
     }
 
     fn reset(&mut self) {
-        self.agent_pos = 0;
+        self.agent_pos = 8;
     }
 
     fn num_states() -> usize {
@@ -208,7 +208,7 @@ impl Environment for GridWorld {
         todo!()
     }
 
-    fn score(&self) -> f64 {
+    fn score(&self) -> f32 {
         match self.agent_pos {
             12 => -3.0,
             40 => 3.0,

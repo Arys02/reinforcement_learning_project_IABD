@@ -88,7 +88,7 @@ impl Environment for SecretEnv0 {
         todo!()
     }
 
-    fn score(&self) -> f64 {
+    fn score(&self) -> f32 {
         todo!()
     }
 

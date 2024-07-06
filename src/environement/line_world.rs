@@ -153,7 +153,7 @@ impl Environment for LineWorld {
         todo!()
     }
 
-    fn score(&self) -> f64 {
+    fn score(&self) -> f32 {
         match self.agent_pos {
             0 => -1.0,
             4 => 1.0,

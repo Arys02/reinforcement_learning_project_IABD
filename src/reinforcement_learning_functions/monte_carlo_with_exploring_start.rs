@@ -8,7 +8,7 @@ use crate::environement::environment::Environment;
 
 pub fn monte_carlo_with_exploring_start<E: Environment>(
     mut env: &mut E,
-    gamma: f64,
+    gamma: f32,
     nb_iter: i32,
     max_steps: i32,
     mut seed: u64,
@@ -61,7 +61,7 @@ pub fn monte_carlo_with_exploring_start<E: Environment>(
 
             if trajectory[..t].iter().all(|&(si, ai, _, _)| si != s || ai != a) {
                 returns.entry((s, a)).or_insert(Vec::new()).push(g);
-                let average_return = returns[&(s, a)].iter().sum::<f64>() / returns[&(s, a)].len() as f64;
+                let average_return = returns[&(s, a)].iter().sum::<f32>() / returns[&(s, a)].len() as f32;
                 Q.insert((s, a), average_return);
 
                 let best_action = aa.iter().max_by(|&&action1, &&action2| {
@@ -103,12 +103,12 @@ mod tests {
 
         println!("stat ID :{:?}", gw.state_id());
 
-        let policy = monte_carlo_with_exploring_start(&mut gw, 0.999, 100000, 100000, 42);
+        let policy = monte_carlo_with_exploring_start(&mut gw, 0.999, 10000, 1000, 42);
 
         println!("{:?}", policy);
 
         let mut gw2 = GridWorld::new();
         gw2.play_strategy(policy.clone());
-        assert_eq!(1, 1)
+        assert_eq!(gw2.state_id(), 40)
     }
 }
