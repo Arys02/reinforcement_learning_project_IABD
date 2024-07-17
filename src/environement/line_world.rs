@@ -1,6 +1,7 @@
 extern crate rand;
 
 use std::collections::HashMap;
+
 use ndarray::{array, Array1, Array4, ArrayBase, Ix4, OwnedRepr};
 use rand::{Rng, SeedableRng};
 use rand::prelude::StdRng;
@@ -35,7 +36,7 @@ impl LineWorld {
         transition_probability_matrix[[1, 0, 0, 0]] = 1.0;
 
 
-        return transition_probability_matrix
+        return transition_probability_matrix;
     }
 }
 
@@ -43,7 +44,7 @@ impl Environment for LineWorld {
     fn new() -> Self {
         LineWorld {
             agent_pos: 2,
-            transition_probability_matrix: Self::build_transition_matrix()
+            transition_probability_matrix: Self::build_transition_matrix(),
         }
     }
 
@@ -59,7 +60,7 @@ impl Environment for LineWorld {
     }
 
     fn is_terminal_state(state: usize) -> bool {
-        match state{
+        match state {
             1 | 2 | 3 => false,
             _ => true
         }
@@ -70,8 +71,8 @@ impl Environment for LineWorld {
         let agent_pos_: usize = rng.gen_range(1..4);
         return LineWorld {
             agent_pos: agent_pos_,
-            transition_probability_matrix: Self::build_transition_matrix()
-        }
+            transition_probability_matrix: Self::build_transition_matrix(),
+        };
     }
 
     fn reset(&mut self) {
@@ -100,13 +101,13 @@ impl Environment for LineWorld {
     }
 
     fn build_transition_probability(s: usize, a: usize, s_p: usize, r: usize) -> f32 {
-        let tm =  Self::build_transition_matrix();
-        return tm[[s, a, s_p, r]]
+        let tm = Self::build_transition_matrix();
+        return tm[[s, a, s_p, r]];
     }
 
 
     fn get_transition_probability(&mut self, s: usize, a: usize, s_p: usize, r: usize) -> f32 {
-        return self.transition_probability_matrix[[s, a, s_p, r]]
+        return self.transition_probability_matrix[[s, a, s_p, r]];
     }
 
     fn reset_random_state(&mut self, seed: u64) {
@@ -134,8 +135,8 @@ impl Environment for LineWorld {
         }
     }
 
-    fn is_forbidden(&self, state: usize) -> bool {
-        todo!("{}", state)
+    fn is_forbidden(&self, action: usize) -> bool {
+        todo!()
     }
 
     fn step(&mut self, action: usize) {
