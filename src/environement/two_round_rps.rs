@@ -1,0 +1,323 @@
+extern crate rand;
+
+use std::collections::HashMap;
+
+use ndarray::{array, Array1, Array4, ArrayBase, Ix4, OwnedRepr};
+use ndarray_rand::rand::SeedableRng;
+use rand::prelude::StdRng;
+use rand::Rng;
+
+use crate::environement::environment::Environment;
+
+pub struct TwoRoundRPS {
+    agent_pos: usize,
+
+    transition_probability_matrix: ArrayBase<OwnedRepr<f32>, Ix4>,
+}
+
+impl TwoRoundRPS {
+    fn build_transition_matrix() -> ArrayBase<OwnedRepr<f32>, Ix4> {
+        let mut transition_probability_matrix = Array4::zeros((Self::num_states(), Self::num_actions(), Self::num_states(), Self::num_rewards()));
+
+        for s in 0..Self::num_states() {
+            for a in 0..Self::num_actions() {
+                for s_p in 0..Self::num_states() {
+                    for r in 0..Self::num_rewards() {
+                        if s == 0 && s_p < 10 {
+                            if s_p == 1 &&  Self::get_reward(r) == 0. && a == 0 {
+                                transition_probability_matrix[[s, a, s_p, r]] = 1.0;
+                            }
+                            if s_p == 2 &&  Self::get_reward(r) == -1. && a == 0 {
+                                transition_probability_matrix[[s, a, s_p, r]] = 1.0;
+                            }
+                            if s_p == 3 &&  Self::get_reward(r) == 1. && a == 0 {
+                                transition_probability_matrix[[s, a, s_p, r]] = 1.0;
+                            }
+                            if s_p == 4 &&  Self::get_reward(r) == 1. && a == 1 {
+                                transition_probability_matrix[[s, a, s_p, r]] = 1.0;
+                            }
+                            if s_p == 5 &&  Self::get_reward(r) == 0. && a == 1 {
+                                transition_probability_matrix[[s, a, s_p, r]] = 1.0;
+                            }
+                            if s_p == 6 &&  Self::get_reward(r) == -1. && a == 1 {
+                                transition_probability_matrix[[s, a, s_p, r]] = 1.0;
+                            }
+                            if s_p == 7 &&  Self::get_reward(r) == -1. && a == 2 {
+                                transition_probability_matrix[[s, a, s_p, r]] = 1.0;
+                            }
+                            if s_p == 8 &&  Self::get_reward(r) == 1. && a == 2 {
+                                transition_probability_matrix[[s, a, s_p, r]] = 1.0;
+                            }
+                            if s_p == 9 &&  Self::get_reward(r) == 0. && a == 2 {
+                                transition_probability_matrix[[s, a, s_p, r]] = 1.0;
+                            }
+
+                        }
+                        if s > 0 && s_p > 9 {
+                            if vec![1, 2, 3].contains(&s) {
+                                if s_p == 10 && Self::get_reward(r) == 0. && a == 0 {
+                                    transition_probability_matrix[[s, a, s_p, r]] = 1.0;
+                                }
+                                if s_p == 13 && Self::get_reward(r) == 1. && a == 1 {
+                                    transition_probability_matrix[[s, a, s_p, r]] = 1.0;
+                                }
+                                if s_p == 16 && Self::get_reward(r) == -1. && a == 2 {
+                                    transition_probability_matrix[[s, a, s_p, r]] = 1.0;
+                                }
+                            }
+                            if vec![4, 5, 6].contains(&s) {
+                                if s_p == 11 && Self::get_reward(r) == -1. && a == 0 {
+                                    transition_probability_matrix[[s, a, s_p, r]] = 1.0;
+                                }
+                                if s_p == 14 && Self::get_reward(r) == 0. && a == 1 {
+                                    transition_probability_matrix[[s, a, s_p, r]] = 1.0;
+                                }
+                                if s_p == 17 && Self::get_reward(r) == 1. && a == 2 {
+                                    transition_probability_matrix[[s, a, s_p, r]] = 1.0;
+                                }
+                            }
+                            if vec![7, 8, 9].contains(&s) {
+                                if s_p == 12 && Self::get_reward(r) == 1. && a == 0 {
+                                    transition_probability_matrix[[s, a, s_p, r]] = 1.0;
+                                }
+                                if s_p == 15 && Self::get_reward(r) == -1. && a == 1 {
+                                    transition_probability_matrix[[s, a, s_p, r]] = 1.0;
+                                }
+                                if s_p == 18 && Self::get_reward(r) == 0. && a == 2 {
+                                    transition_probability_matrix[[s, a, s_p, r]] = 1.0;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+        }
+        return transition_probability_matrix;
+    }
+}
+
+impl Environment for TwoRoundRPS {
+    fn new() -> Self {
+        TwoRoundRPS {
+            agent_pos: 0,
+            transition_probability_matrix: Self::build_transition_matrix(),
+        }
+    }
+
+    fn state_id(&self) -> usize {
+        self.agent_pos as usize
+    }
+
+    fn available_actions(state: usize) -> Array1<usize> {
+        if state > 9 { return Array1::zeros(0); };
+        return array![0, 1, 2];
+    }
+
+    fn is_terminal_state(state: usize) -> bool {
+        match state {
+            x if x > 9 => true,
+            _ => false
+        }
+    }
+
+    fn from_random_state() -> Self {
+        let mut rng = rand::thread_rng();
+        let mut agent_pos: usize = rng.gen_range(0..=9);
+
+        return TwoRoundRPS {
+            agent_pos,
+            transition_probability_matrix: Self::build_transition_matrix(),
+        };
+    }
+
+    fn reset(&mut self) {
+        self.agent_pos = 0;
+    }
+
+    fn num_states() -> usize {
+        19
+    }
+
+    fn num_actions() -> usize {
+        3
+    }
+
+    fn num_rewards() -> usize {
+        3
+    }
+
+    fn get_reward(i: usize) -> f32 {
+        match i {
+            0 => -1.,
+            1 => 0.,
+            2 => 1.,
+            _ => panic!("reward out of range")
+        }
+    }
+
+    fn build_transition_probability(s: usize, a: usize, s_p: usize, r: usize) -> f32 {
+        let matrix = Self::build_transition_matrix();
+        return matrix[[s, a, s_p, r]];
+    }
+    fn get_transition_probability(&mut self, s: usize, a: usize, s_p: usize, r: usize) -> f32 {
+        return self.transition_probability_matrix[[s, a, s_p, r]];
+    }
+
+    fn reset_random_state(&mut self, seed: u64) {
+        let mut rng = StdRng::seed_from_u64(seed);
+        let agent_pos: usize = rng.gen_range(0..=9);
+        self.agent_pos = agent_pos
+    }
+
+    fn available_action(&self) -> Array1<usize> {
+        return Self::available_actions(self.agent_pos);
+    }
+
+    fn available_action_delete(&self) {
+        todo!()
+    }
+
+    fn is_terminal(&self) -> bool {
+        Self::is_terminal_state(self.agent_pos)
+    }
+
+    fn is_forbidden(&self, action: usize) -> bool {
+        if self.agent_pos > 9 {
+            return true;
+        }
+        false
+    }
+
+    fn step(&mut self, action: usize) {
+        assert_eq!(self.is_terminal(), false);
+        assert_eq!(self.available_action().iter().any(|&x| x == action), true);
+
+        if self.agent_pos == 0 {
+
+            let mut rng = rand::thread_rng();
+
+            let ia_move= rng.gen_range(0..=2);
+            self.agent_pos = (action * 3 + ia_move + 1);
+        } else {
+            let ia_move= (self.agent_pos - 1) / 3;
+            self.agent_pos = (action * 3 + ia_move + 1) + 9;
+
+        };
+
+    }
+
+    fn delete(&mut self) {
+        todo!()
+    }
+
+    fn score(&self) -> f32 {
+        match self.agent_pos {
+            n if vec![2, 6, 7, 11, 15, 16].contains(&n) => -1.,
+            n if vec![0, 1, 5, 9, 10, 14, 18].contains(&n) => 0.,
+            n if vec![3, 4, 8, 12, 13, 17].contains(&n) => 1.,
+            _ => 0.,
+        }
+    }
+
+    fn display(&self) {
+        if vec![1, 2, 3, 10, 11, 12].contains(&self.agent_pos) {
+            print!("P | ")
+        };
+        if vec![4, 5, 6, 13, 14, 15].contains(&self.agent_pos) {
+            print!("F | ")
+        };
+        if vec![7, 8, 9, 16, 17, 18].contains(&self.agent_pos) {
+            print!("S | ")
+        };
+
+
+        if self.agent_pos % 3  == 0 && self.agent_pos != 0{
+            print!("S")
+        }
+        if self.agent_pos % 3  == 1 {
+            print!("P")
+        }
+        if self.agent_pos % 3  == 2 {
+            print!("F")
+        }
+        println!();
+    }
+
+    fn play_strategy(&mut self, strategy: HashMap<usize, usize>) {
+        self.display();
+        loop {
+            if self.is_terminal() {
+                println!("Terminal, OVER");
+                break;
+            }
+            let action = strategy.get(&self.agent_pos);
+            if action.is_none() {
+                println!("Action not found.");
+                break;
+            }
+            self.step(*action.unwrap());
+            self.display();
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use rand::distributions::WeightedError::TooMany;
+    use crate::environement::two_round_rps;
+    use super::*;
+
+    #[test]
+    fn test_from_random_state() {
+        let seed: u64 = 42;
+        let rng = StdRng::seed_from_u64(seed).gen_range(0..=9);
+        let mut lw = TwoRoundRPS::new();
+        lw.reset_random_state(seed);
+        println!("position : {}, rng : {}", lw.agent_pos, rng);
+
+        assert_eq!(lw.agent_pos, rng, "With seed {}, expected pos {}", seed, lw.agent_pos)
+    }
+
+    #[test]
+    fn test_new() {
+        let lw = TwoRoundRPS::new();
+        assert_eq!(lw.agent_pos, 0, "should be 8, {} find instead", lw.agent_pos)
+    }
+
+    #[test]
+    fn test_available_action() {
+        let gw = TwoRoundRPS::new();
+
+        assert_eq!(gw.available_action(), array![0, 1, 2], "should be [0, 1, 2], found [] instead");
+    }
+
+    #[test]
+    fn test_two_round_world() {
+        let mut gw = TwoRoundRPS::new();
+
+        gw.display();
+        gw.step(1);
+        gw.display();
+        gw.step(2);
+        gw.display();
+        println!("{}", gw.state_id());
+
+
+        assert_eq!(gw.state_id(), 17)
+    }
+
+    #[test]
+    fn test_two_round_strategy() {
+        let strategy: HashMap<usize, usize> = HashMap::from([
+            (0, 1),
+            (4, 2),
+            (5, 2),
+            (6, 2),
+        ]);
+        let mut gw = TwoRoundRPS::new();
+        gw.play_strategy(strategy);
+
+        assert_eq!(gw.state_id(), 17)
+    }
+}

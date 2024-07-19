@@ -34,13 +34,16 @@ pub fn policy_iteration<E: Environment>(
             pi.push(value)
         }
     }
-    println!("{:?}", pi);
+    println!("pi : {:?}", pi);
 
 
     loop {
         loop {
             let mut delta: f32 = 0.;
             for s in 0..num_states {
+                if E::is_terminal_state(s) {
+                    continue
+                }
                 let a = pi[s];
                 if s % 7 == 1 {
                     print!("8");
@@ -62,7 +65,7 @@ pub fn policy_iteration<E: Environment>(
         }
 
 
-        println!("{:?}", V);
+        println!("V : m{:?}", V);
 
         let mut policy_stable = true;
 
@@ -106,6 +109,7 @@ pub fn policy_iteration<E: Environment>(
 mod tests {
     use crate::environement::line_world::LineWorld;
     use crate::environement::grid_world::GridWorld;
+    use crate::environement::two_round_rps::TwoRoundRPS;
 
     use super::*;
 
@@ -129,6 +133,16 @@ mod tests {
         let mut env = GridWorld::new();
 
         let v = policy_iteration::<GridWorld>(env, 0.999, 0.0001, 42);
+
+        println!("{:?}", v);
+        assert_eq!(1, 1)
+    }
+    #[test]
+    fn policy_iteration_two_round_pfs() {
+        println!("start");
+        let mut env = TwoRoundRPS::new();
+
+        let v = policy_iteration::<TwoRoundRPS>(env, 0.999, 0.0001, 42);
 
         println!("{:?}", v);
         assert_eq!(1, 1)

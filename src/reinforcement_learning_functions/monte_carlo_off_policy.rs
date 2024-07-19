@@ -122,6 +122,7 @@ pub fn monte_carlo_off_policy<E: Environment>(
 mod tests {
     use crate::environement::grid_world::GridWorld;
     use crate::environement::line_world::LineWorld;
+    use crate::environement::two_round_rps::TwoRoundRPS;
 
     use super::*;
 
@@ -163,5 +164,21 @@ mod tests {
         let mut gw2 = GridWorld::new();
         gw2.play_strategy(policy.clone());
         assert_eq!(gw2.state_id(), 40)
+    }
+    #[test]
+    fn monte_carlo_off_policy_rps() {
+        println!("twoRoundRPS: ");
+        let mut gw = TwoRoundRPS::new();
+
+        println!("stat ID :{:?}", gw.state_id());
+
+        let policy = monte_carlo_off_policy(&mut gw, 0.999, 10000, 1000, 0.1, 42);
+
+        println!("{:?}", policy);
+
+        //let policy = build_policy(&policy);
+        let mut gw2 = TwoRoundRPS::new();
+        gw2.play_strategy(policy.clone());
+        assert_eq!(gw2.state_id(), 13)
     }
 }
