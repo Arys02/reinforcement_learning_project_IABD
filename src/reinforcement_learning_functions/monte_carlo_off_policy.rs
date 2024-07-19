@@ -36,7 +36,7 @@ pub fn monte_carlo_off_policy<E: Environment>(
             Q.insert((s, a), new_val);
             C.insert((s, a), 0.);
         }
-        pi.insert(s, max_i);
+        pi.insert(s, E::available_actions(s)[max_i]);
     }
 
     //loop forever for each episode
@@ -80,8 +80,9 @@ pub fn monte_carlo_off_policy<E: Environment>(
 
             b.insert(state, tmp_action_vector.clone());
 
+            let next_action = available_action[action];
             let prev_score = env.score();
-            env.step(action);
+            env.step(next_action);
             let r = env.score() - prev_score;
 
             trajectory.push((state, action, r, available_action.clone()));
@@ -114,15 +115,21 @@ pub fn monte_carlo_off_policy<E: Environment>(
             w = w * (1. / b.get(&s).unwrap()[a])
         }
     }
+    let mut result: HashMap<usize, usize> = HashMap::new();
+    for (key, values) in pi {
+        result.insert(key, values);
+    }
 
-    return pi;
+    return result;
 }
 
 #[cfg(test)]
 mod tests {
     use crate::environement::grid_world::GridWorld;
     use crate::environement::line_world::LineWorld;
+    use crate::environement::monty_hall_1::MontyHall1;
     use crate::environement::two_round_rps::TwoRoundRPS;
+    use crate::reinforcement_learning_functions::monte_carlo_on_policy::monte_carlo_on_policy;
 
     use super::*;
 
@@ -138,7 +145,7 @@ mod tests {
     }
 
     #[test]
-    fn monte_carlo_off_policy_policy() {
+    fn monte_carlo_off_policy_lineworld() {
         let mut lw = LineWorld::new();
 
         println!("stat ID :{:?}", lw.state_id());
@@ -179,6 +186,34 @@ mod tests {
         //let policy = build_policy(&policy);
         let mut gw2 = TwoRoundRPS::new();
         gw2.play_strategy(policy.clone());
-        assert_eq!(gw2.state_id(), 13)
+        assert_eq!(gw2.score(), 1.)
+    }
+    #[test]
+    fn monte_carlo_off_policy_monty_hall_1() {
+        println!("Monty Hall 1: ");
+        let mut env = MontyHall1::new();
+
+        println!("stat ID :{:?}", env.state_id());
+
+        let policy= monte_carlo_off_policy(&mut env, 0.999, 10000, 1000, 0.1,42);
+
+
+        println!("{:?}", policy);
+        let nb_run: usize = 1000;
+
+        let mut win: f32 = 0.;
+
+        for _ in 0..nb_run {
+            env.reset();
+            env.play_strategy(policy.clone());
+            println!("score : {}", env.score());
+            win += env.score();
+        }
+
+        let stat_win = win / (nb_run as f32);
+
+        println!("win stat :  {}", stat_win);
+
+        assert_eq!(stat_win > 0.5 , true)
     }
 }

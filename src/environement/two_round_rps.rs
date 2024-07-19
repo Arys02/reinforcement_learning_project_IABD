@@ -110,7 +110,7 @@ impl Environment for TwoRoundRPS {
     }
 
     fn available_actions(state: usize) -> Array1<usize> {
-        if state > 9 { return Array1::zeros(0); };
+        if state > 18 { return Array1::zeros(0); };
         return array![0, 1, 2];
     }
 

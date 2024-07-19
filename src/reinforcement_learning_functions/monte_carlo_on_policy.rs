@@ -14,7 +14,7 @@ pub fn monte_carlo_on_policy<E: Environment>(
     max_steps: i32,
     epsilon: f32,
     mut seed: u64,
-) -> HashMap<usize, Vec<f32>> {
+) -> HashMap<usize, usize> {
     let mut rng = StdRng::seed_from_u64(seed);
 
     let mut pi = HashMap::new();
@@ -31,6 +31,7 @@ pub fn monte_carlo_on_policy<E: Environment>(
         while !env.is_terminal() && step_count < max_steps {
             let state = env.state_id();
             let available_action = env.available_action();
+            let vec_aa = available_action.to_vec();
 
             if !pi.contains_key(&state) {
                 let mut tmp_action_vector = Vec::with_capacity(available_action.len());
@@ -64,7 +65,7 @@ pub fn monte_carlo_on_policy<E: Environment>(
 
 
             let prev_score = env.score();
-            env.step(action);
+            env.step(*available_action.clone().get(action).unwrap());
             let r = env.score() - prev_score;
 
             trajectory.push((state, action, r, available_action.clone()));
@@ -105,15 +106,25 @@ pub fn monte_carlo_on_policy<E: Environment>(
             }
         }
     }
+    let mut result: HashMap<usize, usize> = HashMap::new();
+    for (key, values) in pi {
+        if let Some((max_index, _)) = values.iter().enumerate().max_by(|a, b| a.1.partial_cmp(b.1).unwrap()) {
+            let available_actions = E::available_actions(key);
+            let action_index = available_actions[max_index];
+            result.insert(key, action_index);
+        }
+    }
 
 
-    return pi;
+    return result;
 }
 
 #[cfg(test)]
 mod tests {
     use crate::environement::grid_world::GridWorld;
     use crate::environement::line_world::LineWorld;
+    use crate::environement::monty_hall_1::MontyHall1;
+    use crate::reinforcement_learning_functions::monte_carlo_with_exploring_start::monte_carlo_with_exploring_start;
 
     use super::*;
 
@@ -129,16 +140,14 @@ mod tests {
     }
 
     #[test]
-    fn monte_carlo_on_policy_policy() {
+    fn monte_carlo_on_policy_lineworld() {
         let mut lw = LineWorld::new();
 
         println!("stat ID :{:?}", lw.state_id());
 
         let policy_map = monte_carlo_on_policy(&mut lw, 0.999, 10000, 10000, 0.4, 42);
 
-        let policy: HashMap<usize, usize> = build_policy(&policy_map);
         println!("{:?}", policy_map);
-        println!("{:?}", policy)
     }
 
     #[test]
@@ -151,10 +160,39 @@ mod tests {
         let policy = monte_carlo_on_policy(&mut gw, 0.999, 10000, 1000, 0.1, 42);
 
         println!("{:?}", policy);
-
-        let policy = build_policy(&policy);
         let mut gw2 = GridWorld::new();
         gw2.play_strategy(policy.clone());
         assert_eq!(gw2.state_id(), 40)
     }
+
+    #[test]
+    fn monte_carlo_on_policy_monty_hall_1() {
+        println!("Monty Hall 1: ");
+        let mut env = MontyHall1::new();
+
+        println!("stat ID :{:?}", env.state_id());
+
+        let policy= monte_carlo_on_policy(&mut env, 0.999, 10000, 1000, 0.1,42);
+
+
+        println!("{:?}", policy);
+        let nb_run: usize = 1000;
+
+        let mut win: f32 = 0.;
+
+        for _ in 0..nb_run {
+            env.reset();
+            env.play_strategy(policy.clone());
+            println!("score : {}", env.score());
+            win += env.score();
+        }
+
+        let stat_win = win / (nb_run as f32);
+
+        println!("win stat :  {}", stat_win);
+
+        assert_eq!(stat_win > 0.5 , true)
+    }
+
+
 }

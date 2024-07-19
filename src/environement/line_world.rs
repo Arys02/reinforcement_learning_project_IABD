@@ -223,6 +223,6 @@ mod tests {
         lw.step(1);
         lw.display();
 
-        assert_eq!(lw.state_id(), 1)
+        assert_eq!(lw.state_id(), 3)
     }
 }

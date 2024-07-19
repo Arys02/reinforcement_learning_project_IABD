@@ -29,6 +29,7 @@ pub fn monte_carlo_with_exploring_start<E: Environment>(
         while !env.is_terminal() && step_count < max_steps {
             let state = env.state_id();
             let available_action = env.available_action();
+            let available_action_vec = available_action.to_vec();
             //println!("state : {:?}", state);
             //println!("available action : {:?}", available_action);
 
@@ -74,17 +75,18 @@ pub fn monte_carlo_with_exploring_start<E: Environment>(
                 pi.insert(s, best_action);
             }
         }
-
     }
-    return pi
+    return pi;
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::environement::line_world::LineWorld;
     use crate::environement::grid_world::GridWorld;
-    use super::*;
+    use crate::environement::line_world::LineWorld;
+    use crate::environement::monty_hall_1::MontyHall1;
+    use crate::environement::two_round_rps::TwoRoundRPS;
 
+    use super::*;
 
     #[test]
     fn monte_carlo_with_exploring_start_returns_correct_policy() {
@@ -110,5 +112,54 @@ mod tests {
         let mut gw2 = GridWorld::new();
         gw2.play_strategy(policy.clone());
         assert_eq!(gw2.state_id(), 40)
+    }
+
+    #[test]
+    fn monte_carlo_with_exploring_start_two_round_rps() {
+        println!("Rock paper scissors : ");
+        let mut env = TwoRoundRPS::new();
+
+        println!("stat ID :{:?}", env.state_id());
+
+        let policy = monte_carlo_with_exploring_start(&mut env, 0.999, 10000, 1000, 42);
+
+        println!("{:?}", policy);
+
+        for _ in 0..5 {
+            env.reset();
+            env.play_strategy(policy.clone());
+            println!("score : {}", env.score())
+        }
+
+        assert_eq!(env.score(), 1.)
+    }
+
+
+    #[test]
+    fn monte_carlo_with_exploring_start_monty_hall_1() {
+        println!("Monty Hall 1: ");
+        let mut env = MontyHall1::new();
+
+        println!("stat ID :{:?}", env.state_id());
+
+        let policy = monte_carlo_with_exploring_start(&mut env, 0.999, 10000, 10000, 42);
+
+        println!("{:?}", policy);
+        let nb_run: usize = 1000;
+
+        let mut win: f32 = 0.;
+
+        for _ in 0..nb_run {
+            env.reset();
+            env.play_strategy(policy.clone());
+            //println!("score : {}", env.score());
+            win += env.score();
+        }
+
+        let stat_win = win / (nb_run as f32);
+
+        println!("win stat :  {}", stat_win);
+
+        assert_eq!(stat_win > 0.5 , true)
     }
 }

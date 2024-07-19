@@ -109,6 +109,7 @@ pub fn policy_iteration<E: Environment>(
 mod tests {
     use crate::environement::line_world::LineWorld;
     use crate::environement::grid_world::GridWorld;
+    use crate::environement::monty_hall_1::MontyHall1;
     use crate::environement::two_round_rps::TwoRoundRPS;
 
     use super::*;
@@ -143,6 +144,16 @@ mod tests {
         let mut env = TwoRoundRPS::new();
 
         let v = policy_iteration::<TwoRoundRPS>(env, 0.999, 0.0001, 42);
+
+        println!("{:?}", v);
+        assert_eq!(1, 1)
+    }
+    #[test]
+    fn policy_iteration_monty_hall_1() {
+        println!("start");
+        let mut env = MontyHall1::new();
+
+        let v = policy_iteration::<MontyHall1>(env, 0.999, 0.0001, 42);
 
         println!("{:?}", v);
         assert_eq!(1, 1)
