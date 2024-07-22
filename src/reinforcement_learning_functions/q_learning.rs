@@ -14,6 +14,7 @@ pub fn q_learning<E: Environment>(
     epsilon: f32,
     gamma: f32,
     nb_iter: usize,
+    nb_step: usize,
     seed: u64,
 ) -> (HashMap<usize, usize>, HashMap<usize, HashMap<usize, f32>>) {
     let mut rng = StdRng::seed_from_u64(seed);
@@ -21,8 +22,9 @@ pub fn q_learning<E: Environment>(
 
     for _ in 0..nb_iter {
         env.reset();
+        let mut step = 0;
 
-        while !env.is_terminal() {
+        while !env.is_terminal() && step < nb_step {
             let state = env.state_id();
             let available_action = env.available_action();
 
@@ -57,7 +59,7 @@ pub fn q_learning<E: Environment>(
             let mut target: f32;
 
             if env.is_terminal() {
-                target = r;
+                target = alpha * r;
             } else {
                 if !Q.contains_key(&state_p) {
                     let mut tmp_q_s_p = HashMap::new();
@@ -106,6 +108,8 @@ pub fn q_learning<E: Environment>(
 mod tests {
     use crate::environement::grid_world::GridWorld;
     use crate::environement::line_world::LineWorld;
+    use crate::environement::two_round_rps::TwoRoundRPS;
+    use crate::reinforcement_learning_functions::sarsa::sarsa;
 
     use super::*;
 
@@ -115,7 +119,7 @@ mod tests {
 
         println!("stat ID :{:?}", lw.state_id());
 
-        let policy = q_learning(&mut lw, 0.1, 0.1, 0.999, 10, 42);
+        let policy = q_learning(&mut lw, 0.1, 0.1, 0.999, 10, 1000, 42);
         println!("{:?}", policy)
     }
 
@@ -126,12 +130,26 @@ mod tests {
 
         println!("stat ID :{:?}", gw.state_id());
 
-        let policy = q_learning(&mut gw, 0.1, 0.1, 0.999, 10, 42);
+        let policy = q_learning(&mut gw, 0.1, 0.1, 0.999, 10, 1000, 42);
 
         let policy_to_play = policy.0;
         gw.play_strategy(policy_to_play);
 
         //println!("{:?}", policy);
         assert_eq!(1, 1)
+    }
+    #[test]
+    fn q_learning_policy_two_round_rps() {
+        let mut env = TwoRoundRPS::new();
+
+        println!("stat ID :{:?}", env.state_id());
+
+        let policy = q_learning(&mut env, 0.1, 0.1, 0.999, 1000, 1000,  42);
+        println!("{:?}", policy);
+        env.reset();
+
+        env.play_strategy(policy.0);
+
+        assert_eq!(env.is_terminal() && env.score() == 1.0, true)
     }
 }

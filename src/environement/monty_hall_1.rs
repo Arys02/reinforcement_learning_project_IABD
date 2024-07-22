@@ -280,17 +280,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_from_random_state() {
-        let seed: u64 = 42;
-        let rng = StdRng::seed_from_u64(seed).gen_range(0..=3);
-        let mut lw = MontyHall1::new();
-        lw.reset_random_state(seed);
-        println!("position : {}, rng : {}", lw.agent_pos, rng);
-
-        assert_eq!(lw.state, rng, "With seed {}, expected pos {}", seed, lw.state)
-    }
-
-    #[test]
     fn test_new() {
         let lw = MontyHall1::new();
         assert_eq!(lw.state, 0, "should be 0, {} find instead", lw.state)

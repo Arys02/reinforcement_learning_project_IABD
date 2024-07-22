@@ -4,3 +4,4 @@ mod policy_iteration;
 mod q_learning;
 mod monte_carlo_on_policy;
 mod monte_carlo_off_policy;
+mod sarsa;

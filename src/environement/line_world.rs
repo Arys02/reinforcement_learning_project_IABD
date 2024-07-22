@@ -173,7 +173,20 @@ impl Environment for LineWorld {
     }
 
     fn play_strategy(&mut self, strategy: HashMap<usize, usize>) {
-        todo!()
+        self.display();
+        loop {
+            if self.is_terminal() {
+                println!("Terminal, OVER");
+                break;
+            }
+            let action = strategy.get(&self.agent_pos);
+            if action.is_none() {
+                println!("Action not found.");
+                break;
+            }
+            self.step(*action.unwrap());
+            self.display();
+        }
     }
 }
 
