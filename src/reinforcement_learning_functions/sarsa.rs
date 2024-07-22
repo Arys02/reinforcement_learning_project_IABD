@@ -49,7 +49,10 @@ pub fn sarsa<E: Environment>(
                 let random_i: usize = rng.gen_range(0..available_action.len());
                 let _ = action_i.insert(random_i);
             } else {
-                let q_s: Vec<f32> = available_action.iter().map(|&a| *Q.get(&(state, a)).unwrap())
+                let q_s: Vec<f32> = available_action.iter().enumerate().map(|(i, &a)| *Q.get(&
+                (state,
+                                                                                           i))
+                    .unwrap())
                     .collect();
 
                 let best_a_index = q_s.iter().enumerate().max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap()).map(|(index, _)| index).unwrap();
@@ -63,13 +66,13 @@ pub fn sarsa<E: Environment>(
             let r = env.score() - prev_score;
 
             let state_p = env.state_id();
+            let available_action_p = env.available_action();
 
             let mut target: f32;
 
             if env.is_terminal() {
                 target = alpha * r
             } else {
-                let available_action_p = env.available_action();
 
                 let mut action_i_p: Option<usize> = None;
                 if rng.gen::<f32>() < epsilon {
@@ -78,7 +81,10 @@ pub fn sarsa<E: Environment>(
                     let random_i: usize = rng.gen_range(0..available_action_p.len());
                     let _ = action_i_p.insert(random_i);
                 } else {
-                    let q_s: Vec<f32> = available_action_p.iter().map(|&a| *Q.get(&(state, a)).unwrap())
+                    let q_s: Vec<f32> = available_action_p.iter().enumerate().map(|(i, &a)|  *Q
+                        .get(&(state_p,
+                                                                                         a))
+                        .unwrap_or(&0.))
                         .collect();
 
                     let best_a_index = q_s.iter().enumerate().max_by(|&(_, a), &(_, b)| a.partial_cmp
@@ -86,11 +92,9 @@ pub fn sarsa<E: Environment>(
                     let _ = action_i_p.insert(best_a_index);
                 }
 
-                let action_p = available_action_p[action_i_p.unwrap()];
 
-
-                let q_sp_ap = *Q.get(&(state_p, action_p)).unwrap();
-                let q_s_a = *Q.get(&(state, action)).unwrap();
+                let q_sp_ap = *Q.get(&(state_p, action_i_p.unwrap())).unwrap();
+                let q_s_a = *Q.get(&(state, action_i.unwrap())).unwrap();
 
 
                 target = (1. - alpha) * q_s_a + alpha * (gamma * q_sp_ap + r);
@@ -114,23 +118,6 @@ pub fn sarsa<E: Environment>(
     }
 
 
-    /*
-        for (&(s, _), _) in &Q {
-            if E::is_terminal_state(s) { continue }
-            let mut best_a: Option<usize> = None;
-            let mut best_a_score = f32::MIN;
-            for (action) in E::available_actions(s) {
-                let a_score = Q[&(s, action)];
-                if best_a.is_none() || best_a_score <= a_score {
-                    best_a = Some(action);
-                    best_a_score = a_score;
-                }
-            }
-            pi.insert(s, best_a.unwrap());
-        }
-
-     */
-
     println!("{:?}", Q);
     println!("{:?}", pi);
     return (pi, Q);
@@ -151,7 +138,7 @@ mod tests {
 
         println!("stat ID :{:?}", lw.state_id());
 
-        let policy = sarsa(&mut lw, 0.1, 0.1, 0.999, 10,1000,  42);
+        let policy = sarsa(&mut lw, 0.1, 0.1, 0.999, 1000,1000,  42);
         println!("{:?}", policy);
         lw.play_strategy(policy.0);
         assert_eq!(lw.is_terminal() && lw.score() == 1.0, true);
@@ -163,7 +150,7 @@ mod tests {
 
         println!("stat ID :{:?}", env.state_id());
 
-        let policy = sarsa(&mut env, 0.1, 0.1, 0.999, 1000,100, 42);
+        let policy = sarsa(&mut env, 0.1, 0.1, 0.999, 100000,100000, 42);
         println!("{:?}", policy);
         env.reset();
 
@@ -205,7 +192,6 @@ mod tests {
         for _ in 0..nb_run {
             env.reset();
             env.play_strategy(policy.0.clone());
-            println!("score : {}", env.score());
             win += env.score();
         }
 
@@ -213,6 +199,6 @@ mod tests {
 
         println!("win stat :  {}", stat_win);
 
-        assert_eq!(stat_win > 0.5, true)
+        assert_eq!(stat_win > 0.6, true)
     }
 }
