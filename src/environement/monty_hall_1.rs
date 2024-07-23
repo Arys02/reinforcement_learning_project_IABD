@@ -52,22 +52,7 @@ impl Environment for MontyHall1{
         self.state as usize
     }
 
-    fn available_actions(state: usize) -> Array1<usize> {
-        if state == 0 {
-            array![0, 1, 2]
-        }
-        else {
-            array![3, 4]
-        }
-    }
 
-    fn is_terminal_state(state: usize) -> bool {
-        match state {
-            4 => true,
-            5 => true,
-            _ => false
-        }
-    }
 
     fn from_random_state() -> Self {
         let mut rng = rand::thread_rng();
@@ -126,7 +111,12 @@ impl Environment for MontyHall1{
     }
 
     fn available_action(&self) -> Array1<usize> {
-        return Self::available_actions(self.state);
+        if self.state == 0 {
+            array![0, 1, 2]
+        }
+        else {
+            array![3, 4]
+        }
     }
 
     fn available_action_delete(&self) {
@@ -134,7 +124,11 @@ impl Environment for MontyHall1{
     }
 
     fn is_terminal(&self) -> bool {
-        Self::is_terminal_state(self.state)
+        match self.state {
+            4 => true,
+            5 => true,
+            _ => false
+        }
     }
 
     fn is_forbidden(&self, action: usize) -> bool {
@@ -267,7 +261,7 @@ impl Environment for MontyHall1{
                 //println!("Action not found.");
                 break;
             }
-            self.step(*action.unwrap());
+            self.step( *action.unwrap());
             //self.display();
         }
     }

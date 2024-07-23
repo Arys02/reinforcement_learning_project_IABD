@@ -16,9 +16,9 @@ pub fn q_learning<E: Environment>(
     nb_iter: usize,
     nb_step: usize,
     seed: u64,
-) -> (HashMap<usize, usize>, HashMap<usize, HashMap<usize, f32>>) {
+) -> (HashMap<usize, usize>, HashMap<usize, HashMap<(usize, usize), f32>>) {
     let mut rng = StdRng::seed_from_u64(seed);
-    let mut Q: HashMap<usize, HashMap<usize, f32>> = HashMap::new();
+    let mut Q: HashMap<usize, HashMap<(usize, usize), f32>> = HashMap::new();
 
     for _ in 0..nb_iter {
         env.reset();
@@ -31,23 +31,27 @@ pub fn q_learning<E: Environment>(
             if !Q.contains_key(&state) {
                 let mut q_s = HashMap::new();
 
-                for a in &available_action {
-                    q_s.insert(*a, rng.gen::<f32>());
+                for a_i in 0..available_action.len(){
+                    q_s.insert((a_i, available_action[a_i]), rng.gen::<f32>());
                 }
 
                 Q.insert(state, q_s);
             }
 
             let mut action : Option<usize> = None;
+            let mut action_i : Option<usize> = None;
 
             if rng.gen::<f32>() < epsilon {
-                let _ = action.insert(*E::available_actions(state).iter().choose(&mut rng).unwrap());
+                //insert dans action l'action
+                let _ = action.insert(*env.available_action().iter().choose(&mut rng).unwrap());
             } else {
-                let q_s: Vec<f32> = available_action.iter().map(|&a| *Q.get(&state).unwrap().get(&a).unwrap()).collect();
+                let q_s: Vec<f32> = available_action.iter().enumerate().map(|(a_i, &a)| *Q.get(&state).unwrap().get(&(a_i, a)).unwrap()).collect();
 
-                let best_a_index = q_s.iter().enumerate().max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap()).map(|(index, _)| index).unwrap();
-                let _ = action.insert(best_a_index);
+                let best_a_index = q_s.iter().enumerate().max_by(|&(_, a), &(_, b)| a.partial_cmp(b).unwrap()).map(|(index, _)| index).unwrap();
+                let _ = action.insert(available_action[best_a_index]);
             }
+
+            let _ = action_i.insert(available_action.iter().position(|&x| x == action.unwrap()).unwrap());
 
             let prev_score: f32 = env.score();
             env.step(action.unwrap());
@@ -65,24 +69,25 @@ pub fn q_learning<E: Environment>(
                     let mut tmp_q_s_p = HashMap::new();
 
                     //TODO check if in available works well
-                    for action_p in &available_action_p {
-                        tmp_q_s_p.insert(*action_p, rng.gen::<f32>());
+                    for action_i in 0..available_action_p.len() {
+                        tmp_q_s_p.insert((action_i, available_action_p[action_i]), rng.gen::<f32>());
                     }
                     Q.insert(state_p, tmp_q_s_p);
                 }
 
                 // équivalent de for comprehension en rust
 
-                let q_s_p = available_action_p.iter().map(|&a_p| *Q.get(&state_p).unwrap().get(&a_p).unwrap()).collect();
+                let q_s_p = available_action_p.iter().enumerate().map(|(a_i_p, &a_p)| *Q.get(&state_p).unwrap().get(&(a_i_p, a_p)).unwrap()).collect();
                 let array_q_s_p = Array::from_vec(q_s_p);
                 //TODO check if it's working like that
                 let max = array_q_s_p.max().unwrap();
-                target = r + gamma * max;
+                let max_i = array_q_s_p.iter().position(|&x| x == *max);
+                target = r + gamma * max
             }
-            let q_s_a = *Q.get(&state).unwrap().get(&action.unwrap()).unwrap();
+            let q_s_a = *Q.get(&state).unwrap().get(&(action_i.unwrap(), action.unwrap())).unwrap();
             let new_value = (1. - alpha) * q_s_a + alpha * target;
 
-            let _ = Q.get_mut(&state).unwrap().insert(action.unwrap(), new_value);
+            let _ = Q.get_mut(&state).unwrap().insert((action_i.unwrap(), action.unwrap()), new_value);
         }
     }
 
@@ -92,7 +97,7 @@ pub fn q_learning<E: Environment>(
         let mut best_a: Option<usize> = None;
         let mut best_a_score = f32::MIN;
 
-        for (&action, &a_score) in actions {
+        for (&(action_i, action), &a_score) in actions {
             if best_a.is_none() || best_a_score <= a_score {
                 best_a = Some(action);
                 best_a_score = a_score;
@@ -108,6 +113,7 @@ pub fn q_learning<E: Environment>(
 mod tests {
     use crate::environement::grid_world::GridWorld;
     use crate::environement::line_world::LineWorld;
+    use crate::environement::secret_env_0::SecretEnv0;
     use crate::environement::two_round_rps::TwoRoundRPS;
     use crate::reinforcement_learning_functions::sarsa::sarsa;
 
@@ -151,5 +157,17 @@ mod tests {
         env.play_strategy(policy.0);
 
         assert_eq!(env.is_terminal() && env.score() == 1.0, true)
+    }
+    #[test]
+    fn policy_iteration_env_0() {
+        println!("start");
+        let mut env = SecretEnv0::new();
+        let policy = q_learning(&mut env, 0.1, 0.1, 0.999, 1000, 1000,  42);
+        println!("{:?}", policy);
+        env.reset();
+
+        env.play_strategy(policy.0);
+
+        assert_eq!(1, 1)
     }
 }

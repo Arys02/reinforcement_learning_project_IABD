@@ -89,20 +89,6 @@ impl Environment for GridWorld {
         self.agent_pos as usize
     }
 
-    fn available_actions(i: usize) -> Array1<usize> {
-        return array![0, 1, 2, 3]
-    }
-
-    fn is_terminal_state(state: usize) -> bool {
-        match state {
-            x if x < 8 => true,
-            x if x > 40 => true,
-            x if x % 7 == 0 => true,
-            x if x % 7 == 6 => true,
-            12 | 40 => true,
-            _ => false
-        }
-    }
 
     fn from_random_state() -> Self {
         let mut rng = rand::thread_rng();
@@ -164,7 +150,7 @@ impl Environment for GridWorld {
     }
 
     fn available_action(&self) -> Array1<usize> {
-        return Self::available_actions(self.agent_pos)
+        return array![0, 1, 2, 3];
     }
 
     fn available_action_delete(&self) {
@@ -172,7 +158,14 @@ impl Environment for GridWorld {
     }
 
     fn is_terminal(&self) -> bool {
-        Self::is_terminal_state(self.agent_pos)
+        match self.agent_pos {
+            x if x < 8 => true,
+            x if x > 40 => true,
+            x if x % 7 == 0 => true,
+            x if x % 7 == 6 => true,
+            12 | 40 => true,
+            _ => false
+        }
     }
 
     fn is_forbidden(&self, action: usize) -> bool {

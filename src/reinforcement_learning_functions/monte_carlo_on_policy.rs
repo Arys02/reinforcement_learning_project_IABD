@@ -56,10 +56,10 @@ pub fn monte_carlo_on_policy<E: Environment>(
                 }
 
 
-                pi.insert(state, tmp_action_vector);
+                pi.insert(state, (tmp_action_vector, available_action.clone()));
             }
 
-            let actions = pi.get(&state).unwrap().to_owned();
+            let actions = pi.get(&state).unwrap().to_owned().0;
             let mut dist = WeightedIndex::new(actions).unwrap();
             let action = dist.sample(&mut rng);
 
@@ -102,16 +102,16 @@ pub fn monte_carlo_on_policy<E: Environment>(
                     }
                 }
 
-                pi.insert(s, tmp_action_vector.clone());
+                pi.insert(s, (tmp_action_vector.clone(), aa.clone()));
             }
         }
     }
     let mut result: HashMap<usize, usize> = HashMap::new();
-    for (key, values) in pi {
-        if let Some((max_index, _)) = values.iter().enumerate().max_by(|a, b| a.1.partial_cmp(b.1).unwrap()) {
-            let available_actions = E::available_actions(key);
+    for (state, values) in pi {
+        if let Some((max_index, _)) = values.0.iter().enumerate().max_by(|a, b| a.1.partial_cmp(b.1).unwrap()) {
+            let available_actions = values.1;
             let action_index = available_actions[max_index];
-            result.insert(key, action_index);
+            result.insert(state, action_index);
         }
     }
 

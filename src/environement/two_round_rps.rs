@@ -98,6 +98,7 @@ impl TwoRoundRPS {
 }
 
 impl Environment for TwoRoundRPS {
+    #![allow(warnings)]
     fn new() -> Self {
         TwoRoundRPS {
             agent_pos: 0,
@@ -109,17 +110,6 @@ impl Environment for TwoRoundRPS {
         self.agent_pos as usize
     }
 
-    fn available_actions(state: usize) -> Array1<usize> {
-        if state > 18 { return Array1::zeros(0); };
-        return array![0, 1, 2];
-    }
-
-    fn is_terminal_state(state: usize) -> bool {
-        match state {
-            x if x > 9 => true,
-            _ => false
-        }
-    }
 
     fn from_random_state() -> Self {
         let mut rng = rand::thread_rng();
@@ -171,7 +161,8 @@ impl Environment for TwoRoundRPS {
     }
 
     fn available_action(&self) -> Array1<usize> {
-        return Self::available_actions(self.agent_pos);
+        if self.agent_pos > 18 { return Array1::zeros(0); };
+        return array![0, 1, 2];
     }
 
     fn available_action_delete(&self) {
@@ -179,7 +170,10 @@ impl Environment for TwoRoundRPS {
     }
 
     fn is_terminal(&self) -> bool {
-        Self::is_terminal_state(self.agent_pos)
+        match self.agent_pos {
+            x if x > 9 => true,
+            _ => false
+        }
     }
 
     fn is_forbidden(&self, action: usize) -> bool {
@@ -264,11 +258,13 @@ impl Environment for TwoRoundRPS {
 
 #[cfg(test)]
 mod tests {
+    #![allow(warnings)]
     use rand::distributions::WeightedError::TooMany;
     use crate::environement::two_round_rps;
     use super::*;
 
     #[test]
+    #[allow(warnings)]
     fn test_from_random_state() {
         let seed: u64 = 42;
         let rng = StdRng::seed_from_u64(seed).gen_range(0..=9);

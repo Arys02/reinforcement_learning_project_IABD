@@ -21,23 +21,6 @@ pub fn monte_carlo_off_policy<E: Environment>(
     let mut Q: HashMap<(usize, usize), f32> = HashMap::new();
     let mut C: HashMap<(usize, usize), f32> = HashMap::new();
 
-    //Initialize
-    for s in 0..E::num_states() {
-        let mut max_val = f32::MIN;
-        let mut max_i = 0;
-        for a in 0..E::available_actions(s).len() {
-            let new_val = rng.gen::<f32>();
-
-            if new_val > max_val {
-                max_val = new_val;
-                max_i = a
-            }
-
-            Q.insert((s, a), new_val);
-            C.insert((s, a), 0.);
-        }
-        pi.insert(s, E::available_actions(s)[max_i]);
-    }
 
     //loop forever for each episode
     for _ in 0..nb_iter {
@@ -52,6 +35,23 @@ pub fn monte_carlo_off_policy<E: Environment>(
         while !env.is_terminal() && step_count < max_steps {
             let state = env.state_id();
             let available_action = env.available_action();
+
+            if !Q.contains_key(&(state, available_action[0])){
+                let mut max_val = f32::MIN;
+                let mut max_i = 0;
+                for a in 0..available_action.len() {
+                    let new_val = rng.gen::<f32>();
+
+                    if new_val > max_val {
+                        max_val = new_val;
+                        max_i = a
+                    }
+
+                    Q.insert((state, a), new_val);
+                    C.insert((state, a), 0.);
+                }
+                pi.insert(state, available_action[max_i]);
+            }
 
             let mut tmp_action_vector = Vec::with_capacity(available_action.len());
             let mut i_max: usize = 0;

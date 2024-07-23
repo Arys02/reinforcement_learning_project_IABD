@@ -4,55 +4,40 @@ use ndarray_rand::rand_distr::num_traits::abs;
 use ndarray_rand::RandomExt;
 use rand::distributions::Uniform;
 use rand::prelude::{SliceRandom, StdRng};
-
 use crate::environement::environment::Environment;
 
+
 pub fn policy_iteration<E: Environment>(
-    mut env: E,
     gamma: f32,
     theta: f32,
-    seed: u64,
 ) -> Vec<usize> {
     let num_states = E::num_states();
     let num_actions = E::num_actions();
     let num_rewards = E::num_rewards();
 
 
-    let mut rng = StdRng::seed_from_u64(seed);
-
     let mut V = Array::random((num_states, 1), Uniform::new(0.0, 1.0)).into_raw_vec();
 
-    for s in 0..num_states {
-        if E::is_terminal_state(s) {
-            V[s] = 0.;
-        }
-    }
+
 
     let mut pi = vec![];
     for i in 0..num_states {
-        if let Some(&value) = E::available_actions(i).as_slice().unwrap().choose(&mut rng) {
-            pi.push(value)
-        }
+            pi.push(0)
     }
     println!("pi : {:?}", pi);
+
 
 
     loop {
         loop {
             let mut delta: f32 = 0.;
             for s in 0..num_states {
-                if E::is_terminal_state(s) {
-                    continue
-                }
                 let a = pi[s];
-                if s % 7 == 1 {
-                    print!("8");
-                }
                 let mut v = V[s];
                 let mut total = 0.;
                 for s_p in 0..num_states {
                     for r in 0..num_rewards {
-                        let p = env.get_transition_probability(s, a, s_p, r);
+                        let p = E::build_transition_probability(s, a, s_p, r);
                         total += p * (E::get_reward(r) + gamma * V[s_p])
                     }
                 }
@@ -70,21 +55,17 @@ pub fn policy_iteration<E: Environment>(
         let mut policy_stable = true;
 
         for s in 0..num_states {
-            if E::is_terminal_state(s) {
-                continue
-            }
-
             let old_action = pi[s];
 
             let mut best_a: Option<usize> = None;
-            let mut best_action_score = -9999.;
+            let mut best_action_score = f32::MIN;
 
             for a in 0..num_actions {
                 let mut total = 0.;
 
                 for s_p in 0..num_states {
                     for r_index in 0..num_rewards {
-                        total += env.get_transition_probability(s, a, s_p, r_index) * (E::get_reward(r_index) + gamma * V[s_p])
+                        total += E::build_transition_probability(s, a, s_p, r_index) * (E::get_reward(r_index) + gamma * V[s_p])
                     }
                 }
 
@@ -107,22 +88,28 @@ pub fn policy_iteration<E: Environment>(
 
 #[cfg(test)]
 mod tests {
+    #![allow(warnings)]
+
+    use std::collections::HashMap;
     use crate::environement::line_world::LineWorld;
     use crate::environement::grid_world::GridWorld;
     use crate::environement::monty_hall_1::MontyHall1;
+    use crate::environement::secret_env_0::SecretEnv0;
     use crate::environement::two_round_rps::TwoRoundRPS;
 
     use super::*;
 
+
     #[test]
     fn policy_iteration_line_world() {
+        #![allow(warnings)]
         println!("start");
 
 
         let lw = LineWorld::new();
         println!("stat ID :{:?}", lw.state_id());
 
-        let v = policy_iteration::<LineWorld>(lw, 0.999, 0.000001, 42);
+        let v = policy_iteration::<LineWorld>(0.999, 0.000001);
 
         println!("{:?}", v);
         assert_eq!(1, 1)
@@ -133,27 +120,80 @@ mod tests {
         println!("start");
         let mut env = GridWorld::new();
 
-        let v = policy_iteration::<GridWorld>(env, 0.999, 0.0001, 42);
+        let v = policy_iteration::<GridWorld>( 0.999, 0.0001);
+
+        let mut policy = HashMap::new();
+        for i in 0..v.len(){
+            policy.insert(i, v[i]);
+        }
+        env.play_strategy(policy.clone());
 
         println!("{:?}", v);
-        assert_eq!(1, 1)
+
+        assert_eq!(env.state_id(), 4)
     }
     #[test]
     fn policy_iteration_two_round_pfs() {
         println!("start");
         let mut env = TwoRoundRPS::new();
 
-        let v = policy_iteration::<TwoRoundRPS>(env, 0.999, 0.0001, 42);
+        let v = policy_iteration::<TwoRoundRPS>( 0.999, 0.0001);
+
+        let mut policy = HashMap::new();
+        for i in 0..v.len(){
+            policy.insert(i, v[i]);
+        }
+
+        env.play_strategy(policy.clone());
 
         println!("{:?}", v);
-        assert_eq!(1, 1)
+        println!("{:?}", policy);
+        assert_eq!(env.score(), 1.);
     }
     #[test]
     fn policy_iteration_monty_hall_1() {
         println!("start");
         let mut env = MontyHall1::new();
 
-        let v = policy_iteration::<MontyHall1>(env, 0.999, 0.0001, 42);
+        let v = policy_iteration::<MontyHall1>( 0.999, 0.0001);
+
+        let mut policy = HashMap::new();
+        for i in 0..v.len(){
+            policy.insert(i, v[i]);
+        }
+
+        println!("{:?}", policy);
+        let nb_run: usize = 1000;
+
+        let mut win: f32 = 0.;
+
+        for _ in 0..nb_run {
+            env.reset();
+            env.play_strategy(policy.clone());
+            println!("score : {}", env.score());
+            win += env.score();
+        }
+
+        let stat_win = win / (nb_run as f32);
+
+        println!("win stat :  {}", stat_win);
+
+        assert_eq!(stat_win > 0.5 , true)
+
+    }
+    #[test]
+    fn policy_iteration_env_0() {
+        println!("start");
+        let mut env = SecretEnv0::new();
+
+        let v = policy_iteration::<SecretEnv0>( 0.999, 0.001);
+
+        let mut policy = HashMap::new();
+        for i in 0..v.len(){
+            policy.insert(i, v[i]);
+        }
+
+        env.play_strategy(policy.clone());
 
         println!("{:?}", v);
         assert_eq!(1, 1)
