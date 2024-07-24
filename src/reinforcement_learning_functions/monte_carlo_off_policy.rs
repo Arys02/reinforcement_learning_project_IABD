@@ -14,7 +14,8 @@ pub fn monte_carlo_off_policy<E: Environment>(
     max_steps: i32,
     epsilon: f32,
     mut seed: u64,
-    log : (bool, &Vec<f32>, &Vec<usize>, &Vec<f32>, &Vec<bool>),
+    //     check, g        size_traj     w          env.ister
+    mut log: (bool, &mut Vec<f32>, &mut Vec<usize>, &mut Vec<f32>, &mut Vec<bool>),
 ) -> HashMap<usize, usize> {
     let mut rng = StdRng::seed_from_u64(seed);
 
@@ -113,7 +114,15 @@ pub fn monte_carlo_off_policy<E: Environment>(
                 break;
             }
 
-            w = w * (1. / b.get(&s).unwrap()[a])
+            w = w * (1. / b.get(&s).unwrap()[a]);
+
+            //     check, g        size_traj     w          env.ister
+            if log.0 {
+                &log.1.push(g);
+                log.2.push(trajectory.len());
+                log.3.push(w);
+                log.4.push(env.is_terminal())
+            }
         }
     }
     let mut result: HashMap<usize, usize> = HashMap::new();
@@ -151,7 +160,12 @@ mod tests {
 
         println!("stat ID :{:?}", lw.state_id());
 
-        let policy_map = monte_carlo_off_policy(&mut lw, 0.999, 1000, 1000, 0.4, 42, (false, &Vec::new(), &Vec::new(), &Vec::new(), &Vec::new()));
+        let mut g = Vec::new();
+        let mut t_size = Vec::new();
+        let mut w = Vec::new();
+        let mut is_terminal = Vec::new();
+
+        let policy_map = monte_carlo_off_policy(&mut lw, 0.999, 1000, 1000, 0.4, 42, (true, &mut g, &mut t_size, &mut w, &mut is_terminal));
 
         //let policy: HashMap<usize, usize> = build_policy(&policy_map);
         let mut gw2 = LineWorld::new();
@@ -166,7 +180,7 @@ mod tests {
 
         println!("stat ID :{:?}", gw.state_id());
 
-        let policy = monte_carlo_off_policy(&mut gw, 0.999, 10000, 1000, 0.1, 42, (false, &Vec::new(), &Vec::new(), &Vec::new(), &Vec::new()));
+        let policy = monte_carlo_off_policy(&mut gw, 0.999, 10000, 1000, 0.1, 42, (false, &mut Vec::new(), &mut Vec::new(), &mut Vec::new(), &mut Vec::new()));
 
         println!("{:?}", policy);
 
@@ -182,7 +196,7 @@ mod tests {
 
         println!("stat ID :{:?}", gw.state_id());
 
-        let policy = monte_carlo_off_policy(&mut gw, 0.999, 10000, 1000, 0.1, 42, (false, &Vec::new(), &Vec::new(), &Vec::new(), &Vec::new()));
+        let policy = monte_carlo_off_policy(&mut gw, 0.999, 10000, 1000, 0.1, 42, (false, &mut Vec::new(), &mut Vec::new(), &mut Vec::new(), &mut Vec::new()));
 
         println!("{:?}", policy);
 
@@ -198,7 +212,7 @@ mod tests {
 
         println!("stat ID :{:?}", env.state_id());
 
-        let policy= monte_carlo_off_policy(&mut env, 0.999, 10000, 1000, 0.1,42, (false, &Vec::new(), &Vec::new(), &Vec::new(), &Vec::new()));
+        let policy= monte_carlo_off_policy(&mut env, 0.999, 10000, 1000, 0.1,42, (false, &mut Vec::new(), &mut Vec::new(), &mut Vec::new(), &mut Vec::new()));
 
 
         println!("{:?}", policy);
