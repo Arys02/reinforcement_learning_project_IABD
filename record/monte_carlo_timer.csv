@@ -1,0 +1,9 @@
+env,monte_carlo_off,monte_carlo_on,monte_carlo_es,q_learning,sarsa
+lineworld,29,26,34,36,45
+gridworld,32,77,83,97,1030
+montyhall,19,25,10,11,20
+tworoundrps,21,24,26,27,18
+secretenv0,556,713,274,274,1040
+secretenv1,2257,3274,1219,1285,4375
+secretenv2,2379,3398,2731,2936,8471
+secretenv3,2364,2536,1172,1208,4722
