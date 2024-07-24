@@ -14,6 +14,7 @@ pub fn monte_carlo_on_policy<E: Environment>(
     max_steps: i32,
     epsilon: f32,
     mut seed: u64,
+    log : (bool, &Vec<f32>, &Vec<usize>, &Vec<bool>),
 ) -> HashMap<usize, usize> {
     let mut rng = StdRng::seed_from_u64(seed);
 

@@ -12,6 +12,7 @@ pub fn monte_carlo_with_exploring_start<E: Environment>(
     nb_iter: i32,
     max_steps: i32,
     mut seed: u64,
+    log : (bool, &Vec<f32>, &Vec<usize>, &Vec<bool>),
 ) -> HashMap<usize, usize> {
     let mut rng = StdRng::seed_from_u64(seed);
     let mut pi = HashMap::new();

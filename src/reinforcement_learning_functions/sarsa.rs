@@ -14,6 +14,8 @@ pub fn sarsa<E: Environment>(
     nb_iter: usize,
     nb_step: usize,
     seed: u64,
+
+    log : (bool, &Vec<bool>),
 ) -> (HashMap<usize, usize>, HashMap<(usize, usize), (f32, usize)>) {
     let mut rng = StdRng::seed_from_u64(seed);
     let mut Q = HashMap::new();

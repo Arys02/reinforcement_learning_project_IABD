@@ -10,6 +10,8 @@ use crate::environement::environment::Environment;
 pub fn policy_iteration<E: Environment>(
     gamma: f32,
     theta: f32,
+
+    log : (bool, &Vec<usize>, &Vec<usize>, usize),
 ) -> Vec<usize> {
     let num_states = E::num_states();
     let num_actions = E::num_actions();
