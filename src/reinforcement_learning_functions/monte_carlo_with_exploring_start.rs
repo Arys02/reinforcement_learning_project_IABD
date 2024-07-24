@@ -40,6 +40,47 @@ fn write_csv(path: &str,
     Ok(())
 }
 
+/// Executes the Monte Carlo with Exploring Starts algorithm for a given environment.
+///
+/// This algorithm uses an on-policy Monte Carlo control method with exploring starts
+/// to improve the policy `pi` based on episodes generated with a random start. The algorithm
+/// iteratively updates the action-value function `Q` and the policy `pi` using returns from the generated episodes.
+///
+/// # Parameters
+///
+/// - `env`: A mutable reference to an environment that implements the `Environment` trait.
+/// - `gamma`: The discount factor for future rewards.
+/// - `nb_iter`: The number of iterations (episodes) to run the algorithm.
+/// - `max_steps`: The maximum number of steps per episode.
+/// - `seed`: The seed for the random number generator to ensure reproducibility.
+/// - `log`: A tuple containing:
+///     - `bool`: A flag to determine whether to log data.
+///     - `&mut Vec<f32>`: A mutable reference to a vector to log the return (G).
+///     - `&mut Vec<usize>`: A mutable reference to a vector to log the trajectory size.
+///     - `&mut Vec<bool>`: A mutable reference to a vector to log whether the episode terminated.
+///
+/// # Returns
+///
+/// - `HashMap<usize, usize>`: The improved policy mapping states to actions.
+///
+/// # Details
+///
+/// The `monte_carlo_with_exploring_start` function follows these steps:
+///
+/// 1. Initialize the random number generator with the provided seed.
+/// 2. Initialize the policy `pi`, action-value function `Q`, and returns tracker.
+/// 3. For each episode:
+///     - Reset the environment to a random state using the provided seed.
+///     - Generate an episode following a policy with exploring starts:
+///         - For the first action, select a random action.
+///         - For subsequent actions, follow the current policy `pi`.
+///     - Track the trajectory of state-action-reward tuples.
+///     - Calculate the return `G` and update `Q` and `pi` using the returns observed in the episode.
+///     - Optionally log the return, trajectory size, and termination status.
+///
+/// Exploring starts ensure that the agent explores different actions at the beginning of each episode,
+/// which helps in discovering better policies. The target policy `pi` is iteratively improved based on the observed returns.
+
 pub fn monte_carlo_with_exploring_start<E: Environment>(
     mut env: &mut E,
     gamma: f32,

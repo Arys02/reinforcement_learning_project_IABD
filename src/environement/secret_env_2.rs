@@ -6,6 +6,12 @@ use ndarray::Array1;
 use crate::environement::environment::Environment;
 use crate::utils::lib_utils::LIB;
 
+/// The `SecretEnv2` struct represents an environment that interacts with an external library to perform various operations.
+/// This struct implements the `Environment` trait, allowing it to be used in reinforcement learning algorithms.
+///
+/// # Fields
+///
+/// - `env`: A pointer to the environment object managed by the external library.
 pub struct SecretEnv2 {
     pub env: *mut c_void,
 }

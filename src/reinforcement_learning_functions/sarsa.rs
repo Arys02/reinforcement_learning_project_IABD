@@ -31,6 +31,50 @@ fn write_csv(path: &str,
     wtr.flush().unwrap();
     Ok(())
 }
+
+/// Executes the SARSA (State-Action-Reward-State-Action) algorithm for a given environment.
+///
+/// This algorithm uses SARSA to find the optimal policy for the environment by iteratively
+/// updating the action-value function `Q` based on episodes generated from interaction with the environment.
+/// SARSA is an on-policy algorithm that updates the value of the current state-action pair using the next state-action pair.
+///
+/// # Parameters
+///
+/// - `env`: A mutable reference to an environment that implements the `Environment` trait.
+/// - `alpha`: The learning rate.
+/// - `epsilon`: The exploration rate for the epsilon-greedy policy.
+/// - `gamma`: The discount factor for future rewards.
+/// - `nb_iter`: The number of iterations (episodes) to run the algorithm.
+/// - `nb_step`: The maximum number of steps per episode.
+/// - `seed`: The seed for the random number generator to ensure reproducibility.
+/// - `log`: A tuple containing:
+///     - `bool`: A flag to determine whether to log data.
+///     - `&mut Vec<bool>`: A mutable reference to a vector to log whether the episode terminated.
+///
+/// # Returns
+///
+/// - `(HashMap<usize, usize>, HashMap<(usize, usize), (f32, usize)>)`:
+///   - A HashMap representing the improved policy mapping states to actions.
+///   - A HashMap representing the action-value function `Q`.
+///
+/// # Details
+///
+/// The `sarsa` function follows these steps:
+///
+/// 1. Initialize the random number generator with the provided seed.
+/// 2. Initialize the action-value function `Q`.
+/// 3. For each episode:
+///     - Reset the environment.
+///     - Initialize the step counter.
+///     - Loop until the environment reaches a terminal state or the maximum number of steps is reached:
+///         - **Action Selection**: Select an action using the epsilon-greedy policy.
+///         - **Action Execution**: Execute the action and observe the reward and next state.
+///         - **Next Action Selection**: Select the next action using the epsilon-greedy policy.
+///         - **Q-Value Update**: Update the action-value function `Q` using the Bellman equation.
+///     - Optionally log whether the episode terminated.
+///
+/// The SARSA algorithm updates the policy `pi` based on the learned action-value function `Q`
+/// by selecting the action with the highest value for each state.
 pub fn sarsa<E: Environment>(
     mut env: &mut E,
     alpha: f32,

@@ -40,6 +40,40 @@ fn write_csv(path: &str,
     Ok(())
 }
 
+/// Executes the Policy Iteration algorithm for a given environment.
+///
+/// This algorithm uses policy iteration to find the optimal policy for the environment by iteratively evaluating
+/// and improving the policy until convergence. The algorithm alternates between policy evaluation and policy improvement
+/// steps.
+///
+/// # Parameters
+///
+/// - `gamma`: The discount factor for future rewards.
+/// - `theta`: The threshold for determining convergence in the policy evaluation step.
+/// - `log`: A tuple containing:
+///     - `bool`: A flag to determine whether to log data.
+///     - `&mut Vec<usize>`: A mutable reference to a vector to log the number of iterations per evaluation step.
+///     - `&mut usize`: A mutable reference to store the total number of policy improvement iterations.
+///
+/// # Returns
+///
+/// - `Vec<usize>`: The optimal policy mapping states to actions.
+///
+/// # Details
+///
+/// The `policy_iteration` function follows these steps:
+///
+/// 1. Initialize the value function `V` and the policy `pi` randomly.
+/// 2. Loop until the policy is stable:
+///     - **Policy Evaluation**:
+///         - Iteratively evaluate the current policy `pi` by updating the value function `V` until the maximum change `delta` is below the threshold `theta`.
+///     - **Policy Improvement**:
+///         - For each state, find the action that maximizes the expected return and update the policy `pi`.
+///         - Check if the policy has changed. If not, the policy is stable, and the algorithm terminates.
+/// 3. Optionally log the number of iterations for each evaluation step and the total number of policy improvement iterations.
+///
+/// The Policy Iteration algorithm ensures convergence to the optimal policy by repeatedly improving the policy based on the evaluated value function.
+
 pub fn policy_iteration<E: Environment>(
     gamma: f32,
     theta: f32,

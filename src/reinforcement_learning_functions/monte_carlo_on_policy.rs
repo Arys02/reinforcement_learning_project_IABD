@@ -39,6 +39,45 @@ fn write_csv(path: &str,
     wtr.flush().unwrap();
     Ok(())
 }
+/// Executes the Monte Carlo On-Policy algorithm for a given environment.
+///
+/// This algorithm uses an on-policy Monte Carlo control method to improve the policy `pi`
+/// based on episodes generated using the same policy. The algorithm iteratively updates the
+/// action-value function `Q` and the policy `pi` using returns from the generated episodes.
+///
+/// # Parameters
+///
+/// - `env`: A mutable reference to an environment that implements the `Environment` trait.
+/// - `gamma`: The discount factor for future rewards.
+/// - `nb_iter`: The number of iterations (episodes) to run the algorithm.
+/// - `max_steps`: The maximum number of steps per episode.
+/// - `epsilon`: The epsilon parameter for the epsilon-greedy policy.
+/// - `seed`: The seed for the random number generator to ensure reproducibility.
+/// - `log`: A tuple containing:
+///     - `bool`: A flag to determine whether to log data.
+///     - `&mut Vec<f32>`: A mutable reference to a vector to log the return (G).
+///     - `&mut Vec<usize>`: A mutable reference to a vector to log the trajectory size.
+///     - `&mut Vec<bool>`: A mutable reference to a vector to log whether the episode terminated.
+///
+/// # Returns
+///
+/// - `HashMap<usize, usize>`: The improved policy mapping states to actions.
+///
+/// # Details
+///
+/// The `monte_carlo_on_policy` function follows these steps:
+///
+/// 1. Initialize the random number generator with the provided seed.
+/// 2. Initialize the policy `pi`, action-value function `Q`, and returns tracker.
+/// 3. For each episode:
+///     - Reset the environment.
+///     - Generate an episode following the current policy `pi`.
+///     - Track the trajectory of state-action-reward tuples.
+///     - Calculate the return `G` and update `Q` and `pi` using the returns observed in the episode.
+///     - Optionally log the return, trajectory size, and termination status.
+///
+/// The behavior policy selects actions based on a probability distribution influenced by the epsilon parameter,
+/// balancing exploration and exploitation. The target policy `pi` is iteratively improved based on the observed returns.
 
 pub fn monte_carlo_on_policy<E: Environment>(
     mut env: &mut E,

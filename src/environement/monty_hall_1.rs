@@ -9,6 +9,21 @@ use rand::Rng;
 
 use crate::environement::environment::Environment;
 
+/// The `MontyHall1` struct represents the Monty Hall problem environment where an agent acts as a contestant.
+/// The agent makes two successive decisions in a scenario involving three doors: A, B, and C.
+///
+/// Characteristics of `MontyHall1`:
+/// - **Initial State**: The environment starts with a hidden randomly selected winning door among the three doors.
+/// - **Actions**:
+///   1. The agent first chooses one of the three doors.
+///   2. One of the remaining two unchosen doors, which is not the winning door, is revealed and removed.
+///   3. The agent then decides to either stick with the initial choice or switch to the remaining door.
+/// - **Terminal States and Rewards**:
+///   - If the final chosen door is the winning door, the agent receives a reward of 1.0.
+///   - If the final chosen door is not the winning door, the agent receives a reward of 0.0.
+///
+/// The `MontyHall1` struct implements the `Environment` trait, providing methods for managing the agent's state,
+/// executing actions, and calculating rewards and transition probabilities.
 pub struct MontyHall1{
     state: usize,
     transition_probability_matrix: ArrayBase<OwnedRepr<f32>, Ix4>,
