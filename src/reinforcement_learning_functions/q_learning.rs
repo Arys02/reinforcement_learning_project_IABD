@@ -114,6 +114,7 @@ mod tests {
     use crate::environement::grid_world::GridWorld;
     use crate::environement::line_world::LineWorld;
     use crate::environement::secret_env_0::SecretEnv0;
+    use crate::environement::secret_env_1::SecretEnv1;
     use crate::environement::two_round_rps::TwoRoundRPS;
     use crate::reinforcement_learning_functions::sarsa::sarsa;
 
@@ -167,7 +168,39 @@ mod tests {
         env.reset();
 
         env.play_strategy(policy.0);
+        let score = env.score();
+        let state = env.state_id();
+        let best_score = SecretEnv0::get_reward(SecretEnv0::num_rewards() - 1);
+        let is_terminal = env.is_terminal();
 
-        assert_eq!(1, 1)
+        let mut vec_score = Vec::new();
+        for i in 0..SecretEnv0::num_rewards() {
+            vec_score.push(SecretEnv0::get_reward(i))
+        }
+
+        assert_eq!(env.is_terminal() && env.score() > 0., true);
     }
+
+    #[test]
+    fn policy_iteration_env_1() {
+        println!("start");
+        let mut env = SecretEnv1::new();
+        let policy = q_learning(&mut env, 0.1, 0.1, 0.999, 1000, 1000,  42);
+        println!("{:?}", policy);
+        env.reset();
+
+        env.play_strategy(policy.0);
+        let score = env.score();
+        let state = env.state_id();
+        let best_score = SecretEnv0::get_reward(SecretEnv0::num_rewards() - 1);
+        let is_terminal = env.is_terminal();
+
+        let mut vec_score = Vec::new();
+        for i in 0..SecretEnv0::num_rewards() {
+            vec_score.push(SecretEnv0::get_reward(i))
+        }
+
+        assert_eq!(env.is_terminal() && env.score() > 15., true);
+    }
+
 }

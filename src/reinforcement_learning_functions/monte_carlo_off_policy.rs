@@ -14,6 +14,7 @@ pub fn monte_carlo_off_policy<E: Environment>(
     max_steps: i32,
     epsilon: f32,
     mut seed: u64,
+    log : bool,
 ) -> HashMap<usize, usize> {
     let mut rng = StdRng::seed_from_u64(seed);
 
@@ -23,7 +24,7 @@ pub fn monte_carlo_off_policy<E: Environment>(
 
 
     //loop forever for each episode
-    for _ in 0..nb_iter {
+    for i in 0..nb_iter {
         seed += 1;
         env.reset();
 
@@ -150,7 +151,7 @@ mod tests {
 
         println!("stat ID :{:?}", lw.state_id());
 
-        let policy_map = monte_carlo_off_policy(&mut lw, 0.999, 1000, 1000, 0.4, 42);
+        let policy_map = monte_carlo_off_policy(&mut lw, 0.999, 1000, 1000, 0.4, 42, false);
 
         //let policy: HashMap<usize, usize> = build_policy(&policy_map);
         println!("{:?}", policy_map);
@@ -163,7 +164,7 @@ mod tests {
 
         println!("stat ID :{:?}", gw.state_id());
 
-        let policy = monte_carlo_off_policy(&mut gw, 0.999, 10000, 1000, 0.1, 42);
+        let policy = monte_carlo_off_policy(&mut gw, 0.999, 10000, 1000, 0.1, 42, false);
 
         println!("{:?}", policy);
 
@@ -179,7 +180,7 @@ mod tests {
 
         println!("stat ID :{:?}", gw.state_id());
 
-        let policy = monte_carlo_off_policy(&mut gw, 0.999, 10000, 1000, 0.1, 42);
+        let policy = monte_carlo_off_policy(&mut gw, 0.999, 10000, 1000, 0.1, 42, false);
 
         println!("{:?}", policy);
 
@@ -195,7 +196,7 @@ mod tests {
 
         println!("stat ID :{:?}", env.state_id());
 
-        let policy= monte_carlo_off_policy(&mut env, 0.999, 10000, 1000, 0.1,42);
+        let policy= monte_carlo_off_policy(&mut env, 0.999, 10000, 1000, 0.1,42, false);
 
 
         println!("{:?}", policy);

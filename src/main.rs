@@ -11,57 +11,10 @@ enum Node<'s> {
     Path(BTreeMap<&'s str, Node<'s>>),
     Status(&'s str),
 }
-
-const OUTPUT: &str ="
-
-running 42 tests
-test environement::line_world::tests::test_available_action ... ok
-test environement::line_world::tests::test_from_random_state ... ok
-test environement::line_world::tests::test_line_world ... ok
-test environement::line_world::tests::test_new ... ok
-test environement::monty_hall_1::tests::test_available_action ... ok
-test environement::monty_hall_1::tests::test_monty_hall_1 ... ok
-test environement::monty_hall_1::tests::test_new ... ok
-test environement::two_round_rps::tests::test_available_action ... ok
-test environement::secret_env_0::tests::test_init ... ok
-test environement::two_round_rps::tests::test_new ... ok
-test environement::two_round_rps::tests::test_two_round_strategy ... ok
-test environement::two_round_rps::tests::test_two_round_world ... ok
-test environement::two_round_rps::tests::test_from_random_state ... ok
-test environement::grid_world::tests::test_line_world ... ok
-test environement::grid_world::tests::test_from_random_state ... ok
-test environement::grid_world::tests::test_grid_world_strategy ... ok
-test environement::grid_world::tests::test_available_action ... ok
-test environement::grid_world::tests::test_new ... ok
-test reinforcement_learning_functions::policy_evaluation::tests::policy_evaluation_line_world ... ok
-test reinforcement_learning_functions::monte_carlo_with_exploring_start::tests::monte_carlo_with_exploring_start_returns_correct_policy ... ok
-test reinforcement_learning_functions::monte_carlo_off_policy::tests::monte_carlo_off_policy_lineworld ... ok
-test reinforcement_learning_functions::policy_iteration::tests::policy_iteration_line_world ... ok
-test reinforcement_learning_functions::policy_iteration::tests::policy_iteration_monty_hall_1 ... ok
-test reinforcement_learning_functions::monte_carlo_with_exploring_start::tests::monte_carlo_with_exploring_start_monty_hall_1 ... ok
-test reinforcement_learning_functions::q_learning::tests::q_learning_grid_world ... ok
-test reinforcement_learning_functions::q_learning::tests::q_learning_policy_lineworld ... ok
-test reinforcement_learning_functions::monte_carlo_off_policy::tests::monte_carlo_off_policy_monty_hall_1 ... ok
-test reinforcement_learning_functions::q_learning::tests::q_learning_policy_two_round_rps ... ok
-test reinforcement_learning_functions::sarsa::tests::sarsa_monty_hall_1 ... ok
-test reinforcement_learning_functions::monte_carlo_off_policy::tests::monte_carlo_off_policy_rps ... ok
-test reinforcement_learning_functions::sarsa::tests::sarsa_policy_two_round_rps ... ok
-test reinforcement_learning_functions::sarsa::tests::sarsa_policy_lineworld ... ok
-test reinforcement_learning_functions::monte_carlo_with_exploring_start::tests::monte_carlo_with_exploring_start_two_round_rps ... ok
-test reinforcement_learning_functions::monte_carlo_off_policy::tests::monte_carlo_off_policy_grid_world ... ok
-test reinforcement_learning_functions::monte_carlo_on_policy::tests::monte_carlo_on_policy_monty_hall_1 ... ok
-test reinforcement_learning_functions::monte_carlo_on_policy::tests::monte_carlo_on_policy_lineworld ... ok
-test reinforcement_learning_functions::monte_carlo_with_exploring_start::tests::monte_carlo_with_exploring_start_returns_correct_policy_grid_world ... ok
-test reinforcement_learning_functions::monte_carlo_on_policy::tests::monte_carlo_on_policy_grid_world ... ok
-test reinforcement_learning_functions::policy_iteration::tests::policy_iteration_two_round_pfs ... ok
-test reinforcement_learning_functions::policy_iteration::tests::policy_iteration_env_0 has been running for over 60 seconds
-test reinforcement_learning_functions::policy_iteration::tests::policy_iteration_grid_world has been running for over 60 seconds
-test reinforcement_learning_functions::sarsa::tests::sarsa_policy_gridworld has been running for over 60 seconds
-
-";
+const LOG_CONTENT: &str = include_str!("../test.log");
 
 fn main() {
-    println!("{}", pretty_test(OUTPUT).unwrap());
+    println!("{}", pretty_test(LOG_CONTENT).unwrap());
 }
 
 fn pretty_test(output: &str) -> Option<Tree<&str>> {
