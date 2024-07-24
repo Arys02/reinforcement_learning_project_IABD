@@ -95,8 +95,10 @@ mod tests {
 
         println!("stat ID :{:?}", lw.state_id());
 
-        let policy = monte_carlo_with_exploring_start(&mut lw, 0.999, 100, 10, 42);
-        println!("{:?}", policy)
+        let policy = monte_carlo_with_exploring_start(&mut lw, 0.999, 100, 10, 42, (false, &Vec::new(), &Vec::new(), &Vec::new()));
+        let mut gw2 = LineWorld::new();
+        gw2.play_strategy(policy.clone(), false);
+        assert_eq!(gw2.state_id(), 40)
     }
 
     #[test]
@@ -106,12 +108,12 @@ mod tests {
 
         println!("stat ID :{:?}", gw.state_id());
 
-        let policy = monte_carlo_with_exploring_start(&mut gw, 0.999, 10000, 1000, 42);
+        let policy = monte_carlo_with_exploring_start(&mut gw, 0.999, 10000, 1000, 42,(false, &Vec::new(), &Vec::new(), &Vec::new()));
 
         println!("{:?}", policy);
 
         let mut gw2 = GridWorld::new();
-        gw2.play_strategy(policy.clone());
+        gw2.play_strategy(policy.clone(), false);
         assert_eq!(gw2.state_id(), 40)
     }
 
@@ -122,13 +124,13 @@ mod tests {
 
         println!("stat ID :{:?}", env.state_id());
 
-        let policy = monte_carlo_with_exploring_start(&mut env, 0.999, 10000, 1000, 42);
+        let policy = monte_carlo_with_exploring_start(&mut env, 0.999, 10000, 1000, 42, (false, &Vec::new(), &Vec::new(), &Vec::new()));
 
         println!("{:?}", policy);
 
         for _ in 0..5 {
             env.reset();
-            env.play_strategy(policy.clone());
+            env.play_strategy(policy.clone(), false);
             println!("score : {}", env.score())
         }
 
@@ -143,7 +145,7 @@ mod tests {
 
         println!("stat ID :{:?}", env.state_id());
 
-        let policy = monte_carlo_with_exploring_start(&mut env, 0.999, 10000, 10000, 42);
+        let policy = monte_carlo_with_exploring_start(&mut env, 0.999, 10000, 10000, 42, (false, &Vec::new(), &Vec::new(), &Vec::new()));
 
         println!("{:?}", policy);
         let nb_run: usize = 1000;
@@ -152,7 +154,7 @@ mod tests {
 
         for _ in 0..nb_run {
             env.reset();
-            env.play_strategy(policy.clone());
+            env.play_strategy(policy.clone(), false);
             //println!("score : {}", env.score());
             win += env.score();
         }

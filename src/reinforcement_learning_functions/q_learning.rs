@@ -128,7 +128,7 @@ mod tests {
 
         println!("stat ID :{:?}", lw.state_id());
 
-        let policy = q_learning(&mut lw, 0.1, 0.1, 0.999, 10, 1000, 42);
+        let policy = q_learning(&mut lw, 0.1, 0.1, 0.999, 10, 1000, 42, (false, &Vec::new()));
         println!("{:?}", policy)
     }
 
@@ -139,10 +139,10 @@ mod tests {
 
         println!("stat ID :{:?}", gw.state_id());
 
-        let policy = q_learning(&mut gw, 0.1, 0.1, 0.999, 10, 1000, 42);
+        let policy = q_learning(&mut gw, 0.1, 0.1, 0.999, 10, 1000, 42,  (false, &Vec::new()));
 
         let policy_to_play = policy.0;
-        gw.play_strategy(policy_to_play);
+        gw.play_strategy(policy_to_play, false);
 
         //println!("{:?}", policy);
         assert_eq!(1, 1)
@@ -153,11 +153,11 @@ mod tests {
 
         println!("stat ID :{:?}", env.state_id());
 
-        let policy = q_learning(&mut env, 0.1, 0.1, 0.999, 1000, 1000,  42);
+        let policy = q_learning(&mut env, 0.1, 0.1, 0.999, 1000, 1000,  42, (false, &Vec::new()));
         println!("{:?}", policy);
         env.reset();
 
-        env.play_strategy(policy.0);
+        env.play_strategy(policy.0, false);
 
         assert_eq!(env.is_terminal() && env.score() == 1.0, true)
     }
@@ -165,11 +165,11 @@ mod tests {
     fn policy_iteration_env_0() {
         println!("start");
         let mut env = SecretEnv0::new();
-        let policy = q_learning(&mut env, 0.1, 0.1, 0.999, 1000, 1000,  42);
+        let policy = q_learning(&mut env, 0.1, 0.1, 0.999, 1000, 1000,  42, (false, &Vec::new()));
         println!("{:?}", policy);
         env.reset();
 
-        env.play_strategy(policy.0);
+        env.play_strategy(policy.0, false);
         let score = env.score();
         let state = env.state_id();
         let best_score = SecretEnv0::get_reward(SecretEnv0::num_rewards() - 1);
@@ -187,11 +187,11 @@ mod tests {
     fn policy_iteration_env_1() {
         println!("start");
         let mut env = SecretEnv1::new();
-        let policy = q_learning(&mut env, 0.1, 0.1, 0.999, 1000, 1000,  42);
+        let policy = q_learning(&mut env, 0.1, 0.1, 0.999, 1000, 1000,  42, (false, &Vec::new()));
         println!("{:?}", policy);
         env.reset();
 
-        env.play_strategy(policy.0);
+        env.play_strategy(policy.0, false);
         let score = env.score();
         let state = env.state_id();
         let best_score = SecretEnv0::get_reward(SecretEnv0::num_rewards() - 1);

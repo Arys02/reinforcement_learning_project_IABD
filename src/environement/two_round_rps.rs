@@ -238,22 +238,6 @@ impl Environment for TwoRoundRPS {
         println!();
     }
 
-    fn play_strategy(&mut self, strategy: HashMap<usize, usize>) {
-        self.display();
-        loop {
-            if self.is_terminal() {
-                println!("Terminal, OVER");
-                break;
-            }
-            let action = strategy.get(&self.agent_pos);
-            if action.is_none() {
-                println!("Action not found.");
-                break;
-            }
-            self.step(*action.unwrap());
-            self.display();
-        }
-    }
 }
 
 #[cfg(test)]
@@ -312,7 +296,7 @@ mod tests {
             (6, 2),
         ]);
         let mut gw = TwoRoundRPS::new();
-        gw.play_strategy(strategy);
+        gw.play_strategy(strategy, false);
 
         assert_eq!(gw.state_id(), 17)
     }

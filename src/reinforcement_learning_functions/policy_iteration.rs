@@ -11,7 +11,7 @@ pub fn policy_iteration<E: Environment>(
     gamma: f32,
     theta: f32,
 
-    log : (bool, &Vec<usize>, &Vec<usize>, usize),
+    log : (bool, &Vec<usize>, &Vec<usize>, &usize),
 ) -> Vec<usize> {
     let num_states = E::num_states();
     let num_actions = E::num_actions();
@@ -111,7 +111,8 @@ mod tests {
         let lw = LineWorld::new();
         println!("stat ID :{:?}", lw.state_id());
 
-        let v = policy_iteration::<LineWorld>(0.999, 0.000001);
+        let mut a : usize = 0;
+        let v = policy_iteration::<LineWorld>(0.999, 0.000001, (false, &Vec::new(), &Vec::new(), &a));
 
         println!("{:?}", v);
         assert_eq!(1, 1)
@@ -121,14 +122,15 @@ mod tests {
     fn policy_iteration_grid_world() {
         println!("start");
         let mut env = GridWorld::new();
+        let mut a : usize = 0;
 
-        let v = policy_iteration::<GridWorld>( 0.999, 0.0001);
+        let v = policy_iteration::<GridWorld>( 0.999, 0.0001, (false, &Vec::new(), &Vec::new(), &a));
 
         let mut policy = HashMap::new();
         for i in 0..v.len(){
             policy.insert(i, v[i]);
         }
-        env.play_strategy(policy.clone());
+        env.play_strategy(policy.clone(), false);
 
         println!("{:?}", v);
 
@@ -139,14 +141,17 @@ mod tests {
         println!("start");
         let mut env = TwoRoundRPS::new();
 
-        let v = policy_iteration::<TwoRoundRPS>( 0.999, 0.0001);
+
+
+        let mut a : usize = 0;
+        let v = policy_iteration::<TwoRoundRPS>( 0.999, 0.0001, (false, &Vec::new(), &Vec::new(), &a));
 
         let mut policy = HashMap::new();
         for i in 0..v.len(){
             policy.insert(i, v[i]);
         }
 
-        env.play_strategy(policy.clone());
+        env.play_strategy(policy.clone(), false);
 
         println!("{:?}", v);
         println!("{:?}", policy);
@@ -157,7 +162,9 @@ mod tests {
         println!("start");
         let mut env = MontyHall1::new();
 
-        let v = policy_iteration::<MontyHall1>( 0.999, 0.0001);
+
+        let mut a : usize = 0;
+        let v = policy_iteration::<MontyHall1>( 0.999, 0.0001, (false, &Vec::new(), &Vec::new(), &a));
 
         let mut policy = HashMap::new();
         for i in 0..v.len(){
@@ -171,7 +178,7 @@ mod tests {
 
         for _ in 0..nb_run {
             env.reset();
-            env.play_strategy(policy.clone());
+            env.play_strategy(policy.clone(), false);
             println!("score : {}", env.score());
             win += env.score();
         }
@@ -188,14 +195,16 @@ mod tests {
         println!("start");
         let mut env = SecretEnv0::new();
 
-        let v = policy_iteration::<SecretEnv0>( 0.999, 0.001);
+
+        let mut a : usize = 0;
+        let v = policy_iteration::<SecretEnv0>( 0.999, 0.001,(false, &Vec::new(), &Vec::new(), &a));
 
         let mut policy = HashMap::new();
         for i in 0..v.len(){
             policy.insert(i, v[i]);
         }
 
-        env.play_strategy(policy.clone());
+        env.play_strategy(policy.clone(), false);
 
         println!("{:?}", v);
         assert_eq!(1, 1)

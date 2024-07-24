@@ -151,10 +151,12 @@ mod tests {
 
         println!("stat ID :{:?}", lw.state_id());
 
-        let policy_map = monte_carlo_off_policy(&mut lw, 0.999, 1000, 1000, 0.4, 42, false);
+        let policy_map = monte_carlo_off_policy(&mut lw, 0.999, 1000, 1000, 0.4, 42, (false, &Vec::new(), &Vec::new(), &Vec::new(), &Vec::new()));
 
         //let policy: HashMap<usize, usize> = build_policy(&policy_map);
-        println!("{:?}", policy_map);
+        let mut gw2 = LineWorld::new();
+        gw2.play_strategy(policy_map.clone(), false);
+        assert_eq!(gw2.state_id(), 4)
     }
 
     #[test]
@@ -164,13 +166,13 @@ mod tests {
 
         println!("stat ID :{:?}", gw.state_id());
 
-        let policy = monte_carlo_off_policy(&mut gw, 0.999, 10000, 1000, 0.1, 42, false);
+        let policy = monte_carlo_off_policy(&mut gw, 0.999, 10000, 1000, 0.1, 42, (false, &Vec::new(), &Vec::new(), &Vec::new(), &Vec::new()));
 
         println!("{:?}", policy);
 
         //let policy = build_policy(&policy);
         let mut gw2 = GridWorld::new();
-        gw2.play_strategy(policy.clone());
+        gw2.play_strategy(policy.clone(), false);
         assert_eq!(gw2.state_id(), 40)
     }
     #[test]
@@ -180,13 +182,13 @@ mod tests {
 
         println!("stat ID :{:?}", gw.state_id());
 
-        let policy = monte_carlo_off_policy(&mut gw, 0.999, 10000, 1000, 0.1, 42, false);
+        let policy = monte_carlo_off_policy(&mut gw, 0.999, 10000, 1000, 0.1, 42, (false, &Vec::new(), &Vec::new(), &Vec::new(), &Vec::new()));
 
         println!("{:?}", policy);
 
         //let policy = build_policy(&policy);
         let mut gw2 = TwoRoundRPS::new();
-        gw2.play_strategy(policy.clone());
+        gw2.play_strategy(policy.clone(), false);
         assert_eq!(gw2.score(), 1.)
     }
     #[test]
@@ -196,7 +198,7 @@ mod tests {
 
         println!("stat ID :{:?}", env.state_id());
 
-        let policy= monte_carlo_off_policy(&mut env, 0.999, 10000, 1000, 0.1,42, false);
+        let policy= monte_carlo_off_policy(&mut env, 0.999, 10000, 1000, 0.1,42, (false, &Vec::new(), &Vec::new(), &Vec::new(), &Vec::new()));
 
 
         println!("{:?}", policy);
@@ -206,7 +208,7 @@ mod tests {
 
         for _ in 0..nb_run {
             env.reset();
-            env.play_strategy(policy.clone());
+            env.play_strategy(policy.clone(), false);
             println!("score : {}", env.score());
             win += env.score();
         }

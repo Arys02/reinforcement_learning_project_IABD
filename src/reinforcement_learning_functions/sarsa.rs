@@ -145,9 +145,9 @@ mod tests {
 
         println!("stat ID :{:?}", lw.state_id());
 
-        let policy = sarsa(&mut lw, 0.1, 0.1, 0.999, 1000, 1000, 42);
+        let policy = sarsa(&mut lw, 0.1, 0.1, 0.999, 1000, 1000, 42, (false, &Vec::new()));
         println!("{:?}", policy);
-        lw.play_strategy(policy.0);
+        lw.play_strategy(policy.0, false);
         assert_eq!(lw.is_terminal() && lw.score() == 1.0, true);
     }
 
@@ -157,11 +157,11 @@ mod tests {
 
         println!("stat ID :{:?}", env.state_id());
 
-        let policy = sarsa(&mut env, 0.1, 0.1, 0.999, 10000, 10000, 42);
+        let policy = sarsa(&mut env, 0.1, 0.1, 0.999, 10000, 10000, 42, (false, &Vec::new()));
         println!("{:?}", policy);
         env.reset();
 
-        env.play_strategy(policy.0);
+        env.play_strategy(policy.0, false);
 
         assert_eq!(env.is_terminal() && env.score() == 3.0, true)
     }
@@ -172,11 +172,11 @@ mod tests {
 
         println!("stat ID :{:?}", env.state_id());
 
-        let policy = sarsa(&mut env, 0.1, 0.1, 0.999, 100, 1000, 42);
+        let policy = sarsa(&mut env, 0.1, 0.1, 0.999, 100, 1000, 42, (false, &Vec::new()));
         println!("{:?}", policy);
         env.reset();
 
-        env.play_strategy(policy.0);
+        env.play_strategy(policy.0, false);
 
         assert_eq!(env.is_terminal() && env.score() == 1.0, true)
     }
@@ -188,7 +188,7 @@ mod tests {
 
         println!("stat ID :{:?}", env.state_id());
 
-        let policy = sarsa(&mut env, 0.1, 0.1, 0.999, 1000, 1000, 42);
+        let policy = sarsa(&mut env, 0.1, 0.1, 0.999, 1000, 1000, 42, (false, &Vec::new()));
 
 
         println!("{:?}", policy);
@@ -198,7 +198,7 @@ mod tests {
 
         for _ in 0..nb_run {
             env.reset();
-            env.play_strategy(policy.0.clone());
+            env.play_strategy(policy.0.clone(), false);
             win += env.score();
         }
 

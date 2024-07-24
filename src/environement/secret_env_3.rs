@@ -142,24 +142,6 @@ impl Environment for SecretEnv3 {
 
 
 
-    fn play_strategy(&mut self, strategy: HashMap<usize, usize>) {
-        self.display();
-        loop {
-            if self.is_terminal() {
-                //println!("Terminal, OVER");
-                break;
-            }
-            let action = strategy.get(&self.state_id());
-            if action.is_none() {
-                //println!("Action not found.");
-                break;
-            }
-
-            self.step(*action.unwrap());
-            self.display();
-        }
-    }
-
     fn build_transition_probability(s: usize, a: usize, s_p: usize, r: usize) -> f32 {
         let secret_env_3_transition_probability: libloading::Symbol<unsafe extern fn(usize, usize, usize, usize) -> f32> = unsafe { LIB.get(b"secret_env_3_transition_probability") }.expect("Failed to load function `secret_env_3_transition_probability`");
         return unsafe { secret_env_3_transition_probability(s, a, s_p, r) };

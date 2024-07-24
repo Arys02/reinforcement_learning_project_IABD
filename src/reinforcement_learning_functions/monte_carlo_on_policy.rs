@@ -146,9 +146,12 @@ mod tests {
 
         println!("stat ID :{:?}", lw.state_id());
 
-        let policy_map = monte_carlo_on_policy(&mut lw, 0.999, 10000, 10000, 0.4, 42);
+        let policy_map = monte_carlo_on_policy(&mut lw, 0.999, 10000, 10000, 0.4, 42, (false, &Vec::new(), &Vec::new(), &Vec::new()));
 
         println!("{:?}", policy_map);
+        let mut gw2 = LineWorld::new();
+        gw2.play_strategy(policy_map.clone(), false);
+        assert_eq!(gw2.state_id(), 4)
     }
 
     #[test]
@@ -158,11 +161,11 @@ mod tests {
 
         println!("stat ID :{:?}", gw.state_id());
 
-        let policy = monte_carlo_on_policy(&mut gw, 0.999, 10000, 1000, 0.1, 42);
+        let policy = monte_carlo_on_policy(&mut gw, 0.999, 10000, 1000, 0.1, 42, (false, &Vec::new(), &Vec::new(), &Vec::new()));
 
         println!("{:?}", policy);
         let mut gw2 = GridWorld::new();
-        gw2.play_strategy(policy.clone());
+        gw2.play_strategy(policy.clone(), false);
         assert_eq!(gw2.state_id(), 40)
     }
 
@@ -173,7 +176,7 @@ mod tests {
 
         println!("stat ID :{:?}", env.state_id());
 
-        let policy= monte_carlo_on_policy(&mut env, 0.999, 10000, 1000, 0.1,42);
+        let policy= monte_carlo_on_policy(&mut env, 0.999, 10000, 1000, 0.1,42, (false, &Vec::new(), &Vec::new(), &Vec::new()));
 
 
         println!("{:?}", policy);
@@ -183,7 +186,7 @@ mod tests {
 
         for _ in 0..nb_run {
             env.reset();
-            env.play_strategy(policy.clone());
+            env.play_strategy(policy.clone(), false);
             println!("score : {}", env.score());
             win += env.score();
         }

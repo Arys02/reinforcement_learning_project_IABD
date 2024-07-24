@@ -39,5 +39,30 @@ pub trait Environment {
     fn score(&self) -> f32;
 
     fn display(&self);
-    fn play_strategy(&mut self, strategy: HashMap<usize, usize>);
+    fn play_strategy(&mut self, strategy: HashMap<usize, usize>, print:bool) {
+        if print {
+            self.display();
+        }
+        let mut check_loop = HashMap::new();
+        loop {
+            if check_loop.contains_key(&self.state_id()){
+                break;
+            }
+            check_loop.insert(self.state_id(), true);
+
+
+            if self.is_terminal() {
+                break;
+            }
+            let action = strategy.get(&self.state_id());
+            if action.is_none() {
+                break;
+            }
+
+            self.step(*action.unwrap());
+            if print {
+                self.display();
+            }
+        }
+    }
 }

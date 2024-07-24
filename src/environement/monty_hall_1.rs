@@ -249,22 +249,6 @@ impl Environment for MontyHall1{
         println!();
     }
 
-    fn play_strategy(&mut self, strategy: HashMap<usize, usize>) {
-        //self.display();
-        loop {
-            if self.is_terminal() {
-                //println!("Terminal, OVER");
-                break;
-            }
-            let action = strategy.get(&self.state);
-            if action.is_none() {
-                //println!("Action not found.");
-                break;
-            }
-            self.step( *action.unwrap());
-            //self.display();
-        }
-    }
 }
 
 #[cfg(test)]
