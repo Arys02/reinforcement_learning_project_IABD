@@ -1,3 +1,3 @@
-mod environement;
-mod reinforcement_learning_functions;
-mod utils;
+pub mod environement;
+pub mod reinforcement_learning_functions;
+pub mod utils;

@@ -1,7 +1,7 @@
-mod monte_carlo_with_exploring_start;
-mod policy_evaluation;
-mod policy_iteration;
-mod q_learning;
-mod monte_carlo_on_policy;
-mod monte_carlo_off_policy;
-mod sarsa;
+pub mod monte_carlo_with_exploring_start;
+pub mod policy_evaluation;
+pub mod policy_iteration;
+pub mod q_learning;
+pub mod monte_carlo_on_policy;
+pub mod monte_carlo_off_policy;
+pub mod sarsa;

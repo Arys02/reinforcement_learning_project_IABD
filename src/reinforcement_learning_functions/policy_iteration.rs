@@ -1,17 +1,49 @@
+use std::error::Error;
 use ndarray::Array;
 use ndarray_rand::rand::SeedableRng;
 use ndarray_rand::rand_distr::num_traits::abs;
 use ndarray_rand::RandomExt;
 use rand::distributions::Uniform;
 use rand::prelude::{SliceRandom, StdRng};
+use serde::Serialize;
 use crate::environement::environment::Environment;
 
+
+fn write_csv(path: &str,
+             name: &str,
+             delta: Vec<usize>,
+             stable: usize
+) -> Result<(), Box<dyn Error>>
+{
+    #[derive(Serialize)]
+    struct Record<'a> {
+        key: &'a str,
+        t1: usize,
+        t2: usize,
+    }
+    ;
+    let mut wtr = csv::Writer::from_path(path).unwrap();
+
+    let len = delta.len();
+
+    for i in 0..len {
+        let record = Record {
+            key: name,
+            t1: delta[i],
+            t2: stable
+        };
+
+        wtr.serialize(&record)?;
+    }
+
+    wtr.flush().unwrap();
+    Ok(())
+}
 
 pub fn policy_iteration<E: Environment>(
     gamma: f32,
     theta: f32,
-
-    log : (bool, &Vec<usize>, &Vec<usize>, &usize),
+    mut log: (bool, &mut Vec<usize>, &mut usize),
 ) -> Vec<usize> {
     let num_states = E::num_states();
     let num_actions = E::num_actions();
@@ -30,7 +62,10 @@ pub fn policy_iteration<E: Environment>(
 
 
 
+
+    let mut i = 0;
     loop {
+        let mut j = 0;
         loop {
             let mut delta: f32 = 0.;
             for s in 0..num_states {
@@ -49,6 +84,10 @@ pub fn policy_iteration<E: Environment>(
             if delta < theta {
                 break
             }
+        }
+        if log.0 {
+            log.1.push(j);
+            j +=1;
         }
 
 
@@ -83,6 +122,10 @@ pub fn policy_iteration<E: Environment>(
             }
         }
         if policy_stable {
+            if log.0 {
+                *log.2 = i;
+            }
+
             return pi
         }
     }
@@ -97,10 +140,61 @@ mod tests {
     use crate::environement::grid_world::GridWorld;
     use crate::environement::monty_hall_1::MontyHall1;
     use crate::environement::secret_env_0::SecretEnv0;
+    use crate::environement::secret_env_1::SecretEnv1;
+    use crate::environement::secret_env_2::SecretEnv2;
+    use crate::environement::secret_env_3::SecretEnv3;
     use crate::environement::two_round_rps::TwoRoundRPS;
 
     use super::*;
 
+    fn test_env_policy<E: Environment>(mut env: &mut E, label: &str) -> u64 {
+        let mut delta = Vec::new();
+        let mut value = 0;
+
+        use std::time::Instant;
+        let now = Instant::now();
+        let v = policy_iteration::<E>(0.999, 0.001, (true, &mut delta, &mut value));
+        let elapsed = now.elapsed();
+        let path = format!("record/policy_iteration_{}.csv", label);
+        write_csv(path.as_str(),
+                  label,
+                  delta, value).expect("TODO: panic message");
+
+        return elapsed.as_millis() as u64;
+    }
+
+    #[test]
+    fn policy_iteration_all_env() {
+        let mut lineworld = LineWorld::new();
+        println!("lineworld,{}", test_env_policy(&mut lineworld, "lineworld"));
+
+        let mut gridworld = GridWorld::new();
+        println!("gridworld,{}", test_env_policy(&mut gridworld, "gridworld"));
+
+        let mut monty_hall = MontyHall1::new();
+        println!("montyhall,{}", test_env_policy(&mut monty_hall, "montyhall"));
+
+        let mut two_round_rps = TwoRoundRPS::new();
+        println!("tworoundrps,{}", test_env_policy(&mut two_round_rps, "tworoundrps"));
+
+        let mut secret_env0 = SecretEnv0::new();
+        println!("secretenv0,{}", test_env_policy(&mut secret_env0, "secretenv0"));
+
+        let mut secret_env1 = SecretEnv1::new();
+        println!("secretenv1,{}", test_env_policy(&mut secret_env1, "secretenv1"));
+
+        let mut secret_env2 = SecretEnv2::new();
+        println!("secretenv2,{}", test_env_policy(&mut secret_env2, "secretenv2"));
+
+        let mut secret_env3 = SecretEnv3::new();
+        println!("secretenv3,{}", test_env_policy(&mut secret_env3, "secretenv3"));
+    }
+
+
+    #[test]
+    fn policy_iteration_some_env()  {
+
+    }
 
     #[test]
     fn policy_iteration_line_world() {
@@ -112,11 +206,12 @@ mod tests {
         println!("stat ID :{:?}", lw.state_id());
 
         let mut a : usize = 0;
-        let v = policy_iteration::<LineWorld>(0.999, 0.000001, (false, &Vec::new(), &Vec::new(), &a));
+        let v = policy_iteration::<LineWorld>(0.999, 0.000001, (false, &mut Vec::new(), &mut a));
 
         println!("{:?}", v);
         assert_eq!(1, 1)
     }
+
 
     #[test]
     fn policy_iteration_grid_world() {
@@ -124,7 +219,7 @@ mod tests {
         let mut env = GridWorld::new();
         let mut a : usize = 0;
 
-        let v = policy_iteration::<GridWorld>( 0.999, 0.0001, (false, &Vec::new(), &Vec::new(), &a));
+        let v = policy_iteration::<GridWorld>( 0.999, 0.0001, (false, &mut Vec::new(), &mut a));
 
         let mut policy = HashMap::new();
         for i in 0..v.len(){
@@ -144,7 +239,7 @@ mod tests {
 
 
         let mut a : usize = 0;
-        let v = policy_iteration::<TwoRoundRPS>( 0.999, 0.0001, (false, &Vec::new(), &Vec::new(), &a));
+        let v = policy_iteration::<TwoRoundRPS>( 0.999, 0.0001, (false, &mut Vec::new(), &mut a));
 
         let mut policy = HashMap::new();
         for i in 0..v.len(){
@@ -164,7 +259,7 @@ mod tests {
 
 
         let mut a : usize = 0;
-        let v = policy_iteration::<MontyHall1>( 0.999, 0.0001, (false, &Vec::new(), &Vec::new(), &a));
+        let v = policy_iteration::<MontyHall1>( 0.999, 0.0001, (false, &mut Vec::new(), &mut a));
 
         let mut policy = HashMap::new();
         for i in 0..v.len(){
@@ -197,7 +292,7 @@ mod tests {
 
 
         let mut a : usize = 0;
-        let v = policy_iteration::<SecretEnv0>( 0.999, 0.001,(false, &Vec::new(), &Vec::new(), &a));
+        let v = policy_iteration::<SecretEnv0>( 0.999, 0.001,(false, &mut Vec::new(), &mut a));
 
         let mut policy = HashMap::new();
         for i in 0..v.len(){

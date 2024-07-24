@@ -1,12 +1,62 @@
-use std::collections::HashMap;
+extern crate csv;
+extern crate serde;
 
+use crate::environement::environment::Environment;
+use std::collections::HashMap;
+use std::error::Error;
+use csv::Writer;
 use ndarray_rand::rand::SeedableRng;
 use rand::distributions::WeightedIndex;
 use rand::prelude::{Distribution, IteratorRandom, StdRng};
 use rand::Rng;
 
-use crate::environement::environment::Environment;
+use serde::Serialize;
 
+fn write_csv(path: &str,
+                 name: &str,
+                 g_vec: Vec<f32>,
+                 size_trajectoire_vec: Vec<usize>,
+                 w_vec: Vec<f32>, is_terminal_vec:
+                 Vec<bool>) -> Result<(), Box<dyn Error>>
+{
+    #[derive(Serialize)]
+    struct Record<'a> {
+        key: &'a str,
+        t1: f32,
+        t2: usize,
+        t3: f32,
+        t4: bool,
+    }
+    ;
+    //let mut data = HashMap::new();
+    let mut wtr = csv::Writer::from_path(path).unwrap();
+    //let mut wtr = Writer::from_writer(vec![]);
+
+
+    //data.insert(name, (g_vec, size_trajectoire_vec, w_vec, is_terminal_vec));
+
+    //wtr.write_record(&["env", "g", "trajectoir_size", "w_vec"]).unwrap();
+
+    let len = g_vec.len();
+
+    for i in 0..len {
+
+        //wtr.write_record(&[key, t1[i], *t2[i], *t3[i], *t4[i]]);
+        let record = Record {
+            key: name,
+            t1: g_vec[i],
+            t2: size_trajectoire_vec[i],
+            t3: w_vec[i],
+            t4: is_terminal_vec[i],
+        };
+
+        wtr.serialize(&record)?;
+    }
+    //let data = String::from_utf8(wtr.into_inner()?)?;
+
+    wtr.flush().unwrap();
+    Ok(())
+}
 pub fn monte_carlo_off_policy<E: Environment>(
     mut env: &mut E,
     gamma: f32,
@@ -38,7 +88,7 @@ pub fn monte_carlo_off_policy<E: Environment>(
             let state = env.state_id();
             let available_action = env.available_action();
 
-            if !Q.contains_key(&(state, available_action[0])){
+            if !Q.contains_key(&(state, available_action[0])) {
                 let mut max_val = f32::MIN;
                 let mut max_i = 0;
                 for a in 0..available_action.len() {
@@ -135,11 +185,15 @@ pub fn monte_carlo_off_policy<E: Environment>(
 
 #[cfg(test)]
 mod tests {
+    use ndarray_stats::histogram::Grid;
     use crate::environement::grid_world::GridWorld;
     use crate::environement::line_world::LineWorld;
     use crate::environement::monty_hall_1::MontyHall1;
+    use crate::environement::secret_env_0::SecretEnv0;
+    use crate::environement::secret_env_1::SecretEnv1;
+    use crate::environement::secret_env_2::SecretEnv2;
+    use crate::environement::secret_env_3::SecretEnv3;
     use crate::environement::two_round_rps::TwoRoundRPS;
-    use crate::reinforcement_learning_functions::monte_carlo_on_policy::monte_carlo_on_policy;
 
     use super::*;
 
@@ -154,9 +208,61 @@ mod tests {
         result
     }
 
+    fn test_env_policy<E: Environment>(mut env: &mut E, label: &str) -> u64 {
+        let mut env_test = E::new();
+
+        let mut g = Vec::new();
+        let mut t_size = Vec::new();
+        let mut w = Vec::new();
+        let mut is_terminal = Vec::new();
+
+        use std::time::Instant;
+        let now = Instant::now();
+        let policy_map = monte_carlo_off_policy(env, 0.999, 1000, 1000, 0.4, 42, (true, &mut g, &mut t_size, &mut w, &mut is_terminal));
+        let elapsed = now.elapsed();
+
+        let path = format!("record/monte_carlo_off_{}.csv", label);
+        write_csv(path.as_str(),
+                  label,
+                  g,
+                  t_size,
+                  w,
+                  is_terminal).expect("TODO: panic message");
+
+        env_test.play_strategy(policy_map.clone(), false);
+        return elapsed.as_millis() as u64;
+    }
+    #[test]
+    fn monte_carlo_off_all_env() {
+        let mut lineworld = LineWorld::new();
+        println!("lineworld,{}", test_env_policy(&mut lineworld, "lineworld"));
+
+        let mut gridworld = GridWorld::new();
+        println!("gridworld,{}", test_env_policy(&mut gridworld, "gridworld"));
+
+        let mut monty_hall = MontyHall1::new();
+        println!("montyhall,{}", test_env_policy(&mut monty_hall, "montyhall"));
+
+        let mut two_round_rps = TwoRoundRPS::new();
+        println!("tworoundrps,{}", test_env_policy(&mut two_round_rps, "tworoundrps"));
+
+        let mut secret_env0 = SecretEnv0::new();
+        println!("secretenv0,{}", test_env_policy(&mut secret_env0, "secretenv0"));
+
+        let mut secret_env1 = SecretEnv1::new();
+        println!("secretenv1,{}", test_env_policy(&mut secret_env1, "secretenv1"));
+
+        let mut secret_env2 = SecretEnv2::new();
+        println!("secretenv2,{}", test_env_policy(&mut secret_env2, "secretenv2"));
+
+        let mut secret_env3 = SecretEnv3::new();
+        println!("secretenv3,{}", test_env_policy(&mut secret_env3, "secretenv3"));
+    }
+
     #[test]
     fn monte_carlo_off_policy_lineworld() {
         let mut lw = LineWorld::new();
+
 
         println!("stat ID :{:?}", lw.state_id());
 
@@ -165,7 +271,19 @@ mod tests {
         let mut w = Vec::new();
         let mut is_terminal = Vec::new();
 
+        use std::time::Instant;
+        let now = Instant::now();
         let policy_map = monte_carlo_off_policy(&mut lw, 0.999, 1000, 1000, 0.4, 42, (true, &mut g, &mut t_size, &mut w, &mut is_terminal));
+        let elapsed = now.elapsed();
+
+
+        write_csv("record/monte_carlo_off_lineworld.csv",
+                  "lineworld",
+                  g,
+                  t_size,
+                  w,
+                  is_terminal).expect("TODO: panic message");
+
 
         //let policy: HashMap<usize, usize> = build_policy(&policy_map);
         let mut gw2 = LineWorld::new();
@@ -178,9 +296,8 @@ mod tests {
         println!("gridworld : ");
         let mut gw = GridWorld::new();
 
-        println!("stat ID :{:?}", gw.state_id());
-
         let policy = monte_carlo_off_policy(&mut gw, 0.999, 10000, 1000, 0.1, 42, (false, &mut Vec::new(), &mut Vec::new(), &mut Vec::new(), &mut Vec::new()));
+
 
         println!("{:?}", policy);
 
@@ -212,7 +329,7 @@ mod tests {
 
         println!("stat ID :{:?}", env.state_id());
 
-        let policy= monte_carlo_off_policy(&mut env, 0.999, 10000, 1000, 0.1,42, (false, &mut Vec::new(), &mut Vec::new(), &mut Vec::new(), &mut Vec::new()));
+        let policy = monte_carlo_off_policy(&mut env, 0.999, 10000, 1000, 0.1, 42, (false, &mut Vec::new(), &mut Vec::new(), &mut Vec::new(), &mut Vec::new()));
 
 
         println!("{:?}", policy);
@@ -231,6 +348,6 @@ mod tests {
 
         println!("win stat :  {}", stat_win);
 
-        assert_eq!(stat_win > 0.5 , true)
+        assert_eq!(stat_win > 0.5, true)
     }
 }

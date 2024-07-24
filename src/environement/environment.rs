@@ -46,6 +46,7 @@ pub trait Environment {
         let mut check_loop = HashMap::new();
         loop {
             if check_loop.contains_key(&self.state_id()){
+                println!("Boucle");
                 break;
             }
             check_loop.insert(self.state_id(), true);
@@ -64,5 +65,6 @@ pub trait Environment {
                 self.display();
             }
         }
+        println!("score {}, state {}", self.score(), self.state_id());
     }
 }
