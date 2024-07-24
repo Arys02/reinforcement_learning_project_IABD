@@ -9,6 +9,20 @@ use rand::Rng;
 
 use crate::environement::environment::Environment;
 
+/// The `GridWorld` struct represents a grid-based environment where an agent can navigate a 5x5 grid.
+/// The agent starts at the top-left corner of the grid and can move left, right, up, or down.
+///
+/// Characteristics of `GridWorld`:
+/// - **Grid Size**: The grid consists of 5 rows and 5 columns.
+/// - **Starting Position**: The agent typically starts at the first row, first column (top-left corner).
+/// - **Actions**: The agent has 4 possible actions: move left, move right, move up, and move down.
+/// - **Terminal States and Rewards**:
+///   - Reaching the last cell of the first row (top-right corner) results in a terminal state with a reward of -3.
+///   - Reaching the last cell of the last row (bottom-right corner) results in a terminal state with a reward of 1.
+///   - Attempting to move outside the grid boundaries results in a terminal state with a score of -1.
+///
+/// The `GridWorld` struct implements the `Environment` trait, providing methods for managing the agent's state,
+/// executing actions, and calculating rewards and transition probabilities.
 pub struct GridWorld {
     agent_pos: usize,
 

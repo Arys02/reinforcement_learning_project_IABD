@@ -8,7 +8,21 @@ use rand::prelude::StdRng;
 use rand::Rng;
 
 use crate::environement::environment::Environment;
-
+/// The `TwoRoundRPS` struct represents an environment where an agent plays a two-round game of Rock-Paper-Scissors (RPS) against an opponent with a particular strategy.
+/// The opponent plays randomly in the first round but in the second round, it always mirrors the agent's choice from the first round.
+///
+/// Characteristics of `TwoRoundRPS`:
+/// - **Rounds**: The game consists of two rounds of Rock-Paper-Scissors.
+/// - **Opponent Strategy**:
+///   - In the first round, the opponent's choice is random.
+///   - In the second round, the opponent plays the exact choice made by the agent in the first round.
+/// - **Rewards**:
+///   - Winning a round results in a reward of +1.
+///   - Losing a round results in a reward of -1.
+///   - A tie results in a reward of 0.
+///
+/// The `TwoRoundRPS` struct implements the `Environment` trait, providing methods for managing the agent's state,
+/// executing actions, and calculating rewards and transition probabilities.
 pub struct TwoRoundRPS {
     agent_pos: usize,
 

@@ -8,6 +8,20 @@ use rand::prelude::StdRng;
 
 use crate::environement::environment::Environment;
 
+
+// The `LineWorld` struct represents a linear environment where an agent can navigate along a vector of fixed size.
+/// The agent starts at the middle of the vector and can move left or right.
+///
+/// Characteristics of `LineWorld`:
+/// - **Vector Size**: The environment is a vector of 5 positions.
+/// - **Starting Position**: The agent starts at the position 2 (middle of the vector).
+/// - **Actions**: The agent has 2 possible actions: move left and move right.
+/// - **Terminal States and Rewards**:
+///   - Reaching position 4 results in a terminal state with a reward of 1.
+///   - Reaching position 0 results in a terminal state with a reward of -1.
+///
+/// The `LineWorld` struct implements the `Environment` trait, providing methods for managing the agent's state,
+/// executing actions, and calculating rewards and transition probabilities.
 pub struct LineWorld {
     agent_pos: usize,
 
