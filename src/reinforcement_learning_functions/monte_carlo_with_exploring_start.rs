@@ -7,39 +7,6 @@ use serde::Serialize;
 use crate::environement::environment::Environment;
 
 
-fn write_csv(path: &str,
-             name: &str,
-             g_vec: Vec<f32>,
-             size_trajectoire_vec: Vec<usize>,
-             is_terminal_vec: Vec<bool>) -> Result<(), Box<dyn Error>>
-{
-    #[derive(Serialize)]
-    struct Record<'a> {
-        key: &'a str,
-        t1: f32,
-        t2: usize,
-        t4: bool,
-    }
-    ;
-    let mut wtr = csv::Writer::from_path(path).unwrap();
-
-    let len = g_vec.len();
-
-    for i in 0..len {
-        let record = Record {
-            key: name,
-            t1: g_vec[i],
-            t2: size_trajectoire_vec[i],
-            t4: is_terminal_vec[i],
-        };
-
-        wtr.serialize(&record)?;
-    }
-
-    wtr.flush().unwrap();
-    Ok(())
-}
-
 /// Executes the Monte Carlo with Exploring Starts algorithm for a given environment.
 ///
 /// This algorithm uses an on-policy Monte Carlo control method with exploring starts
@@ -87,7 +54,6 @@ pub fn monte_carlo_with_exploring_start<E: Environment>(
     nb_iter: i32,
     max_steps: i32,
     mut seed: u64,
-    log : (bool, &mut Vec<f32>, &mut Vec<usize>, &mut Vec<bool>),
 ) -> HashMap<usize, usize> {
     let mut rng = StdRng::seed_from_u64(seed);
     let mut pi = HashMap::new();
@@ -151,11 +117,7 @@ pub fn monte_carlo_with_exploring_start<E: Environment>(
                 pi.insert(s, best_action);
             }
         }
-        if log.0 {
-            &log.1.push(g);
-            log.2.push(trajectory.len());
-            log.3.push(env.is_terminal())
-        }
+
     }
     return pi;
 }
@@ -176,21 +138,10 @@ mod tests {
     fn test_env_policy<E: Environment>(mut env: &mut E, label: &str) -> u64 {
         let mut env_test = E::new();
 
-        let mut g = Vec::new();
-        let mut t_size = Vec::new();
-        let mut is_terminal = Vec::new();
-
         use std::time::Instant;
         let now = Instant::now();
-        let policy_map = monte_carlo_with_exploring_start(env, 0.999, 1000, 1000,  42, (true, &mut g, &mut t_size, &mut is_terminal));
+        let policy_map = monte_carlo_with_exploring_start(env, 0.999, 1000, 1000,  42);
         let elapsed = now.elapsed();
-
-        let path = format!("record/monte_carlo_es_{}.csv", label);
-        write_csv(path.as_str(),
-                  label,
-                  g,
-                  t_size,
-                  is_terminal).expect("TODO: panic message");
 
         env_test.play_strategy(policy_map.clone(), false);
         return elapsed.as_millis() as u64;
@@ -228,7 +179,7 @@ mod tests {
 
         println!("stat ID :{:?}", lw.state_id());
 
-        let policy = monte_carlo_with_exploring_start(&mut lw, 0.999, 100, 10, 42, (false, &mut Vec::new(), &mut Vec::new(), &mut Vec::new()));
+        let policy = monte_carlo_with_exploring_start(&mut lw, 0.999, 100, 10, 42);
         let mut gw2 = LineWorld::new();
         gw2.play_strategy(policy.clone(), false);
         assert_eq!(gw2.state_id(), 40)
@@ -241,7 +192,7 @@ mod tests {
 
         println!("stat ID :{:?}", gw.state_id());
 
-        let policy = monte_carlo_with_exploring_start(&mut gw, 0.999, 10000, 1000, 42,(false, &mut Vec::new(), &mut Vec::new(), &mut Vec::new()));
+        let policy = monte_carlo_with_exploring_start(&mut gw, 0.999, 10000, 1000, 42);
 
         println!("{:?}", policy);
 
@@ -257,7 +208,7 @@ mod tests {
 
         println!("stat ID :{:?}", env.state_id());
 
-        let policy = monte_carlo_with_exploring_start(&mut env, 0.999, 10000, 1000, 42, (false, &mut Vec::new(), &mut Vec::new(), &mut Vec::new()));
+        let policy = monte_carlo_with_exploring_start(&mut env, 0.999, 10000, 1000, 42);
 
         println!("{:?}", policy);
 
@@ -278,7 +229,7 @@ mod tests {
 
         println!("stat ID :{:?}", env.state_id());
 
-        let policy = monte_carlo_with_exploring_start(&mut env, 0.999, 10000, 10000, 42, (false, &mut Vec::new(), &mut Vec::new(), &mut Vec::new()));
+        let policy = monte_carlo_with_exploring_start(&mut env, 0.999, 10000, 10000, 42);
 
         println!("{:?}", policy);
         let nb_run: usize = 1000;

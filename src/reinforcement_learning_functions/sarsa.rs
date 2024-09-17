@@ -6,31 +6,6 @@ use rand::Rng;
 use serde::Serialize;
 use crate::environement::environment::Environment;
 
-fn write_csv(path: &str,
-             name: &str,
-             is_terminal_vec: Vec<bool>) -> Result<(), Box<dyn Error>>
-{
-    #[derive(Serialize)]
-    struct Record<'a> {
-        key: &'a str,
-        t1: bool,
-    }
-    let mut wtr = csv::Writer::from_path(path).unwrap();
-
-    let len = is_terminal_vec.len();
-
-    for i in 0..len {
-        let record = Record {
-            key: name,
-            t1: is_terminal_vec[i],
-        };
-
-        wtr.serialize(&record)?;
-    }
-
-    wtr.flush().unwrap();
-    Ok(())
-}
 
 /// Executes the SARSA (State-Action-Reward-State-Action) algorithm for a given environment.
 ///
@@ -83,8 +58,6 @@ pub fn sarsa<E: Environment>(
     nb_iter: usize,
     nb_step: usize,
     seed: u64,
-
-    log : (bool, &mut Vec<bool>),
 ) -> (HashMap<usize, usize>, HashMap<(usize, usize), (f32, usize)>) {
     let mut rng = StdRng::seed_from_u64(seed);
     let mut Q = HashMap::new();
@@ -176,9 +149,6 @@ pub fn sarsa<E: Environment>(
             Q.insert((state, action_i.unwrap()), (target, action));
         }
 
-        if log.0 {
-            log.1.push(env.is_terminal());
-        }
     }
     for s in 0..E::num_states() {
         let mut best_a: Option<usize> = None;
@@ -216,17 +186,12 @@ mod tests {
     fn test_env_policy<E: Environment>(mut env: &mut E, label: &str) -> u64 {
         let mut env_test = E::new();
 
-        let mut is_terminal = Vec::new();
-
         use std::time::Instant;
         let now = Instant::now();
-        let policy_map = sarsa(env, 0.1, 0.1, 0.999, 1000, 1000, 42, (true, &mut is_terminal));
+        let policy_map = sarsa(env, 0.1, 0.1, 0.999, 1000, 1000, 42);
         let elapsed = now.elapsed();
 
         let path = format!("record/sarsa_{}.csv", label);
-        write_csv(path.as_str(),
-                  label,
-                  is_terminal).expect("TODO: panic message");
 
         env_test.play_strategy(policy_map.0.clone(), false);
         return elapsed.as_millis() as u64;
@@ -265,7 +230,7 @@ mod tests {
 
         println!("stat ID :{:?}", lw.state_id());
 
-        let policy = sarsa(&mut lw, 0.1, 0.1, 0.999, 1000, 1000, 42, (false, &mut Vec::new()));
+        let policy = sarsa(&mut lw, 0.1, 0.1, 0.999, 1000, 1000, 42);
         println!("{:?}", policy);
         lw.play_strategy(policy.0, false);
         assert_eq!(lw.is_terminal() && lw.score() == 1.0, true);
@@ -277,7 +242,7 @@ mod tests {
 
         println!("stat ID :{:?}", env.state_id());
 
-        let policy = sarsa(&mut env, 0.1, 0.1, 0.999, 10000, 10000, 42, (false, &mut Vec::new()));
+        let policy = sarsa(&mut env, 0.1, 0.1, 0.999, 10000, 10000, 42);
         println!("{:?}", policy);
         env.reset();
 
@@ -292,7 +257,7 @@ mod tests {
 
         println!("stat ID :{:?}", env.state_id());
 
-        let policy = sarsa(&mut env, 0.1, 0.1, 0.999, 100, 1000, 42, (false, &mut Vec::new()));
+        let policy = sarsa(&mut env, 0.1, 0.1, 0.999, 100, 1000, 42);
         println!("{:?}", policy);
         env.reset();
 
@@ -308,7 +273,7 @@ mod tests {
 
         println!("stat ID :{:?}", env.state_id());
 
-        let policy = sarsa(&mut env, 0.1, 0.1, 0.999, 1000, 1000, 42, (false, &mut Vec::new()));
+        let policy = sarsa(&mut env, 0.1, 0.1, 0.999, 1000, 1000, 42);
 
 
         println!("{:?}", policy);

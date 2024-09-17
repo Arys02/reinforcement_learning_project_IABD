@@ -12,52 +12,6 @@ use rand::Rng;
 
 use serde::Serialize;
 
-fn write_csv(path: &str,
-                 name: &str,
-                 g_vec: Vec<f32>,
-                 size_trajectoire_vec: Vec<usize>,
-                 w_vec: Vec<f32>, is_terminal_vec:
-                 Vec<bool>) -> Result<(), Box<dyn Error>>
-{
-    #[derive(Serialize)]
-    struct Record<'a> {
-        key: &'a str,
-        t1: f32,
-        t2: usize,
-        t3: f32,
-        t4: bool,
-    }
-    ;
-    //let mut data = HashMap::new();
-    let mut wtr = csv::Writer::from_path(path).unwrap();
-    //let mut wtr = Writer::from_writer(vec![]);
-
-
-    //data.insert(name, (g_vec, size_trajectoire_vec, w_vec, is_terminal_vec));
-
-    //wtr.write_record(&["env", "g", "trajectoir_size", "w_vec"]).unwrap();
-
-    let len = g_vec.len();
-
-    for i in 0..len {
-
-        //wtr.write_record(&[key, t1[i], *t2[i], *t3[i], *t4[i]]);
-        let record = Record {
-            key: name,
-            t1: g_vec[i],
-            t2: size_trajectoire_vec[i],
-            t3: w_vec[i],
-            t4: is_terminal_vec[i],
-        };
-
-        wtr.serialize(&record)?;
-    }
-    //let data = String::from_utf8(wtr.into_inner()?)?;
-
-    wtr.flush().unwrap();
-    Ok(())
-}
-
 /// Executes the Monte Carlo Off-Policy algorithm for a given environment.
 ///
 /// This algorithm uses an off-policy Monte Carlo control method to improve the policy `pi`
@@ -107,8 +61,6 @@ pub fn monte_carlo_off_policy<E: Environment>(
     max_steps: i32,
     epsilon: f32,
     mut seed: u64,
-    //     check, g        size_traj     w          env.ister
-    mut log: (bool, &mut Vec<f32>, &mut Vec<usize>, &mut Vec<f32>, &mut Vec<bool>),
 ) -> HashMap<usize, usize> {
     let mut rng = StdRng::seed_from_u64(seed);
 
@@ -209,13 +161,6 @@ pub fn monte_carlo_off_policy<E: Environment>(
 
             w = w * (1. / b.get(&s).unwrap()[a]);
 
-            //     check, g        size_traj     w          env.ister
-            if log.0 {
-                &log.1.push(g);
-                log.2.push(trajectory.len());
-                log.3.push(w);
-                log.4.push(env.is_terminal())
-            }
         }
     }
     let mut result: HashMap<usize, usize> = HashMap::new();
@@ -254,23 +199,13 @@ mod tests {
     fn test_env_policy<E: Environment>(mut env: &mut E, label: &str) -> u64 {
         let mut env_test = E::new();
 
-        let mut g = Vec::new();
-        let mut t_size = Vec::new();
-        let mut w = Vec::new();
-        let mut is_terminal = Vec::new();
-
         use std::time::Instant;
         let now = Instant::now();
-        let policy_map = monte_carlo_off_policy(env, 0.999, 1000, 1000, 0.4, 42, (true, &mut g, &mut t_size, &mut w, &mut is_terminal));
+        let policy_map = monte_carlo_off_policy(env, 0.999, 1000, 1000, 0.4, 42);
         let elapsed = now.elapsed();
 
         let path = format!("record/monte_carlo_off_{}.csv", label);
-        write_csv(path.as_str(),
-                  label,
-                  g,
-                  t_size,
-                  w,
-                  is_terminal).expect("TODO: panic message");
+
 
         env_test.play_strategy(policy_map.clone(), false);
         return elapsed.as_millis() as u64;
@@ -309,26 +244,12 @@ mod tests {
 
         println!("stat ID :{:?}", lw.state_id());
 
-        let mut g = Vec::new();
-        let mut t_size = Vec::new();
-        let mut w = Vec::new();
-        let mut is_terminal = Vec::new();
-
         use std::time::Instant;
         let now = Instant::now();
-        let policy_map = monte_carlo_off_policy(&mut lw, 0.999, 1000, 1000, 0.4, 42, (true, &mut g, &mut t_size, &mut w, &mut is_terminal));
+        let policy_map = monte_carlo_off_policy(&mut lw, 0.999, 1000, 1000, 0.4, 42);
         let elapsed = now.elapsed();
 
 
-        write_csv("record/monte_carlo_off_lineworld.csv",
-                  "lineworld",
-                  g,
-                  t_size,
-                  w,
-                  is_terminal).expect("TODO: panic message");
-
-
-        //let policy: HashMap<usize, usize> = build_policy(&policy_map);
         let mut gw2 = LineWorld::new();
         gw2.play_strategy(policy_map.clone(), false);
         assert_eq!(gw2.state_id(), 4)
@@ -339,7 +260,7 @@ mod tests {
         println!("gridworld : ");
         let mut gw = GridWorld::new();
 
-        let policy = monte_carlo_off_policy(&mut gw, 0.999, 10000, 1000, 0.1, 42, (false, &mut Vec::new(), &mut Vec::new(), &mut Vec::new(), &mut Vec::new()));
+        let policy = monte_carlo_off_policy(&mut gw, 0.999, 10000, 1000, 0.1, 42);
 
 
         println!("{:?}", policy);
@@ -356,7 +277,7 @@ mod tests {
 
         println!("stat ID :{:?}", gw.state_id());
 
-        let policy = monte_carlo_off_policy(&mut gw, 0.999, 10000, 1000, 0.1, 42, (false, &mut Vec::new(), &mut Vec::new(), &mut Vec::new(), &mut Vec::new()));
+        let policy = monte_carlo_off_policy(&mut gw, 0.999, 10000, 1000, 0.1, 42);
 
         println!("{:?}", policy);
 
@@ -372,7 +293,7 @@ mod tests {
 
         println!("stat ID :{:?}", env.state_id());
 
-        let policy = monte_carlo_off_policy(&mut env, 0.999, 10000, 1000, 0.1, 42, (false, &mut Vec::new(), &mut Vec::new(), &mut Vec::new(), &mut Vec::new()));
+        let policy = monte_carlo_off_policy(&mut env, 0.999, 10000, 1000, 0.1, 42);
 
 
         println!("{:?}", policy);

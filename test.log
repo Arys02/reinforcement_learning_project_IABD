@@ -1,0 +1,56 @@
+
+running 54 tests
+test environement::line_world::tests::test_available_action ... ok
+test environement::line_world::tests::test_line_world ... ok
+test environement::line_world::tests::test_from_random_state ... ok
+test environement::line_world::tests::test_new ... ok
+test environement::monty_hall_1::tests::test_monty_hall_1 ... ok
+test environement::secret_env_0::tests::test_init ... ok
+test environement::monty_hall_1::tests::test_available_action ... ok
+test environement::monty_hall_1::tests::test_new ... ok
+test environement::secret_env_1::tests::test_init ... FAILED
+test environement::secret_env_2::tests::test_init ... FAILED
+test environement::secret_env_3::tests::test_init ... FAILED
+test environement::two_round_rps::tests::test_new ... ok
+test environement::two_round_rps::tests::test_available_action ... ok
+test environement::two_round_rps::tests::test_two_round_strategy ... ok
+test environement::grid_world::tests::test_available_action ... ok
+test environement::two_round_rps::tests::test_from_random_state ... ok
+test environement::grid_world::tests::test_grid_world_strategy ... ok
+test environement::two_round_rps::tests::test_two_round_world ... ok
+test environement::grid_world::tests::test_from_random_state ... ok
+test environement::grid_world::tests::test_new ... ok
+test environement::grid_world::tests::test_line_world ... ok
+test reinforcement_learning_functions::monte_carlo_with_exploring_start::tests::monte_carlo_with_exploring_start_returns_correct_policy ... FAILED
+test reinforcement_learning_functions::policy_evaluation::tests::policy_evaluation_line_world ... ok
+test reinforcement_learning_functions::monte_carlo_off_policy::tests::monte_carlo_off_policy_lineworld ... ok
+test reinforcement_learning_functions::policy_iteration::tests::policy_iteration_line_world ... ok
+test reinforcement_learning_functions::policy_iteration::tests::policy_iteration_monty_hall_1 ... ok
+test reinforcement_learning_functions::policy_iteration::tests::policy_iteration_some_env ... ok
+test reinforcement_learning_functions::monte_carlo_with_exploring_start::tests::monte_carlo_with_exploring_start_monty_hall_1 ... ok
+test reinforcement_learning_functions::monte_carlo_off_policy::tests::monte_carlo_off_policy_monty_hall_1 ... ok
+test reinforcement_learning_functions::monte_carlo_off_policy::tests::monte_carlo_off_policy_rps ... ok
+test reinforcement_learning_functions::monte_carlo_with_exploring_start::tests::monte_carlo_with_exploring_start_two_round_rps ... ok
+test reinforcement_learning_functions::q_learning::tests::q_learning_grid_world ... ok
+test reinforcement_learning_functions::q_learning::tests::q_learning_policy_lineworld ... ok
+test reinforcement_learning_functions::monte_carlo_off_policy::tests::monte_carlo_off_policy_grid_world ... ok
+test reinforcement_learning_functions::q_learning::tests::q_learning_policy_two_round_rps ... ok
+test reinforcement_learning_functions::sarsa::tests::sarsa_monty_hall_1 ... ok
+test reinforcement_learning_functions::monte_carlo_on_policy::tests::monte_carlo_on_policy_monty_hall_1 ... ok
+test reinforcement_learning_functions::sarsa::tests::sarsa_policy_lineworld ... ok
+test reinforcement_learning_functions::sarsa::tests::sarsa_policy_two_round_rps ... ok
+test reinforcement_learning_functions::monte_carlo_on_policy::tests::monte_carlo_on_policy_lineworld ... ok
+test reinforcement_learning_functions::monte_carlo_with_exploring_start::tests::monte_carlo_with_exploring_start_returns_correct_policy_grid_world ... ok
+test reinforcement_learning_functions::monte_carlo_on_policy::tests::monte_carlo_on_policy_grid_world ... ok
+test reinforcement_learning_functions::sarsa::tests::sarsa_policy_gridworld ... ok
+test reinforcement_learning_functions::q_learning::tests::policy_iteration_env_0 ... ok
+test reinforcement_learning_functions::policy_iteration::tests::policy_iteration_two_round_pfs ... ok
+test reinforcement_learning_functions::q_learning::tests::policy_iteration_env_1 ... FAILED
+test reinforcement_learning_functions::monte_carlo_with_exploring_start::tests::monte_carlo_es_all_env ... ok
+test reinforcement_learning_functions::monte_carlo_off_policy::tests::monte_carlo_off_all_env ... ok
+test reinforcement_learning_functions::monte_carlo_on_policy::tests::monte_carlo_on_all_env ... ok
+test reinforcement_learning_functions::q_learning::tests::q_learning_all_env ... ok
+test reinforcement_learning_functions::sarsa::tests::sarsa_all_env ... ok
+test reinforcement_learning_functions::policy_iteration::tests::policy_iteration_all_env has been running for over 60 seconds
+test reinforcement_learning_functions::policy_iteration::tests::policy_iteration_env_0 has been running for over 60 seconds
+test reinforcement_learning_functions::policy_iteration::tests::policy_iteration_grid_world has been running for over 60 seconds

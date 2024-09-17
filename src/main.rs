@@ -1,3 +1,4 @@
+#![allow(warnings)]
 
 mod environement;
 mod reinforcement_learning_functions;
@@ -5,6 +6,7 @@ mod utils;
 
 use std::collections::{btree_map::Entry, BTreeMap};
 use termtree::{GlyphPalette, Tree};
+
 
 #[derive(Debug)]
 enum Node<'s> {

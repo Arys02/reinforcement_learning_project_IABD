@@ -9,37 +9,6 @@ use serde::Serialize;
 use crate::environement::environment::Environment;
 
 
-fn write_csv(path: &str,
-             name: &str,
-             delta: Vec<usize>,
-             stable: usize
-) -> Result<(), Box<dyn Error>>
-{
-    #[derive(Serialize)]
-    struct Record<'a> {
-        key: &'a str,
-        t1: usize,
-        t2: usize,
-    }
-    ;
-    let mut wtr = csv::Writer::from_path(path).unwrap();
-
-    let len = delta.len();
-
-    for i in 0..len {
-        let record = Record {
-            key: name,
-            t1: delta[i],
-            t2: stable
-        };
-
-        wtr.serialize(&record)?;
-    }
-
-    wtr.flush().unwrap();
-    Ok(())
-}
-
 /// Executes the Policy Iteration algorithm for a given environment.
 ///
 /// This algorithm uses policy iteration to find the optimal policy for the environment by iteratively evaluating
@@ -77,7 +46,6 @@ fn write_csv(path: &str,
 pub fn policy_iteration<E: Environment>(
     gamma: f32,
     theta: f32,
-    mut log: (bool, &mut Vec<usize>, &mut usize),
 ) -> Vec<usize> {
     let num_states = E::num_states();
     let num_actions = E::num_actions();
@@ -119,10 +87,7 @@ pub fn policy_iteration<E: Environment>(
                 break
             }
         }
-        if log.0 {
-            log.1.push(j);
-            j +=1;
-        }
+
 
 
         println!("V : m{:?}", V);
@@ -156,9 +121,6 @@ pub fn policy_iteration<E: Environment>(
             }
         }
         if policy_stable {
-            if log.0 {
-                *log.2 = i;
-            }
 
             return pi
         }
@@ -182,17 +144,11 @@ mod tests {
     use super::*;
 
     fn test_env_policy<E: Environment>(mut env: &mut E, label: &str) -> u64 {
-        let mut delta = Vec::new();
-        let mut value = 0;
-
         use std::time::Instant;
         let now = Instant::now();
-        let v = policy_iteration::<E>(0.999, 0.001, (true, &mut delta, &mut value));
+        let v = policy_iteration::<E>(0.999, 0.001);
         let elapsed = now.elapsed();
         let path = format!("record/policy_iteration_{}.csv", label);
-        write_csv(path.as_str(),
-                  label,
-                  delta, value).expect("TODO: panic message");
 
         return elapsed.as_millis() as u64;
     }
@@ -240,7 +196,7 @@ mod tests {
         println!("stat ID :{:?}", lw.state_id());
 
         let mut a : usize = 0;
-        let v = policy_iteration::<LineWorld>(0.999, 0.000001, (false, &mut Vec::new(), &mut a));
+        let v = policy_iteration::<LineWorld>(0.999, 0.000001);
 
         println!("{:?}", v);
         assert_eq!(1, 1)
@@ -253,7 +209,7 @@ mod tests {
         let mut env = GridWorld::new();
         let mut a : usize = 0;
 
-        let v = policy_iteration::<GridWorld>( 0.999, 0.0001, (false, &mut Vec::new(), &mut a));
+        let v = policy_iteration::<GridWorld>( 0.999, 0.0001);
 
         let mut policy = HashMap::new();
         for i in 0..v.len(){
@@ -273,7 +229,7 @@ mod tests {
 
 
         let mut a : usize = 0;
-        let v = policy_iteration::<TwoRoundRPS>( 0.999, 0.0001, (false, &mut Vec::new(), &mut a));
+        let v = policy_iteration::<TwoRoundRPS>( 0.999, 0.0001);
 
         let mut policy = HashMap::new();
         for i in 0..v.len(){
@@ -293,7 +249,7 @@ mod tests {
 
 
         let mut a : usize = 0;
-        let v = policy_iteration::<MontyHall1>( 0.999, 0.0001, (false, &mut Vec::new(), &mut a));
+        let v = policy_iteration::<MontyHall1>( 0.999, 0.0001);
 
         let mut policy = HashMap::new();
         for i in 0..v.len(){
@@ -326,7 +282,7 @@ mod tests {
 
 
         let mut a : usize = 0;
-        let v = policy_iteration::<SecretEnv0>( 0.999, 0.001,(false, &mut Vec::new(), &mut a));
+        let v = policy_iteration::<SecretEnv0>( 0.999, 0.001);
 
         let mut policy = HashMap::new();
         for i in 0..v.len(){
