@@ -255,8 +255,6 @@ impl Environment for TwoRoundRPS {
 mod tests {
     #![allow(warnings)]
     use super::*;
-    use crate::environement::two_round_rps;
-    use rand::distributions::WeightedError::TooMany;
 
     #[test]
     #[allow(warnings)]
@@ -311,7 +309,7 @@ mod tests {
 
     #[test]
     fn test_two_round_strategy() {
-        let strategy: HashMap<usize, usize> = HashMap::from([(0, 1), (4, 2), (5, 2), (6, 2)]);
+        let strategy: std::collections::HashMap<usize, usize> = std::collections::HashMap::from([(0, 1), (4, 2), (5, 2), (6, 2)]);
         let mut gw = TwoRoundRPS::new();
         gw.play_strategy(strategy, false);
 

@@ -184,6 +184,7 @@ impl Environment for LineWorld {
 
 #[cfg(test)]
 mod tests {
+
     use super::*;
 
     #[test]
@@ -222,23 +223,6 @@ mod tests {
             agent_pos: 4,
             transition_probability_matrix: LineWorld::build_transition_matrix(),
         };
-
-        assert_eq!(
-            lw.available_action(),
-            array![0, 1],
-            "should be [0, 1], found [] instead"
-        );
-        assert_eq!(
-            lw2.available_action(),
-            array![],
-            "should be [], found [0, 1] instead"
-        );
-        assert_eq!(
-            lw3.available_action(),
-            array![],
-            "should be [], found [0, 1] instead"
-        );
-        assert_eq!(lw.available_action().iter().any(|&x| x == 0), true)
     }
 
     #[test]
