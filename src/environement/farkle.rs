@@ -189,29 +189,74 @@ pub mod farkle{
 
     impl Display for Farkle{
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-            writeln!(f, "{}",
-                     "=== Farkle Game ===".bold().underline().blue()
+            writeln!(
+                f,
+                "{}",
+                "=== Farkle Game ===".bold().underline().blue()
             )?;
             writeln!(f, "Round: {}", self.round)?;
             writeln!(f, "Player Score: {}", self.player_score)?;
             writeln!(f, "AI Score: {}", self.ai_score)?;
             writeln!(f, "Game Over: {}", self.is_game_over)?;
             writeln!(f, "Remaining Dice: {}", self.remaining_dice)?;
-            writeln!(f, "Current Round Score: {}", self.score)?;
-            writeln!(f, "Current Turn: {}", if self.is_player_turn { "Player".green() } else { "AI".red() })?;
+            writeln!(f, "Current Round Score: {:.2}", self.score)?;
+            writeln!(
+                f,
+                "Current Turn: {}",
+                if self.is_player_turn {
+                    "Player".green()
+                } else {
+                    "AI".red()
+                }
+            )?;
             writeln!(f, "Dice:")?;
 
-            // Prepare lines for ASCII art
-            let mut dice_lines = vec![String::new(); 5];
+            // Define ASCII Art for Dice Faces 1 through 6
+            const DICE_ART: [&str; 6] = [
+                // Die face 1
+                "┌─────┐\n│     │\n│  ●  │\n│     │\n└─────┘",
+                // Die face 2
+                "┌─────┐\n│●    │\n│     │\n│    ●│\n└─────┘",
+                // Die face 3
+                "┌─────┐\n│●    │\n│  ●  │\n│    ●│\n└─────┘",
+                // Die face 4
+                "┌─────┐\n│●   ●│\n│     │\n│●   ●│\n└─────┘",
+                // Die face 5
+                "┌─────┐\n│●   ●│\n│  ●  │\n│●   ●│\n└─────┘",
+                // Die face 6
+                "┌─────┐\n│●   ●│\n│●   ●│\n│●   ●│\n└─────┘",
+            ];
 
-            for &die in &self.board {
-                let face = if die >= 1 && die <=6 {
-                    DICE_ART[(die - 1) as usize]
-                } else {
-                    // Represent kept aside or not rolled dice with blank dice
-                    "┌─────┐\n│     │\n│     │\n│     │\n└─────┘"
-                };
+            // Expand the board counts into a list of individual die faces
+            let mut dice_faces: Vec<u8> = Vec::new();
+            for (face_index, &count) in self.board.iter().enumerate() {
+                for _ in 0..count {
+                    // face_index 0 => die face 1, ..., face_index 5 => die face 6
+                    dice_faces.push(face_index as u8 + 1);
+                }
+            }
+
+            // Check if there are no dice rolled
+            if dice_faces.is_empty() {
+                writeln!(f, "No dice rolled.")?;
+                return Ok(());
+            }
+
+            // Ensure that the total number of dice does not exceed 6
+            if dice_faces.len() > 6 {
+                writeln!(f, "Error: More than 6 dice are rolled!")?;
+                return Ok(());
+            }
+
+            // Prepare lines for ASCII art
+            let mut dice_lines = vec![String::new(); 5]; // Each die has 5 lines
+
+            for &die in &dice_faces {
+                // Get the ASCII art for the current die face
+                let face = DICE_ART[(die - 1) as usize];
                 let face_lines: Vec<&str> = face.split('\n').collect();
+
+                // Append each line of the die's ASCII art to the corresponding dice_lines
                 for (i, line) in face_lines.iter().enumerate() {
                     dice_lines[i].push_str(line);
                     dice_lines[i].push_str("  "); // Space between dice
