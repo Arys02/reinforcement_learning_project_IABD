@@ -1,14 +1,14 @@
 extern crate csv;
 extern crate serde;
 
-use crate::environement::environment::Environment;
-use std::collections::HashMap;
-use std::error::Error;
+use crate::environement::environment_traits::Environment;
 use csv::Writer;
 use ndarray_rand::rand::SeedableRng;
 use rand::distributions::WeightedIndex;
 use rand::prelude::{Distribution, IteratorRandom, StdRng};
 use rand::Rng;
+use std::collections::HashMap;
+use std::error::Error;
 
 use serde::Serialize;
 
@@ -68,7 +68,6 @@ pub fn monte_carlo_off_policy<E: Environment>(
     let mut Q: HashMap<(usize, usize), f32> = HashMap::new();
     let mut C: HashMap<(usize, usize), f32> = HashMap::new();
 
-
     //loop forever for each episode
     for i in 0..nb_iter {
         seed += 1;
@@ -114,13 +113,11 @@ pub fn monte_carlo_off_policy<E: Environment>(
 
             for i in 0..available_action.len() {
                 if i == i_max {
-                    tmp_action_vector[i] = 1. - epsilon + epsilon / (available_action.len()
-                        as f32)
+                    tmp_action_vector[i] = 1. - epsilon + epsilon / (available_action.len() as f32)
                 } else {
                     tmp_action_vector[i] = epsilon / (available_action.len() as f32)
                 }
             }
-
 
             let mut dist = WeightedIndex::new(&tmp_action_vector).unwrap();
             let action = dist.sample(&mut rng);
@@ -144,15 +141,24 @@ pub fn monte_carlo_off_policy<E: Environment>(
 
             g = gamma * g + r;
             C.insert((s, a), C.get(&(s, a)).unwrap() + w);
-            Q.insert((s, a), Q.get(&(s, a)).unwrap() + (w / C.get(&(s, a)).unwrap()) * (g - Q
-                .get(&(s, a)).unwrap()));
+            Q.insert(
+                (s, a),
+                Q.get(&(s, a)).unwrap()
+                    + (w / C.get(&(s, a)).unwrap()) * (g - Q.get(&(s, a)).unwrap()),
+            );
 
-            let best_action = aa.iter().max_by(|&&action1, &&action2| {
-                let q_val1 = Q.get(&(s, action1)).copied().unwrap_or_else(|| rng.gen());
-                let q_val2 = Q.get(&(s, action2)).copied().unwrap_or_else(|| rng.gen());
+            let best_action = aa
+                .iter()
+                .max_by(|&&action1, &&action2| {
+                    let q_val1 = Q.get(&(s, action1)).copied().unwrap_or_else(|| rng.gen());
+                    let q_val2 = Q.get(&(s, action2)).copied().unwrap_or_else(|| rng.gen());
 
-                q_val1.partial_cmp(&q_val2).unwrap_or(std::cmp::Ordering::Equal)
-            }).copied().unwrap();
+                    q_val1
+                        .partial_cmp(&q_val2)
+                        .unwrap_or(std::cmp::Ordering::Equal)
+                })
+                .copied()
+                .unwrap();
 
             pi.insert(s, best_action);
             if best_action != a {
@@ -160,7 +166,6 @@ pub fn monte_carlo_off_policy<E: Environment>(
             }
 
             w = w * (1. / b.get(&s).unwrap()[a]);
-
         }
     }
     let mut result: HashMap<usize, usize> = HashMap::new();
@@ -173,7 +178,6 @@ pub fn monte_carlo_off_policy<E: Environment>(
 
 #[cfg(test)]
 mod tests {
-    use ndarray_stats::histogram::Grid;
     use crate::environement::grid_world::GridWorld;
     use crate::environement::line_world::LineWorld;
     use crate::environement::monty_hall_1::MontyHall1;
@@ -182,13 +186,18 @@ mod tests {
     use crate::environement::secret_env_2::SecretEnv2;
     use crate::environement::secret_env_3::SecretEnv3;
     use crate::environement::two_round_rps::TwoRoundRPS;
+    use ndarray_stats::histogram::Grid;
 
     use super::*;
 
     fn build_policy(map: &HashMap<usize, Vec<f32>>) -> HashMap<usize, usize> {
         let mut result: HashMap<usize, usize> = HashMap::new();
         for (key, values) in map {
-            if let Some((max_index, _)) = values.iter().enumerate().max_by(|a, b| a.1.partial_cmp(b.1).unwrap()) {
+            if let Some((max_index, _)) = values
+                .iter()
+                .enumerate()
+                .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
+            {
                 result.insert(*key, max_index);
             }
         }
@@ -206,7 +215,6 @@ mod tests {
 
         let path = format!("record/monte_carlo_off_{}.csv", label);
 
-
         env_test.play_strategy(policy_map.clone(), false);
         return elapsed.as_millis() as u64;
     }
@@ -219,28 +227,45 @@ mod tests {
         println!("gridworld,{}", test_env_policy(&mut gridworld, "gridworld"));
 
         let mut monty_hall = MontyHall1::new();
-        println!("montyhall,{}", test_env_policy(&mut monty_hall, "montyhall"));
+        println!(
+            "montyhall,{}",
+            test_env_policy(&mut monty_hall, "montyhall")
+        );
 
         let mut two_round_rps = TwoRoundRPS::new();
-        println!("tworoundrps,{}", test_env_policy(&mut two_round_rps, "tworoundrps"));
+        println!(
+            "tworoundrps,{}",
+            test_env_policy(&mut two_round_rps, "tworoundrps")
+        );
 
         let mut secret_env0 = SecretEnv0::new();
-        println!("secretenv0,{}", test_env_policy(&mut secret_env0, "secretenv0"));
+        println!(
+            "secretenv0,{}",
+            test_env_policy(&mut secret_env0, "secretenv0")
+        );
 
         let mut secret_env1 = SecretEnv1::new();
-        println!("secretenv1,{}", test_env_policy(&mut secret_env1, "secretenv1"));
+        println!(
+            "secretenv1,{}",
+            test_env_policy(&mut secret_env1, "secretenv1")
+        );
 
         let mut secret_env2 = SecretEnv2::new();
-        println!("secretenv2,{}", test_env_policy(&mut secret_env2, "secretenv2"));
+        println!(
+            "secretenv2,{}",
+            test_env_policy(&mut secret_env2, "secretenv2")
+        );
 
         let mut secret_env3 = SecretEnv3::new();
-        println!("secretenv3,{}", test_env_policy(&mut secret_env3, "secretenv3"));
+        println!(
+            "secretenv3,{}",
+            test_env_policy(&mut secret_env3, "secretenv3")
+        );
     }
 
     #[test]
     fn monte_carlo_off_policy_lineworld() {
         let mut lw = LineWorld::new();
-
 
         println!("stat ID :{:?}", lw.state_id());
 
@@ -248,7 +273,6 @@ mod tests {
         let now = Instant::now();
         let policy_map = monte_carlo_off_policy(&mut lw, 0.999, 1000, 1000, 0.4, 42);
         let elapsed = now.elapsed();
-
 
         let mut gw2 = LineWorld::new();
         gw2.play_strategy(policy_map.clone(), false);
@@ -261,7 +285,6 @@ mod tests {
         let mut gw = GridWorld::new();
 
         let policy = monte_carlo_off_policy(&mut gw, 0.999, 10000, 1000, 0.1, 42);
-
 
         println!("{:?}", policy);
 
@@ -294,7 +317,6 @@ mod tests {
         println!("stat ID :{:?}", env.state_id());
 
         let policy = monte_carlo_off_policy(&mut env, 0.999, 10000, 1000, 0.1, 42);
-
 
         println!("{:?}", policy);
         let nb_run: usize = 1000;

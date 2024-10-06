@@ -7,7 +7,7 @@ use ndarray_rand::rand::SeedableRng;
 use rand::prelude::StdRng;
 use rand::Rng;
 
-use crate::environement::environment::Environment;
+use crate::environement::environment_traits::Environment;
 
 /// The `MontyHall1` struct represents the Monty Hall problem environment where an agent acts as a contestant.
 /// The agent makes two successive decisions in a scenario involving three doors: A, B, and C.
@@ -24,37 +24,41 @@ use crate::environement::environment::Environment;
 ///
 /// The `MontyHall1` struct implements the `Environment` trait, providing methods for managing the agent's state,
 /// executing actions, and calculating rewards and transition probabilities.
-pub struct MontyHall1{
+pub struct MontyHall1 {
     state: usize,
     transition_probability_matrix: ArrayBase<OwnedRepr<f32>, Ix4>,
-    agent_pos : usize,
-    door_win : usize
+    agent_pos: usize,
+    door_win: usize,
 }
 
 impl MontyHall1 {
     fn build_transition_matrix() -> ArrayBase<OwnedRepr<f32>, Ix4> {
-        let mut transition_probability_matrix = Array4::zeros((Self::num_states(), Self::num_actions(), Self::num_states(), Self::num_rewards()));
+        let mut transition_probability_matrix = Array4::zeros((
+            Self::num_states(),
+            Self::num_actions(),
+            Self::num_states(),
+            Self::num_rewards(),
+        ));
 
         transition_probability_matrix[[0, 0, 1, 0]] = 1.0;
         transition_probability_matrix[[0, 1, 2, 0]] = 1.0;
         transition_probability_matrix[[0, 2, 3, 0]] = 1.0;
 
-        transition_probability_matrix[[1, 3, 4, 1]] = 1./ 3.;
-        transition_probability_matrix[[1, 3, 4, 0]] = 2./ 3.;
-        transition_probability_matrix[[1, 4, 5, 1]] = 2./ 3.;
-        transition_probability_matrix[[1, 4, 5, 0]] = 1./ 3.;
-
+        transition_probability_matrix[[1, 3, 4, 1]] = 1. / 3.;
+        transition_probability_matrix[[1, 3, 4, 0]] = 2. / 3.;
+        transition_probability_matrix[[1, 4, 5, 1]] = 2. / 3.;
+        transition_probability_matrix[[1, 4, 5, 0]] = 1. / 3.;
 
         return transition_probability_matrix;
     }
 }
 
-impl Environment for MontyHall1{
+impl Environment for MontyHall1 {
     fn new() -> Self {
         //let mut rng = StdRng::seed_from_u64(42);
 
         let mut rng = rand::thread_rng();
-        let mut dore_win : usize = rng.gen_range(1..=3);
+        let mut dore_win: usize = rng.gen_range(1..=3);
         MontyHall1 {
             state: 0,
             agent_pos: 0,
@@ -67,14 +71,12 @@ impl Environment for MontyHall1{
         self.state as usize
     }
 
-
-
     fn from_random_state() -> Self {
         let mut rng = rand::thread_rng();
         let mut agent_pos: usize = rng.gen_range(0..=3);
-        let mut door_win : usize = rng.gen_range(1..=3);
+        let mut door_win: usize = rng.gen_range(1..=3);
 
-        return MontyHall1{
+        return MontyHall1 {
             state: agent_pos,
             agent_pos,
             door_win,
@@ -84,7 +86,7 @@ impl Environment for MontyHall1{
 
     fn reset(&mut self) {
         let mut rng = rand::thread_rng();
-        let mut dore_win : usize = rng.gen_range(1..=3);
+        let mut dore_win: usize = rng.gen_range(1..=3);
         self.door_win = dore_win;
         self.state = 0;
     }
@@ -105,7 +107,7 @@ impl Environment for MontyHall1{
         match i {
             0 => 0.,
             1 => 1.,
-            _ => panic!("reward out of range")
+            _ => panic!("reward out of range"),
         }
     }
 
@@ -120,7 +122,7 @@ impl Environment for MontyHall1{
     fn reset_random_state(&mut self, seed: u64) {
         let mut rng = rand::thread_rng();
         let agent_pos: usize = rng.gen_range(0..=3);
-        let dore_win : usize = rng.gen_range(1..=3);
+        let dore_win: usize = rng.gen_range(1..=3);
         self.door_win = dore_win;
         self.state = agent_pos
     }
@@ -128,8 +130,7 @@ impl Environment for MontyHall1{
     fn available_action(&self) -> Array1<usize> {
         if self.state == 0 {
             array![0, 1, 2]
-        }
-        else {
+        } else {
             array![3, 4]
         }
     }
@@ -142,7 +143,7 @@ impl Environment for MontyHall1{
         match self.state {
             4 => true,
             5 => true,
-            _ => false
+            _ => false,
         }
     }
 
@@ -160,19 +161,18 @@ impl Environment for MontyHall1{
         if self.state == 0 {
             self.state = action + 1;
             self.agent_pos = action + 1;
-        }
-        else {
-            self.state = if action == 3 { 4 } else {
+        } else {
+            self.state = if action == 3 {
+                4
+            } else {
                 if self.agent_pos != self.door_win {
                     self.agent_pos = self.door_win
-                }
-                else {
+                } else {
                     self.agent_pos += 1 % 3
                 }
-               5
+                5
             }
         }
-
     }
 
     fn delete(&mut self) {
@@ -181,16 +181,15 @@ impl Environment for MontyHall1{
 
     fn score(&self) -> f32 {
         if self.state < 0 {
-            return 0.
+            return 0.;
         }
         if self.agent_pos == self.door_win {
-            return 1.
+            return 1.;
         }
-        return 0.
+        return 0.;
     }
 
     fn display(&self) {
-
         println!("--------------");
         if self.state == 0 {
             println!("   |    1    |");
@@ -199,13 +198,12 @@ impl Environment for MontyHall1{
         }
         if self.state == 1 {
             let mut rng = rand::thread_rng();
-            let rand : usize = rng.gen_range(0..=1);
+            let rand: usize = rng.gen_range(0..=1);
             if rand == 0 {
                 println!("-> |    1    |");
                 println!("   |   goat  |");
                 println!("   |    3    |");
-            }
-            else {
+            } else {
                 println!("-> |    1    |");
                 println!("   |    2    |");
                 println!("   |   goat  |");
@@ -213,13 +211,12 @@ impl Environment for MontyHall1{
         }
         if self.state == 2 {
             let mut rng = rand::thread_rng();
-            let rand : usize = rng.gen_range(0..=1);
+            let rand: usize = rng.gen_range(0..=1);
             if rand == 0 {
                 println!("   |   goat  |");
                 println!("-> |    2    |");
                 println!("   |    3    |");
-            }
-            else {
+            } else {
                 println!("   |   goat  |");
                 println!("-> |    2    |");
                 println!("   |    3    |");
@@ -227,13 +224,12 @@ impl Environment for MontyHall1{
         }
         if self.state == 3 {
             let mut rng = rand::thread_rng();
-            let rand : usize = rng.gen_range(0..=1);
+            let rand: usize = rng.gen_range(0..=1);
             if rand == 0 {
                 println!("   |   goat  |");
                 println!("-> |    2    |");
                 println!("   |    3    |");
-            }
-            else {
+            } else {
                 println!("   |    1    |");
                 println!("-> |    2    |");
                 println!("   |   goat  |");
@@ -243,14 +239,12 @@ impl Environment for MontyHall1{
             for i in 1..=3 {
                 if self.agent_pos == i {
                     print!("-> ")
-                }
-                else {
+                } else {
                     print!("   ")
                 }
                 if self.door_win == i {
                     print!("| treasure |")
-                }
-                else {
+                } else {
                     print!("|   goat   |");
                 }
                 println!();
@@ -263,14 +257,13 @@ impl Environment for MontyHall1{
         }
         println!();
     }
-
 }
 
 #[cfg(test)]
 mod tests {
-    use rand::distributions::WeightedError::TooMany;
-    use crate::environement::two_round_rps;
     use super::*;
+    use crate::environement::two_round_rps;
+    use rand::distributions::WeightedError::TooMany;
 
     #[test]
     fn test_new() {
@@ -282,7 +275,11 @@ mod tests {
     fn test_available_action() {
         let gw = MontyHall1::new();
 
-        assert_eq!(gw.available_action(), array![0, 1, 2], "should be [0, 1, 2], found [] instead");
+        assert_eq!(
+            gw.available_action(),
+            array![0, 1, 2],
+            "should be [0, 1, 2], found [] instead"
+        );
     }
 
     #[test]
@@ -298,9 +295,6 @@ mod tests {
         println!("winning door {}", gw.door_win);
         println!("agent pos {}", gw.agent_pos);
 
-
         assert_eq!(gw.state_id(), 4)
     }
-
-
 }

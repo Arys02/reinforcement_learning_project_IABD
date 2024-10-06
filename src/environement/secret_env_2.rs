@@ -3,7 +3,7 @@ use std::ffi::c_void;
 
 use ndarray::Array1;
 
-use crate::environement::environment::Environment;
+use crate::environement::environment_traits::Environment;
 use crate::utils::lib_utils::LIB;
 
 /// The `SecretEnv2` struct represents an environment that interacts with an external library to perform various operations.
@@ -18,74 +18,97 @@ pub struct SecretEnv2 {
 
 impl Environment for SecretEnv2 {
     fn new() -> Self {
-        let secret_env_2_new: libloading::Symbol<unsafe extern fn() -> *mut c_void> =
-            unsafe { LIB.get(b"secret_env_2_new") }.expect("Failed to load function `secret_env_2_new`");
+        let secret_env_2_new: libloading::Symbol<unsafe extern "C" fn() -> *mut c_void> =
+            unsafe { LIB.get(b"secret_env_2_new") }
+                .expect("Failed to load function `secret_env_2_new`");
         unsafe {
             let env = secret_env_2_new();
             return SecretEnv2 { env };
         }
     }
     fn state_id(&self) -> usize {
-        let secret_env_2_state_id: libloading::Symbol<unsafe extern fn(*const c_void) -> usize> = unsafe { LIB.get(b"secret_env_2_state_id") }.expect("Failed to load function `secret_env_2_state_id`");
+        let secret_env_2_state_id: libloading::Symbol<
+            unsafe extern "C" fn(*const c_void) -> usize,
+        > = unsafe { LIB.get(b"secret_env_2_state_id") }
+            .expect("Failed to load function `secret_env_2_state_id`");
         return unsafe { secret_env_2_state_id(self.env) };
     }
 
     fn num_states() -> usize {
-        let secret_env_2_num_states: libloading::Symbol<unsafe extern fn() -> usize> = unsafe { LIB.get(b"secret_env_2_num_states") }.expect("Failed to load function `secret_env_2_num_states`");
+        let secret_env_2_num_states: libloading::Symbol<unsafe extern "C" fn() -> usize> =
+            unsafe { LIB.get(b"secret_env_2_num_states") }
+                .expect("Failed to load function `secret_env_2_num_states`");
         return unsafe { secret_env_2_num_states() };
     }
 
     fn num_actions() -> usize {
-        let secret_env_2_num_actions: libloading::Symbol<unsafe extern fn() -> usize> = unsafe { LIB.get(b"secret_env_2_num_actions") }.expect("Failed to load function `secret_env_2_num_actions`");
+        let secret_env_2_num_actions: libloading::Symbol<unsafe extern "C" fn() -> usize> =
+            unsafe { LIB.get(b"secret_env_2_num_actions") }
+                .expect("Failed to load function `secret_env_2_num_actions`");
         return unsafe { secret_env_2_num_actions() };
     }
 
     fn num_rewards() -> usize {
-        let secret_env_2_num_rewards: libloading::Symbol<unsafe extern fn() -> usize> = unsafe { LIB.get(b"secret_env_2_num_rewards") }.expect("Failed to load function `secret_env_2_num_rewards`");
+        let secret_env_2_num_rewards: libloading::Symbol<unsafe extern "C" fn() -> usize> =
+            unsafe { LIB.get(b"secret_env_2_num_rewards") }
+                .expect("Failed to load function `secret_env_2_num_rewards`");
         return unsafe { secret_env_2_num_rewards() };
     }
 
     fn get_reward(i: usize) -> f32 {
-        let secret_env_2_reward: libloading::Symbol<unsafe extern fn(usize) -> f32> = unsafe { LIB.get(b"secret_env_2_reward") }.expect("Failed to load function `secret_env_2_reward`");
+        let secret_env_2_reward: libloading::Symbol<unsafe extern "C" fn(usize) -> f32> =
+            unsafe { LIB.get(b"secret_env_2_reward") }
+                .expect("Failed to load function `secret_env_2_reward`");
         return unsafe { secret_env_2_reward(i) };
     }
 
     fn get_transition_probability(&mut self, s: usize, a: usize, s_p: usize, r: usize) -> f32 {
-        let secret_env_2_transition_probability: libloading::Symbol<unsafe extern fn(usize, usize, usize, usize) -> f32> = unsafe { LIB.get(b"secret_env_2_transition_probability") }.expect("Failed to load function `secret_env_2_transition_probability`");
+        let secret_env_2_transition_probability: libloading::Symbol<
+            unsafe extern "C" fn(usize, usize, usize, usize) -> f32,
+        > = unsafe { LIB.get(b"secret_env_2_transition_probability") }
+            .expect("Failed to load function `secret_env_2_transition_probability`");
         return unsafe { secret_env_2_transition_probability(s, a, s_p, r) };
     }
 
     fn reset_random_state(&mut self, seed: u64) {
         unsafe {
-            let secret_env_2_from_random_state: libloading::Symbol<unsafe extern fn() -> *mut c_void> =
-                LIB.get(b"secret_env_2_from_random_state").expect("Failed to load function `secret_env_2_from_random_state`");
+            let secret_env_2_from_random_state: libloading::Symbol<
+                unsafe extern "C" fn() -> *mut c_void,
+            > = LIB
+                .get(b"secret_env_2_from_random_state")
+                .expect("Failed to load function `secret_env_2_from_random_state`");
             let env = secret_env_2_from_random_state();
             self.env = env
         }
     }
 
-
     fn from_random_state() -> Self {
         unsafe {
-            let secret_env_2_from_random_state: libloading::Symbol<unsafe extern fn() -> *mut c_void> =
-                LIB.get(b"secret_env_2_from_random_state").expect("Failed to load function `secret_env_2_from_random_state`");
+            let secret_env_2_from_random_state: libloading::Symbol<
+                unsafe extern "C" fn() -> *mut c_void,
+            > = LIB
+                .get(b"secret_env_2_from_random_state")
+                .expect("Failed to load function `secret_env_2_from_random_state`");
             let env = secret_env_2_from_random_state();
-            SecretEnv2 {
-                env
-            }
+            SecretEnv2 { env }
         }
     }
-
 
     fn available_action(&self) -> Array1<usize> {
         unsafe {
             let mut aa = Vec::new();
-            let secret_env_2_available_actions: libloading::Symbol<unsafe extern fn(*const c_void) -> *const usize> =
-                LIB.get(b"secret_env_2_available_actions").expect("Failed to load function `secret_env_2_available_actions`");
+            let secret_env_2_available_actions: libloading::Symbol<
+                unsafe extern "C" fn(*const c_void) -> *const usize,
+            > = LIB
+                .get(b"secret_env_2_available_actions")
+                .expect("Failed to load function `secret_env_2_available_actions`");
             let actions = secret_env_2_available_actions(self.env);
 
-            let secret_env_2_available_actions_len: libloading::Symbol<unsafe extern fn(*const c_void) -> usize> =
-                LIB.get(b"secret_env_2_available_actions_len").expect("Failed to load function `secret_env_2_available_actions_len`");
+            let secret_env_2_available_actions_len: libloading::Symbol<
+                unsafe extern "C" fn(*const c_void) -> usize,
+            > = LIB
+                .get(b"secret_env_2_available_actions_len")
+                .expect("Failed to load function `secret_env_2_available_actions_len`");
 
             // show all available actions
             for i in 0..secret_env_2_available_actions_len(self.env) {
@@ -100,56 +123,69 @@ impl Environment for SecretEnv2 {
     }
 
     fn is_terminal(&self) -> bool {
-        let secret_env_2_is_game_over: libloading::Symbol<unsafe extern fn(*const c_void) -> bool> = unsafe { LIB.get(b"secret_env_2_is_game_over") }.expect("Failed to load function `secret_env_2_is_game_over`");
+        let secret_env_2_is_game_over: libloading::Symbol<
+            unsafe extern "C" fn(*const c_void) -> bool,
+        > = unsafe { LIB.get(b"secret_env_2_is_game_over") }
+            .expect("Failed to load function `secret_env_2_is_game_over`");
         return unsafe { secret_env_2_is_game_over(self.env) };
     }
 
-
     fn is_forbidden(&self, action: usize) -> bool {
-        let secret_env_2_is_forbidden: libloading::Symbol<unsafe extern fn(*const c_void, usize) -> bool> = unsafe { LIB.get(b"secret_env_2_is_forbidden") }.expect("Failed to load function `secret_env_2_is_forbidden`");
+        let secret_env_2_is_forbidden: libloading::Symbol<
+            unsafe extern "C" fn(*const c_void, usize) -> bool,
+        > = unsafe { LIB.get(b"secret_env_2_is_forbidden") }
+            .expect("Failed to load function `secret_env_2_is_forbidden`");
         return unsafe { secret_env_2_is_forbidden(self.env, action) };
     }
 
     fn step(&mut self, action: usize) {
         unsafe {
-            let secret_env_2_step: libloading::Symbol<unsafe extern fn(*mut c_void, usize)> =
-                LIB.get(b"secret_env_2_step").expect("Failed to load function `secret_env_2_step`");
+            let secret_env_2_step: libloading::Symbol<unsafe extern "C" fn(*mut c_void, usize)> =
+                LIB.get(b"secret_env_2_step")
+                    .expect("Failed to load function `secret_env_2_step`");
             secret_env_2_step(self.env, action);
         }
     }
 
     fn delete(&mut self) {
         unsafe {
-            let secret_env_2_delete: libloading::Symbol<unsafe extern fn(*mut c_void)> =
-                LIB.get(b"secret_env_2_delete").expect("Failed to load function `secret_env_2_delete`");
+            let secret_env_2_delete: libloading::Symbol<unsafe extern "C" fn(*mut c_void)> = LIB
+                .get(b"secret_env_2_delete")
+                .expect("Failed to load function `secret_env_2_delete`");
             secret_env_2_delete(self.env)
         }
     }
 
     fn score(&self) -> f32 {
         unsafe {
-            let secret_env_2_score: libloading::Symbol<unsafe extern fn(*const c_void) -> f32> =
-                LIB.get(b"secret_env_2_score").expect("Failed to load function `secret_env_2_score`");
+            let secret_env_2_score: libloading::Symbol<unsafe extern "C" fn(*const c_void) -> f32> =
+                LIB.get(b"secret_env_2_score")
+                    .expect("Failed to load function `secret_env_2_score`");
             secret_env_2_score(self.env)
         }
     }
 
     fn display(&self) {
         unsafe {
-            let secret_env_2_display: libloading::Symbol<unsafe extern fn(*const c_void)> = LIB.get(b"secret_env_2_display").expect("Failed to load function `secret_env_2_display`");
+            let secret_env_2_display: libloading::Symbol<unsafe extern "C" fn(*const c_void)> = LIB
+                .get(b"secret_env_2_display")
+                .expect("Failed to load function `secret_env_2_display`");
             secret_env_2_display(self.env)
         }
     }
 
     fn reset(&mut self) {
-        let secret_env_2_reset: libloading::Symbol<unsafe extern fn(*mut c_void)> = unsafe { LIB.get(b"secret_env_2_reset") }.expect("Failed to load function `secret_env_2_reset`");
+        let secret_env_2_reset: libloading::Symbol<unsafe extern "C" fn(*mut c_void)> =
+            unsafe { LIB.get(b"secret_env_2_reset") }
+                .expect("Failed to load function `secret_env_2_reset`");
         unsafe { secret_env_2_reset(self.env) };
     }
 
-
-
     fn build_transition_probability(s: usize, a: usize, s_p: usize, r: usize) -> f32 {
-        let secret_env_2_transition_probability: libloading::Symbol<unsafe extern fn(usize, usize, usize, usize) -> f32> = unsafe { LIB.get(b"secret_env_2_transition_probability") }.expect("Failed to load function `secret_env_2_transition_probability`");
+        let secret_env_2_transition_probability: libloading::Symbol<
+            unsafe extern "C" fn(usize, usize, usize, usize) -> f32,
+        > = unsafe { LIB.get(b"secret_env_2_transition_probability") }
+            .expect("Failed to load function `secret_env_2_transition_probability`");
         return unsafe { secret_env_2_transition_probability(s, a, s_p, r) };
     }
 }
@@ -178,17 +214,24 @@ mod tests {
         let mut env = SecretEnv2::new();
         dbg!(env.state_id());
 
-        assert_eq!(SecretEnv2::get_transition_probability(&mut env, 0, 0, 0, 0), 0.0);
+        assert_eq!(
+            SecretEnv2::get_transition_probability(&mut env, 0, 0, 0, 0),
+            0.0
+        );
 
-        let secret_env_2_state_id: libloading::Symbol<unsafe extern fn(*const c_void) -> usize> =
-            unsafe { LIB.get(b"secret_env_2_state_id") }.expect("Failed to load function `secret_env_2_state_id`");
-        unsafe { dbg!(secret_env_2_state_id(env.env)); }
+        let secret_env_2_state_id: libloading::Symbol<
+            unsafe extern "C" fn(*const c_void) -> usize,
+        > = unsafe { LIB.get(b"secret_env_2_state_id") }
+            .expect("Failed to load function `secret_env_2_state_id`");
+        unsafe {
+            dbg!(secret_env_2_state_id(env.env));
+        }
 
         unsafe {
-            let secret_env_2_new: libloading::Symbol<unsafe extern fn() -> *mut c_void> =
-                LIB.get(b"secret_env_2_new").expect("Failed to load function `secret_env_2_new`");
+            let secret_env_2_new: libloading::Symbol<unsafe extern "C" fn() -> *mut c_void> = LIB
+                .get(b"secret_env_2_new")
+                .expect("Failed to load function `secret_env_2_new`");
             let env2_p = secret_env_2_new();
-
 
             let env3 = SecretEnv2::new();
             dbg!(env3.env);

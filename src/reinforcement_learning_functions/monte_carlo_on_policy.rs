@@ -1,11 +1,11 @@
-use std::collections::HashMap;
-use std::error::Error;
+use crate::environement::environment_traits::Environment;
 use ndarray_rand::rand::SeedableRng;
 use rand::distributions::WeightedIndex;
 use rand::prelude::{Distribution, IteratorRandom, StdRng};
 use rand::Rng;
 use serde::Serialize;
-use crate::environement::environment::Environment;
+use std::collections::HashMap;
+use std::error::Error;
 
 /// Executes the Monte Carlo On-Policy algorithm for a given environment.
 ///
@@ -88,13 +88,12 @@ pub fn monte_carlo_on_policy<E: Environment>(
 
                 for i in 0..available_action.len() {
                     if i == i_max {
-                        tmp_action_vector[i] = 1. - epsilon + epsilon / (available_action.len()
-                            as f32)
+                        tmp_action_vector[i] =
+                            1. - epsilon + epsilon / (available_action.len() as f32)
                     } else {
                         tmp_action_vector[i] = epsilon / (available_action.len() as f32)
                     }
                 }
-
 
                 pi.insert(state, (tmp_action_vector, available_action.clone()));
             }
@@ -102,7 +101,6 @@ pub fn monte_carlo_on_policy<E: Environment>(
             let actions = pi.get(&state).unwrap().to_owned().0;
             let mut dist = WeightedIndex::new(actions).unwrap();
             let action = dist.sample(&mut rng);
-
 
             let prev_score = env.score();
             env.step(*available_action.clone().get(action).unwrap());
@@ -119,19 +117,28 @@ pub fn monte_carlo_on_policy<E: Environment>(
 
             g = gamma * g + r;
             //unless the pair St, At appear
-            if trajectory[..t].iter().all(|&(si, ai, _, _)| si != s || ai != a) {
+            if trajectory[..t]
+                .iter()
+                .all(|&(si, ai, _, _)| si != s || ai != a)
+            {
                 returns.entry((s, a)).or_insert(Vec::new()).push(g);
-                let average_return = returns[&(s, a)].iter().sum::<f32>() / returns[&(s, a)].len() as f32;
+                let average_return =
+                    returns[&(s, a)].iter().sum::<f32>() / returns[&(s, a)].len() as f32;
 
                 Q.insert((s, a), average_return);
 
-                let best_action = aa.iter().max_by(|&&action1, &&action2| {
-                    let q_val1 = Q.get(&(s, action1)).copied().unwrap_or_else(|| rng.gen());
-                    let q_val2 = Q.get(&(s, action2)).copied().unwrap_or_else(|| rng.gen());
+                let best_action = aa
+                    .iter()
+                    .max_by(|&&action1, &&action2| {
+                        let q_val1 = Q.get(&(s, action1)).copied().unwrap_or_else(|| rng.gen());
+                        let q_val2 = Q.get(&(s, action2)).copied().unwrap_or_else(|| rng.gen());
 
-                    q_val1.partial_cmp(&q_val2).unwrap_or(std::cmp::Ordering::Equal)
-                }).copied().unwrap();
-
+                        q_val1
+                            .partial_cmp(&q_val2)
+                            .unwrap_or(std::cmp::Ordering::Equal)
+                    })
+                    .copied()
+                    .unwrap();
 
                 let mut tmp_action_vector = Vec::with_capacity(aa.len());
                 for i in 0..aa.len() {
@@ -144,18 +151,21 @@ pub fn monte_carlo_on_policy<E: Environment>(
 
                 pi.insert(s, (tmp_action_vector.clone(), aa.clone()));
             }
-
         }
     }
     let mut result: HashMap<usize, usize> = HashMap::new();
     for (state, values) in pi {
-        if let Some((max_index, _)) = values.0.iter().enumerate().max_by(|a, b| a.1.partial_cmp(b.1).unwrap()) {
+        if let Some((max_index, _)) = values
+            .0
+            .iter()
+            .enumerate()
+            .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
+        {
             let available_actions = values.1;
             let action_index = available_actions[max_index];
             result.insert(state, action_index);
         }
     }
-
 
     return result;
 }
@@ -198,27 +208,49 @@ mod tests {
         println!("gridworld,{}", test_env_policy(&mut gridworld, "gridworld"));
 
         let mut monty_hall = MontyHall1::new();
-        println!("montyhall,{}", test_env_policy(&mut monty_hall, "montyhall"));
+        println!(
+            "montyhall,{}",
+            test_env_policy(&mut monty_hall, "montyhall")
+        );
 
         let mut two_round_rps = TwoRoundRPS::new();
-        println!("tworoundrps,{}", test_env_policy(&mut two_round_rps, "tworoundrps"));
+        println!(
+            "tworoundrps,{}",
+            test_env_policy(&mut two_round_rps, "tworoundrps")
+        );
 
         let mut secret_env0 = SecretEnv0::new();
-        println!("secretenv0,{}", test_env_policy(&mut secret_env0, "secretenv0"));
+        println!(
+            "secretenv0,{}",
+            test_env_policy(&mut secret_env0, "secretenv0")
+        );
 
         let mut secret_env1 = SecretEnv1::new();
-        println!("secretenv1,{}", test_env_policy(&mut secret_env1, "secretenv1"));
+        println!(
+            "secretenv1,{}",
+            test_env_policy(&mut secret_env1, "secretenv1")
+        );
 
         let mut secret_env2 = SecretEnv2::new();
-        println!("secretenv2,{}", test_env_policy(&mut secret_env2, "secretenv2"));
+        println!(
+            "secretenv2,{}",
+            test_env_policy(&mut secret_env2, "secretenv2")
+        );
 
         let mut secret_env3 = SecretEnv3::new();
-        println!("secretenv3,{}", test_env_policy(&mut secret_env3, "secretenv3"));
+        println!(
+            "secretenv3,{}",
+            test_env_policy(&mut secret_env3, "secretenv3")
+        );
     }
     fn build_policy(map: &HashMap<usize, Vec<f32>>) -> HashMap<usize, usize> {
         let mut result: HashMap<usize, usize> = HashMap::new();
         for (key, values) in map {
-            if let Some((max_index, _)) = values.iter().enumerate().max_by(|a, b| a.1.partial_cmp(b.1).unwrap()) {
+            if let Some((max_index, _)) = values
+                .iter()
+                .enumerate()
+                .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
+            {
                 result.insert(*key, max_index);
             }
         }
@@ -262,8 +294,7 @@ mod tests {
 
         println!("stat ID :{:?}", env.state_id());
 
-        let policy= monte_carlo_on_policy(&mut env, 0.999, 10000, 1000, 0.1,42);
-
+        let policy = monte_carlo_on_policy(&mut env, 0.999, 10000, 1000, 0.1, 42);
 
         println!("{:?}", policy);
         let nb_run: usize = 1000;
@@ -281,8 +312,6 @@ mod tests {
 
         println!("win stat :  {}", stat_win);
 
-        assert_eq!(stat_win > 0.5 , true)
+        assert_eq!(stat_win > 0.5, true)
     }
-
-
 }

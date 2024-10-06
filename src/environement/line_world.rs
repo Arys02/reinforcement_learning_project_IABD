@@ -3,11 +3,10 @@ extern crate rand;
 use std::collections::HashMap;
 
 use ndarray::{array, Array1, Array4, ArrayBase, Ix4, OwnedRepr};
-use rand::{Rng, SeedableRng};
 use rand::prelude::StdRng;
+use rand::{Rng, SeedableRng};
 
-use crate::environement::environment::Environment;
-
+use crate::environement::environment_traits::Environment;
 
 // The `LineWorld` struct represents a linear environment where an agent can navigate along a vector of fixed size.
 /// The agent starts at the middle of the vector and can move left or right.
@@ -30,16 +29,31 @@ pub struct LineWorld {
 
 impl LineWorld {
     fn build_transition_matrix() -> ArrayBase<OwnedRepr<f32>, Ix4> {
-        let mut transition_probability_matrix = Array4::zeros((Self::num_states(), Self::num_actions(), Self::num_states(), Self::num_rewards()));
+        let mut transition_probability_matrix = Array4::zeros((
+            Self::num_states(),
+            Self::num_actions(),
+            Self::num_states(),
+            Self::num_rewards(),
+        ));
 
         for s in 0..Self::num_states() {
             for a in 0..Self::num_actions() {
                 for s_p in 0..Self::num_states() {
                     for r in 0..Self::num_rewards() {
-                        if s < Self::num_states() && s_p == s + 1 && a == 1 && Self::get_reward(r) == 0. && (s == 1 || s == 2) {
+                        if s < Self::num_states()
+                            && s_p == s + 1
+                            && a == 1
+                            && Self::get_reward(r) == 0.
+                            && (s == 1 || s == 2)
+                        {
                             transition_probability_matrix[[s, a, s_p, r]] = 1.0;
                         }
-                        if s > 0 && s_p == s - 1 && a == 0 && Self::get_reward(r) == 0. && (s == 2 || s == 3) {
+                        if s > 0
+                            && s_p == s - 1
+                            && a == 0
+                            && Self::get_reward(r) == 0.
+                            && (s == 2 || s == 3)
+                        {
                             transition_probability_matrix[[s, a, s_p, r]] = 1.0;
                         }
                     }
@@ -48,7 +62,6 @@ impl LineWorld {
         }
         transition_probability_matrix[[3, 1, 4, 2]] = 1.0;
         transition_probability_matrix[[1, 0, 0, 0]] = 1.0;
-
 
         return transition_probability_matrix;
     }
@@ -65,7 +78,6 @@ impl Environment for LineWorld {
     fn state_id(&self) -> usize {
         self.agent_pos
     }
-
 
     fn from_random_state() -> Self {
         let mut rng = rand::thread_rng();
@@ -97,7 +109,7 @@ impl Environment for LineWorld {
             0 => -1.,
             1 => 0.,
             2 => 1.,
-            _ => panic!("reward is out of range")
+            _ => panic!("reward is out of range"),
         }
     }
 
@@ -105,7 +117,6 @@ impl Environment for LineWorld {
         let tm = Self::build_transition_matrix();
         return tm[[s, a, s_p, r]];
     }
-
 
     fn get_transition_probability(&mut self, s: usize, a: usize, s_p: usize, r: usize) -> f32 {
         return self.transition_probability_matrix[[s, a, s_p, r]];
@@ -117,11 +128,10 @@ impl Environment for LineWorld {
         self.agent_pos = agent_pos_
     }
 
-
     fn available_action(&self) -> Array1<usize> {
         match self.agent_pos {
             1 | 2 | 3 => array![0, 1],
-            _ => array![]
+            _ => array![],
         }
     }
 
@@ -132,7 +142,7 @@ impl Environment for LineWorld {
     fn is_terminal(&self) -> bool {
         match self.agent_pos {
             1 | 2 | 3 => false,
-            _ => true
+            _ => true,
         }
     }
 
@@ -159,7 +169,7 @@ impl Environment for LineWorld {
         match self.agent_pos {
             0 => -1.0,
             4 => 1.0,
-            _ => 0.0
+            _ => 0.0,
         }
     }
 
@@ -167,14 +177,12 @@ impl Environment for LineWorld {
         for i in 0..5 {
             match self.agent_pos {
                 x if x == i => print!("X"),
-                _ => print!("_")
+                _ => print!("_"),
             }
         }
         println!()
     }
-
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -188,24 +196,50 @@ mod tests {
         lw.reset_random_state(seed);
         println!("position : {}, rng : {}", lw.agent_pos, rng);
 
-        assert_eq!(lw.agent_pos, rng, "With seed {}, expected pos {}", seed, lw.agent_pos)
+        assert_eq!(
+            lw.agent_pos, rng,
+            "With seed {}, expected pos {}",
+            seed, lw.agent_pos
+        )
     }
 
     #[test]
     fn test_new() {
         let lw = LineWorld::new();
-        assert_eq!(lw.agent_pos, 2, "should be 2, {} find instead", lw.agent_pos)
+        assert_eq!(
+            lw.agent_pos, 2,
+            "should be 2, {} find instead",
+            lw.agent_pos
+        )
     }
 
     #[test]
     fn test_available_action() {
         let lw = LineWorld::new();
-        let lw2 = LineWorld { agent_pos: 0, transition_probability_matrix: LineWorld::build_transition_matrix() };
-        let lw3 = LineWorld { agent_pos: 4, transition_probability_matrix: LineWorld::build_transition_matrix() };
+        let lw2 = LineWorld {
+            agent_pos: 0,
+            transition_probability_matrix: LineWorld::build_transition_matrix(),
+        };
+        let lw3 = LineWorld {
+            agent_pos: 4,
+            transition_probability_matrix: LineWorld::build_transition_matrix(),
+        };
 
-        assert_eq!(lw.available_action(), array![0, 1], "should be [0, 1], found [] instead");
-        assert_eq!(lw2.available_action(), array![], "should be [], found [0, 1] instead");
-        assert_eq!(lw3.available_action(), array![], "should be [], found [0, 1] instead");
+        assert_eq!(
+            lw.available_action(),
+            array![0, 1],
+            "should be [0, 1], found [] instead"
+        );
+        assert_eq!(
+            lw2.available_action(),
+            array![],
+            "should be [], found [0, 1] instead"
+        );
+        assert_eq!(
+            lw3.available_action(),
+            array![],
+            "should be [], found [0, 1] instead"
+        );
         assert_eq!(lw.available_action().iter().any(|&x| x == 0), true)
     }
 

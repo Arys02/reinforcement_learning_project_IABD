@@ -1,14 +1,12 @@
-use std::collections::HashMap;
-use std::error::Error;
+use crate::environement::environment_traits::Environment;
 use ndarray::Array;
 use ndarray_rand::rand::SeedableRng;
+use ndarray_stats::QuantileExt;
 use rand::prelude::{IteratorRandom, StdRng};
 use rand::Rng;
-use ndarray_stats::QuantileExt;
 use serde::Serialize;
-use crate::environement::environment::Environment;
-
-
+use std::collections::HashMap;
+use std::error::Error;
 
 /// Executes the Q-Learning algorithm for a given environment.
 ///
@@ -62,7 +60,10 @@ pub fn q_learning<E: Environment>(
     nb_iter: usize,
     nb_step: usize,
     seed: u64,
-) -> (HashMap<usize, usize>, HashMap<usize, HashMap<(usize, usize), f32>>) {
+) -> (
+    HashMap<usize, usize>,
+    HashMap<usize, HashMap<(usize, usize), f32>>,
+) {
     let mut rng = StdRng::seed_from_u64(seed);
     let mut Q: HashMap<usize, HashMap<(usize, usize), f32>> = HashMap::new();
 
@@ -77,27 +78,41 @@ pub fn q_learning<E: Environment>(
             if !Q.contains_key(&state) {
                 let mut q_s = HashMap::new();
 
-                for a_i in 0..available_action.len(){
+                for a_i in 0..available_action.len() {
                     q_s.insert((a_i, available_action[a_i]), rng.gen::<f32>());
                 }
 
                 Q.insert(state, q_s);
             }
 
-            let mut action : Option<usize> = None;
-            let mut action_i : Option<usize> = None;
+            let mut action: Option<usize> = None;
+            let mut action_i: Option<usize> = None;
 
             if rng.gen::<f32>() < epsilon {
                 //insert dans action l'action
                 let _ = action.insert(*env.available_action().iter().choose(&mut rng).unwrap());
             } else {
-                let q_s: Vec<f32> = available_action.iter().enumerate().map(|(a_i, &a)| *Q.get(&state).unwrap().get(&(a_i, a)).unwrap()).collect();
+                let q_s: Vec<f32> = available_action
+                    .iter()
+                    .enumerate()
+                    .map(|(a_i, &a)| *Q.get(&state).unwrap().get(&(a_i, a)).unwrap())
+                    .collect();
 
-                let best_a_index = q_s.iter().enumerate().max_by(|&(_, a), &(_, b)| a.partial_cmp(b).unwrap()).map(|(index, _)| index).unwrap();
+                let best_a_index = q_s
+                    .iter()
+                    .enumerate()
+                    .max_by(|&(_, a), &(_, b)| a.partial_cmp(b).unwrap())
+                    .map(|(index, _)| index)
+                    .unwrap();
                 let _ = action.insert(available_action[best_a_index]);
             }
 
-            let _ = action_i.insert(available_action.iter().position(|&x| x == action.unwrap()).unwrap());
+            let _ = action_i.insert(
+                available_action
+                    .iter()
+                    .position(|&x| x == action.unwrap())
+                    .unwrap(),
+            );
 
             let prev_score: f32 = env.score();
             env.step(action.unwrap());
@@ -116,24 +131,36 @@ pub fn q_learning<E: Environment>(
 
                     //TODO check if in available works well
                     for action_i in 0..available_action_p.len() {
-                        tmp_q_s_p.insert((action_i, available_action_p[action_i]), rng.gen::<f32>());
+                        tmp_q_s_p
+                            .insert((action_i, available_action_p[action_i]), rng.gen::<f32>());
                     }
                     Q.insert(state_p, tmp_q_s_p);
                 }
 
                 // équivalent de for comprehension en rust
 
-                let q_s_p = available_action_p.iter().enumerate().map(|(a_i_p, &a_p)| *Q.get(&state_p).unwrap().get(&(a_i_p, a_p)).unwrap()).collect();
+                let q_s_p = available_action_p
+                    .iter()
+                    .enumerate()
+                    .map(|(a_i_p, &a_p)| *Q.get(&state_p).unwrap().get(&(a_i_p, a_p)).unwrap())
+                    .collect();
                 let array_q_s_p = Array::from_vec(q_s_p);
                 //TODO check if it's working like that
                 let max = array_q_s_p.max().unwrap();
                 let max_i = array_q_s_p.iter().position(|&x| x == *max);
                 target = r + gamma * max
             }
-            let q_s_a = *Q.get(&state).unwrap().get(&(action_i.unwrap(), action.unwrap())).unwrap();
+            let q_s_a = *Q
+                .get(&state)
+                .unwrap()
+                .get(&(action_i.unwrap(), action.unwrap()))
+                .unwrap();
             let new_value = (1. - alpha) * q_s_a + alpha * target;
 
-            let _ = Q.get_mut(&state).unwrap().insert((action_i.unwrap(), action.unwrap()), new_value);
+            let _ = Q
+                .get_mut(&state)
+                .unwrap()
+                .insert((action_i.unwrap(), action.unwrap()), new_value);
         }
     }
 
@@ -183,7 +210,6 @@ mod tests {
         return elapsed.as_millis() as u64;
     }
 
-
     #[test]
     fn q_learning_all_env() {
         let mut lineworld = LineWorld::new();
@@ -193,22 +219,40 @@ mod tests {
         println!("gridworld,{}", test_env_policy(&mut gridworld, "gridworld"));
 
         let mut monty_hall = MontyHall1::new();
-        println!("montyhall,{}", test_env_policy(&mut monty_hall, "montyhall"));
+        println!(
+            "montyhall,{}",
+            test_env_policy(&mut monty_hall, "montyhall")
+        );
 
         let mut two_round_rps = TwoRoundRPS::new();
-        println!("tworoundrps,{}", test_env_policy(&mut two_round_rps, "tworoundrps"));
+        println!(
+            "tworoundrps,{}",
+            test_env_policy(&mut two_round_rps, "tworoundrps")
+        );
 
         let mut secret_env0 = SecretEnv0::new();
-        println!("secretenv0,{}", test_env_policy(&mut secret_env0, "secretenv0"));
+        println!(
+            "secretenv0,{}",
+            test_env_policy(&mut secret_env0, "secretenv0")
+        );
 
         let mut secret_env1 = SecretEnv1::new();
-        println!("secretenv1,{}", test_env_policy(&mut secret_env1, "secretenv1"));
+        println!(
+            "secretenv1,{}",
+            test_env_policy(&mut secret_env1, "secretenv1")
+        );
 
         let mut secret_env2 = SecretEnv2::new();
-        println!("secretenv2,{}", test_env_policy(&mut secret_env2, "secretenv2"));
+        println!(
+            "secretenv2,{}",
+            test_env_policy(&mut secret_env2, "secretenv2")
+        );
 
         let mut secret_env3 = SecretEnv3::new();
-        println!("secretenv3,{}", test_env_policy(&mut secret_env3, "secretenv3"));
+        println!(
+            "secretenv3,{}",
+            test_env_policy(&mut secret_env3, "secretenv3")
+        );
     }
 
     #[test]
@@ -242,7 +286,7 @@ mod tests {
 
         println!("stat ID :{:?}", env.state_id());
 
-        let policy = q_learning(&mut env, 0.1, 0.1, 0.999, 1000, 1000,  42);
+        let policy = q_learning(&mut env, 0.1, 0.1, 0.999, 1000, 1000, 42);
         println!("{:?}", policy);
         env.reset();
 
@@ -254,7 +298,7 @@ mod tests {
     fn policy_iteration_env_0() {
         println!("start");
         let mut env = SecretEnv0::new();
-        let policy = q_learning(&mut env, 0.1, 0.1, 0.999, 1000, 1000,  42);
+        let policy = q_learning(&mut env, 0.1, 0.1, 0.999, 1000, 1000, 42);
         println!("{:?}", policy);
         env.reset();
 
@@ -276,7 +320,7 @@ mod tests {
     fn policy_iteration_env_1() {
         println!("start");
         let mut env = SecretEnv1::new();
-        let policy = q_learning(&mut env, 0.1, 0.1, 0.999, 1000, 1000,  42);
+        let policy = q_learning(&mut env, 0.1, 0.1, 0.999, 1000, 1000, 42);
         println!("{:?}", policy);
         env.reset();
 
@@ -293,5 +337,4 @@ mod tests {
 
         assert_eq!(env.is_terminal() && env.score() > 15., true);
     }
-
 }

@@ -1,11 +1,10 @@
-use std::collections::HashMap;
-use std::error::Error;
+use crate::environement::environment_traits::Environment;
 use ndarray_rand::rand::SeedableRng;
 use rand::prelude::{IteratorRandom, StdRng};
 use rand::Rng;
 use serde::Serialize;
-use crate::environement::environment::Environment;
-
+use std::collections::HashMap;
+use std::error::Error;
 
 /// Executes the Monte Carlo with Exploring Starts algorithm for a given environment.
 ///
@@ -95,35 +94,44 @@ pub fn monte_carlo_with_exploring_start<E: Environment>(
             step_count += 1;
         }
 
-
         let mut g = 0.;
 
         for (t, &(s, a, r, ref aa)) in trajectory.iter().enumerate().rev() {
             g = gamma * g + r;
             //println!("{}", g);
 
-            if trajectory[..t].iter().all(|&(si, ai, _, _)| si != s || ai != a) {
+            if trajectory[..t]
+                .iter()
+                .all(|&(si, ai, _, _)| si != s || ai != a)
+            {
                 returns.entry((s, a)).or_insert(Vec::new()).push(g);
-                let average_return = returns[&(s, a)].iter().sum::<f32>() / returns[&(s, a)].len() as f32;
+                let average_return =
+                    returns[&(s, a)].iter().sum::<f32>() / returns[&(s, a)].len() as f32;
                 Q.insert((s, a), average_return);
 
-                let best_action = aa.iter().max_by(|&&action1, &&action2| {
-                    let q_val1 = Q.get(&(s, action1)).copied().unwrap_or_else(|| rng.gen());
-                    let q_val2 = Q.get(&(s, action2)).copied().unwrap_or_else(|| rng.gen());
+                let best_action = aa
+                    .iter()
+                    .max_by(|&&action1, &&action2| {
+                        let q_val1 = Q.get(&(s, action1)).copied().unwrap_or_else(|| rng.gen());
+                        let q_val2 = Q.get(&(s, action2)).copied().unwrap_or_else(|| rng.gen());
 
-                    q_val1.partial_cmp(&q_val2).unwrap_or(std::cmp::Ordering::Equal)
-                }).copied().unwrap();
+                        q_val1
+                            .partial_cmp(&q_val2)
+                            .unwrap_or(std::cmp::Ordering::Equal)
+                    })
+                    .copied()
+                    .unwrap();
 
                 pi.insert(s, best_action);
             }
         }
-
     }
     return pi;
 }
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use crate::environement::grid_world::GridWorld;
     use crate::environement::line_world::LineWorld;
     use crate::environement::monty_hall_1::MontyHall1;
@@ -133,14 +141,13 @@ mod tests {
     use crate::environement::secret_env_3::SecretEnv3;
     use crate::environement::two_round_rps::TwoRoundRPS;
     use crate::reinforcement_learning_functions::monte_carlo_on_policy::monte_carlo_on_policy;
-    use super::*;
 
     fn test_env_policy<E: Environment>(mut env: &mut E, label: &str) -> u64 {
         let mut env_test = E::new();
 
         use std::time::Instant;
         let now = Instant::now();
-        let policy_map = monte_carlo_with_exploring_start(env, 0.999, 1000, 1000,  42);
+        let policy_map = monte_carlo_with_exploring_start(env, 0.999, 1000, 1000, 42);
         let elapsed = now.elapsed();
 
         env_test.play_strategy(policy_map.clone(), false);
@@ -156,22 +163,40 @@ mod tests {
         println!("gridworld,{}", test_env_policy(&mut gridworld, "gridworld"));
 
         let mut monty_hall = MontyHall1::new();
-        println!("montyhall,{}", test_env_policy(&mut monty_hall, "montyhall"));
+        println!(
+            "montyhall,{}",
+            test_env_policy(&mut monty_hall, "montyhall")
+        );
 
         let mut two_round_rps = TwoRoundRPS::new();
-        println!("tworoundrps,{}", test_env_policy(&mut two_round_rps, "tworoundrps"));
+        println!(
+            "tworoundrps,{}",
+            test_env_policy(&mut two_round_rps, "tworoundrps")
+        );
 
         let mut secret_env0 = SecretEnv0::new();
-        println!("secretenv0,{}", test_env_policy(&mut secret_env0, "secretenv0"));
+        println!(
+            "secretenv0,{}",
+            test_env_policy(&mut secret_env0, "secretenv0")
+        );
 
         let mut secret_env1 = SecretEnv1::new();
-        println!("secretenv1,{}", test_env_policy(&mut secret_env1, "secretenv1"));
+        println!(
+            "secretenv1,{}",
+            test_env_policy(&mut secret_env1, "secretenv1")
+        );
 
         let mut secret_env2 = SecretEnv2::new();
-        println!("secretenv2,{}", test_env_policy(&mut secret_env2, "secretenv2"));
+        println!(
+            "secretenv2,{}",
+            test_env_policy(&mut secret_env2, "secretenv2")
+        );
 
         let mut secret_env3 = SecretEnv3::new();
-        println!("secretenv3,{}", test_env_policy(&mut secret_env3, "secretenv3"));
+        println!(
+            "secretenv3,{}",
+            test_env_policy(&mut secret_env3, "secretenv3")
+        );
     }
     #[test]
     fn monte_carlo_with_exploring_start_returns_correct_policy() {
@@ -221,7 +246,6 @@ mod tests {
         assert_eq!(env.score(), 1.)
     }
 
-
     #[test]
     fn monte_carlo_with_exploring_start_monty_hall_1() {
         println!("Monty Hall 1: ");
@@ -247,6 +271,6 @@ mod tests {
 
         println!("win stat :  {}", stat_win);
 
-        assert_eq!(stat_win > 0.5 , true)
+        assert_eq!(stat_win > 0.5, true)
     }
 }

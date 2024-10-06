@@ -1,6 +1,6 @@
 use ndarray::{Array1, Array2};
 
-use crate::environement::environment::Environment;
+use crate::environement::environment_traits::Environment;
 
 pub fn policy_evaluation<E: Environment>(
     policy: Array2<usize>,
@@ -25,7 +25,9 @@ pub fn policy_evaluation<E: Environment>(
                 let mut pi_s_a: f32 = policy[[s, a]] as f32;
                 for s_p in 0..num_states {
                     for r in 0..num_rewards {
-                        total += pi_s_a * E::build_transition_probability(s, a, s_p, r) * (E::get_reward(r) + gamma * V[s_p])
+                        total += pi_s_a
+                            * E::build_transition_probability(s, a, s_p, r)
+                            * (E::get_reward(r) + gamma * V[s_p])
                     }
                 }
             }
@@ -35,7 +37,7 @@ pub fn policy_evaluation<E: Environment>(
         println!("{:?}, delta : {:?}", i, delta);
         i += 1;
         if delta < theta {
-            return V
+            return V;
         }
     }
 }
@@ -50,28 +52,21 @@ mod tests {
     fn policy_evaluation_line_world() {
         println!("start");
 
-
         let lw = LineWorld::new();
         println!("stat ID :{:?}", lw.state_id());
 
-        let pi_right: Array2<usize> = Array2::from_shape_vec((LineWorld::num_states(), 2), vec![
-            0, 1,
-            0, 1,
-            0, 1,
-            0, 1,
-            0, 1,
-        ]).unwrap();
-        let pi_left: Array2<usize> = Array2::from_shape_vec((LineWorld::num_states(), 2), vec![
-            1, 0,
-            1, 0,
-            1, 0,
-            1, 0,
-            1, 0,
-        ]).unwrap();
-
+        let pi_right: Array2<usize> = Array2::from_shape_vec(
+            (LineWorld::num_states(), 2),
+            vec![0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
+        )
+        .unwrap();
+        let pi_left: Array2<usize> = Array2::from_shape_vec(
+            (LineWorld::num_states(), 2),
+            vec![1, 0, 1, 0, 1, 0, 1, 0, 1, 0],
+        )
+        .unwrap();
 
         let policy = policy_evaluation::<LineWorld>(pi_left, 0.999, 0.00001);
-
 
         println!("{:?}", policy);
         assert_eq!(1, 1)

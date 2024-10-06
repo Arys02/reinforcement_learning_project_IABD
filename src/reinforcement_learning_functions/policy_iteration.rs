@@ -1,4 +1,4 @@
-use std::error::Error;
+use crate::environement::environment_traits::Environment;
 use ndarray::Array;
 use ndarray_rand::rand::SeedableRng;
 use ndarray_rand::rand_distr::num_traits::abs;
@@ -6,8 +6,7 @@ use ndarray_rand::RandomExt;
 use rand::distributions::Uniform;
 use rand::prelude::{SliceRandom, StdRng};
 use serde::Serialize;
-use crate::environement::environment::Environment;
-
+use std::error::Error;
 
 /// Executes the Policy Iteration algorithm for a given environment.
 ///
@@ -43,27 +42,18 @@ use crate::environement::environment::Environment;
 ///
 /// The Policy Iteration algorithm ensures convergence to the optimal policy by repeatedly improving the policy based on the evaluated value function.
 
-pub fn policy_iteration<E: Environment>(
-    gamma: f32,
-    theta: f32,
-) -> Vec<usize> {
+pub fn policy_iteration<E: Environment>(gamma: f32, theta: f32) -> Vec<usize> {
     let num_states = E::num_states();
     let num_actions = E::num_actions();
     let num_rewards = E::num_rewards();
 
-
     let mut V = Array::random((num_states, 1), Uniform::new(0.0, 1.0)).into_raw_vec();
-
-
 
     let mut pi = vec![];
     for i in 0..num_states {
-            pi.push(0)
+        pi.push(0)
     }
     println!("pi : {:?}", pi);
-
-
-
 
     let mut i = 0;
     loop {
@@ -84,11 +74,9 @@ pub fn policy_iteration<E: Environment>(
                 delta = delta.max((v - V[s]).abs())
             }
             if delta < theta {
-                break
+                break;
             }
         }
-
-
 
         println!("V : m{:?}", V);
 
@@ -105,7 +93,8 @@ pub fn policy_iteration<E: Environment>(
 
                 for s_p in 0..num_states {
                     for r_index in 0..num_rewards {
-                        total += E::build_transition_probability(s, a, s_p, r_index) * (E::get_reward(r_index) + gamma * V[s_p])
+                        total += E::build_transition_probability(s, a, s_p, r_index)
+                            * (E::get_reward(r_index) + gamma * V[s_p])
                     }
                 }
 
@@ -121,8 +110,7 @@ pub fn policy_iteration<E: Environment>(
             }
         }
         if policy_stable {
-
-            return pi
+            return pi;
         }
     }
 }
@@ -131,15 +119,15 @@ pub fn policy_iteration<E: Environment>(
 mod tests {
     #![allow(warnings)]
 
-    use std::collections::HashMap;
-    use crate::environement::line_world::LineWorld;
     use crate::environement::grid_world::GridWorld;
+    use crate::environement::line_world::LineWorld;
     use crate::environement::monty_hall_1::MontyHall1;
     use crate::environement::secret_env_0::SecretEnv0;
     use crate::environement::secret_env_1::SecretEnv1;
     use crate::environement::secret_env_2::SecretEnv2;
     use crate::environement::secret_env_3::SecretEnv3;
     use crate::environement::two_round_rps::TwoRoundRPS;
+    use std::collections::HashMap;
 
     use super::*;
 
@@ -162,57 +150,70 @@ mod tests {
         println!("gridworld,{}", test_env_policy(&mut gridworld, "gridworld"));
 
         let mut monty_hall = MontyHall1::new();
-        println!("montyhall,{}", test_env_policy(&mut monty_hall, "montyhall"));
+        println!(
+            "montyhall,{}",
+            test_env_policy(&mut monty_hall, "montyhall")
+        );
 
         let mut two_round_rps = TwoRoundRPS::new();
-        println!("tworoundrps,{}", test_env_policy(&mut two_round_rps, "tworoundrps"));
+        println!(
+            "tworoundrps,{}",
+            test_env_policy(&mut two_round_rps, "tworoundrps")
+        );
 
         let mut secret_env0 = SecretEnv0::new();
-        println!("secretenv0,{}", test_env_policy(&mut secret_env0, "secretenv0"));
+        println!(
+            "secretenv0,{}",
+            test_env_policy(&mut secret_env0, "secretenv0")
+        );
 
         let mut secret_env1 = SecretEnv1::new();
-        println!("secretenv1,{}", test_env_policy(&mut secret_env1, "secretenv1"));
+        println!(
+            "secretenv1,{}",
+            test_env_policy(&mut secret_env1, "secretenv1")
+        );
 
         let mut secret_env2 = SecretEnv2::new();
-        println!("secretenv2,{}", test_env_policy(&mut secret_env2, "secretenv2"));
+        println!(
+            "secretenv2,{}",
+            test_env_policy(&mut secret_env2, "secretenv2")
+        );
 
         let mut secret_env3 = SecretEnv3::new();
-        println!("secretenv3,{}", test_env_policy(&mut secret_env3, "secretenv3"));
+        println!(
+            "secretenv3,{}",
+            test_env_policy(&mut secret_env3, "secretenv3")
+        );
     }
-
 
     #[test]
-    fn policy_iteration_some_env()  {
-
-    }
+    fn policy_iteration_some_env() {}
 
     #[test]
     fn policy_iteration_line_world() {
         #![allow(warnings)]
         println!("start");
 
-
         let lw = LineWorld::new();
         println!("stat ID :{:?}", lw.state_id());
 
-        let mut a : usize = 0;
+        let mut a: usize = 0;
         let v = policy_iteration::<LineWorld>(0.999, 0.000001);
 
         println!("{:?}", v);
         assert_eq!(1, 1)
     }
 
-
     #[test]
     fn policy_iteration_grid_world() {
         println!("start");
         let mut env = GridWorld::new();
-        let mut a : usize = 0;
+        let mut a: usize = 0;
 
-        let v = policy_iteration::<GridWorld>( 0.999, 0.0001);
+        let v = policy_iteration::<GridWorld>(0.999, 0.0001);
 
         let mut policy = HashMap::new();
-        for i in 0..v.len(){
+        for i in 0..v.len() {
             policy.insert(i, v[i]);
         }
         env.play_strategy(policy.clone(), false);
@@ -226,13 +227,11 @@ mod tests {
         println!("start");
         let mut env = TwoRoundRPS::new();
 
-
-
-        let mut a : usize = 0;
-        let v = policy_iteration::<TwoRoundRPS>( 0.999, 0.0001);
+        let mut a: usize = 0;
+        let v = policy_iteration::<TwoRoundRPS>(0.999, 0.0001);
 
         let mut policy = HashMap::new();
-        for i in 0..v.len(){
+        for i in 0..v.len() {
             policy.insert(i, v[i]);
         }
 
@@ -247,12 +246,11 @@ mod tests {
         println!("start");
         let mut env = MontyHall1::new();
 
-
-        let mut a : usize = 0;
-        let v = policy_iteration::<MontyHall1>( 0.999, 0.0001);
+        let mut a: usize = 0;
+        let v = policy_iteration::<MontyHall1>(0.999, 0.0001);
 
         let mut policy = HashMap::new();
-        for i in 0..v.len(){
+        for i in 0..v.len() {
             policy.insert(i, v[i]);
         }
 
@@ -272,20 +270,18 @@ mod tests {
 
         println!("win stat :  {}", stat_win);
 
-        assert_eq!(stat_win > 0.5 , true)
-
+        assert_eq!(stat_win > 0.5, true)
     }
     #[test]
     fn policy_iteration_env_0() {
         println!("start");
         let mut env = SecretEnv0::new();
 
-
-        let mut a : usize = 0;
-        let v = policy_iteration::<SecretEnv0>( 0.999, 0.001);
+        let mut a: usize = 0;
+        let v = policy_iteration::<SecretEnv0>(0.999, 0.001);
 
         let mut policy = HashMap::new();
-        for i in 0..v.len(){
+        for i in 0..v.len() {
             policy.insert(i, v[i]);
         }
 

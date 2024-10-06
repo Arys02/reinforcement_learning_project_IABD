@@ -7,7 +7,7 @@ use ndarray_rand::rand::SeedableRng;
 use rand::prelude::StdRng;
 use rand::Rng;
 
-use crate::environement::environment::Environment;
+use crate::environement::environment_traits::Environment;
 /// The `TwoRoundRPS` struct represents an environment where an agent plays a two-round game of Rock-Paper-Scissors (RPS) against an opponent with a particular strategy.
 /// The opponent plays randomly in the first round but in the second round, it always mirrors the agent's choice from the first round.
 ///
@@ -31,41 +31,45 @@ pub struct TwoRoundRPS {
 
 impl TwoRoundRPS {
     fn build_transition_matrix() -> ArrayBase<OwnedRepr<f32>, Ix4> {
-        let mut transition_probability_matrix = Array4::zeros((Self::num_states(), Self::num_actions(), Self::num_states(), Self::num_rewards()));
+        let mut transition_probability_matrix = Array4::zeros((
+            Self::num_states(),
+            Self::num_actions(),
+            Self::num_states(),
+            Self::num_rewards(),
+        ));
 
         for s in 0..Self::num_states() {
             for a in 0..Self::num_actions() {
                 for s_p in 0..Self::num_states() {
                     for r in 0..Self::num_rewards() {
                         if s == 0 && s_p < 10 {
-                            if s_p == 1 &&  Self::get_reward(r) == 0. && a == 0 {
+                            if s_p == 1 && Self::get_reward(r) == 0. && a == 0 {
                                 transition_probability_matrix[[s, a, s_p, r]] = 1.0;
                             }
-                            if s_p == 2 &&  Self::get_reward(r) == -1. && a == 0 {
+                            if s_p == 2 && Self::get_reward(r) == -1. && a == 0 {
                                 transition_probability_matrix[[s, a, s_p, r]] = 1.0;
                             }
-                            if s_p == 3 &&  Self::get_reward(r) == 1. && a == 0 {
+                            if s_p == 3 && Self::get_reward(r) == 1. && a == 0 {
                                 transition_probability_matrix[[s, a, s_p, r]] = 1.0;
                             }
-                            if s_p == 4 &&  Self::get_reward(r) == 1. && a == 1 {
+                            if s_p == 4 && Self::get_reward(r) == 1. && a == 1 {
                                 transition_probability_matrix[[s, a, s_p, r]] = 1.0;
                             }
-                            if s_p == 5 &&  Self::get_reward(r) == 0. && a == 1 {
+                            if s_p == 5 && Self::get_reward(r) == 0. && a == 1 {
                                 transition_probability_matrix[[s, a, s_p, r]] = 1.0;
                             }
-                            if s_p == 6 &&  Self::get_reward(r) == -1. && a == 1 {
+                            if s_p == 6 && Self::get_reward(r) == -1. && a == 1 {
                                 transition_probability_matrix[[s, a, s_p, r]] = 1.0;
                             }
-                            if s_p == 7 &&  Self::get_reward(r) == -1. && a == 2 {
+                            if s_p == 7 && Self::get_reward(r) == -1. && a == 2 {
                                 transition_probability_matrix[[s, a, s_p, r]] = 1.0;
                             }
-                            if s_p == 8 &&  Self::get_reward(r) == 1. && a == 2 {
+                            if s_p == 8 && Self::get_reward(r) == 1. && a == 2 {
                                 transition_probability_matrix[[s, a, s_p, r]] = 1.0;
                             }
-                            if s_p == 9 &&  Self::get_reward(r) == 0. && a == 2 {
+                            if s_p == 9 && Self::get_reward(r) == 0. && a == 2 {
                                 transition_probability_matrix[[s, a, s_p, r]] = 1.0;
                             }
-
                         }
                         if s > 0 && s_p > 9 {
                             if vec![1, 2, 3].contains(&s) {
@@ -105,7 +109,6 @@ impl TwoRoundRPS {
                     }
                 }
             }
-
         }
         return transition_probability_matrix;
     }
@@ -123,7 +126,6 @@ impl Environment for TwoRoundRPS {
     fn state_id(&self) -> usize {
         self.agent_pos as usize
     }
-
 
     fn from_random_state() -> Self {
         let mut rng = rand::thread_rng();
@@ -156,7 +158,7 @@ impl Environment for TwoRoundRPS {
             0 => -1.,
             1 => 0.,
             2 => 1.,
-            _ => panic!("reward out of range")
+            _ => panic!("reward out of range"),
         }
     }
 
@@ -175,7 +177,9 @@ impl Environment for TwoRoundRPS {
     }
 
     fn available_action(&self) -> Array1<usize> {
-        if self.agent_pos > 18 { return Array1::zeros(0); };
+        if self.agent_pos > 18 {
+            return Array1::zeros(0);
+        };
         return array![0, 1, 2];
     }
 
@@ -186,7 +190,7 @@ impl Environment for TwoRoundRPS {
     fn is_terminal(&self) -> bool {
         match self.agent_pos {
             x if x > 9 => true,
-            _ => false
+            _ => false,
         }
     }
 
@@ -202,17 +206,14 @@ impl Environment for TwoRoundRPS {
         assert_eq!(self.available_action().iter().any(|&x| x == action), true);
 
         if self.agent_pos == 0 {
-
             let mut rng = rand::thread_rng();
 
-            let ia_move= rng.gen_range(0..=2);
+            let ia_move = rng.gen_range(0..=2);
             self.agent_pos = (action * 3 + ia_move + 1);
         } else {
-            let ia_move= (self.agent_pos - 1) / 3;
+            let ia_move = (self.agent_pos - 1) / 3;
             self.agent_pos = (action * 3 + ia_move + 1) + 9;
-
         };
-
     }
 
     fn delete(&mut self) {
@@ -239,27 +240,25 @@ impl Environment for TwoRoundRPS {
             print!("S | ")
         };
 
-
-        if self.agent_pos % 3  == 0 && self.agent_pos != 0{
+        if self.agent_pos % 3 == 0 && self.agent_pos != 0 {
             print!("S")
         }
-        if self.agent_pos % 3  == 1 {
+        if self.agent_pos % 3 == 1 {
             print!("P")
         }
-        if self.agent_pos % 3  == 2 {
+        if self.agent_pos % 3 == 2 {
             print!("F")
         }
         println!();
     }
-
 }
 
 #[cfg(test)]
 mod tests {
     #![allow(warnings)]
-    use rand::distributions::WeightedError::TooMany;
-    use crate::environement::two_round_rps;
     use super::*;
+    use crate::environement::two_round_rps;
+    use rand::distributions::WeightedError::TooMany;
 
     #[test]
     #[allow(warnings)]
@@ -270,20 +269,32 @@ mod tests {
         lw.reset_random_state(seed);
         println!("position : {}, rng : {}", lw.agent_pos, rng);
 
-        assert_eq!(lw.agent_pos, rng, "With seed {}, expected pos {}", seed, lw.agent_pos)
+        assert_eq!(
+            lw.agent_pos, rng,
+            "With seed {}, expected pos {}",
+            seed, lw.agent_pos
+        )
     }
 
     #[test]
     fn test_new() {
         let lw = TwoRoundRPS::new();
-        assert_eq!(lw.agent_pos, 0, "should be 8, {} find instead", lw.agent_pos)
+        assert_eq!(
+            lw.agent_pos, 0,
+            "should be 8, {} find instead",
+            lw.agent_pos
+        )
     }
 
     #[test]
     fn test_available_action() {
         let gw = TwoRoundRPS::new();
 
-        assert_eq!(gw.available_action(), array![0, 1, 2], "should be [0, 1, 2], found [] instead");
+        assert_eq!(
+            gw.available_action(),
+            array![0, 1, 2],
+            "should be [0, 1, 2], found [] instead"
+        );
     }
 
     #[test]
@@ -297,18 +308,12 @@ mod tests {
         gw.display();
         println!("{}", gw.state_id());
 
-
         assert_eq!(gw.state_id(), 17)
     }
 
     #[test]
     fn test_two_round_strategy() {
-        let strategy: HashMap<usize, usize> = HashMap::from([
-            (0, 1),
-            (4, 2),
-            (5, 2),
-            (6, 2),
-        ]);
+        let strategy: HashMap<usize, usize> = HashMap::from([(0, 1), (4, 2), (5, 2), (6, 2)]);
         let mut gw = TwoRoundRPS::new();
         gw.play_strategy(strategy, false);
 

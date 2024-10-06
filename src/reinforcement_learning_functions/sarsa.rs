@@ -1,11 +1,10 @@
-use std::collections::HashMap;
-use std::error::Error;
+use crate::environement::environment_traits::Environment;
 use ndarray_rand::rand::SeedableRng;
 use rand::prelude::{Distribution, IteratorRandom, StdRng};
 use rand::Rng;
 use serde::Serialize;
-use crate::environement::environment::Environment;
-
+use std::collections::HashMap;
+use std::error::Error;
 
 /// Executes the SARSA (State-Action-Reward-State-Action) algorithm for a given environment.
 ///
@@ -64,11 +63,9 @@ pub fn sarsa<E: Environment>(
 
     let mut pi = HashMap::new();
 
-
     for _ in 0..nb_iter {
         env.reset();
         let mut step = 0;
-
 
         while !env.is_terminal() && step < nb_step {
             step += 1;
@@ -88,12 +85,18 @@ pub fn sarsa<E: Environment>(
                 let random_i: usize = rng.gen_range(0..aa.len());
                 let _ = action_i.insert(random_i);
             } else {
-                let q_s: Vec<(f32, usize)> = aa.iter().enumerate().map(|(i, &a)| *Q.get(&
-                (state, i))
-                    .unwrap())
+                let q_s: Vec<(f32, usize)> = aa
+                    .iter()
+                    .enumerate()
+                    .map(|(i, &a)| *Q.get(&(state, i)).unwrap())
                     .collect();
 
-                let best_a_index = q_s.iter().enumerate().max_by(|(_, (a, _)), (_, (b, _))| a.partial_cmp(b).unwrap()).map(|(index, _)| index).unwrap();
+                let best_a_index = q_s
+                    .iter()
+                    .enumerate()
+                    .max_by(|(_, (a, _)), (_, (b, _))| a.partial_cmp(b).unwrap())
+                    .map(|(index, _)| index)
+                    .unwrap();
                 let _ = action_i.insert(best_a_index);
             }
 
@@ -106,14 +109,11 @@ pub fn sarsa<E: Environment>(
             let state_p = env.state_id();
             let available_action_p = env.available_action();
 
-
-
             let mut target: f32;
 
             if env.is_terminal() {
                 target = alpha * r
-            } else
-            {
+            } else {
                 if !Q.contains_key(&(state_p, available_action_p[0])) {
                     for a in 0..available_action_p.len() {
                         Q.insert((state_p, a), (rng.gen::<f32>(), available_action_p[a]));
@@ -127,20 +127,27 @@ pub fn sarsa<E: Environment>(
                     let random_i: usize = rng.gen_range(0..available_action_p.len());
                     let _ = action_i_p.insert(random_i);
                 } else {
-                    let q_s: Vec<(f32, usize)> = available_action_p.iter().enumerate().map(|(i, &a)| *Q
-                        .get(&(state_p,
-                               i))
-                        .unwrap())
+                    let q_s: Vec<(f32, usize)> = available_action_p
+                        .iter()
+                        .enumerate()
+                        .map(|(i, &a)| *Q.get(&(state_p, i)).unwrap())
                         .collect();
 
-                    let best_a_index = q_s.iter().enumerate().max_by(|&(_, (a, _)), &(_, (b, _))| a.partial_cmp
-                    (b).unwrap()).map(|(index, _)| index).unwrap();
+                    let best_a_index = q_s
+                        .iter()
+                        .enumerate()
+                        .max_by(|&(_, (a, _)), &(_, (b, _))| a.partial_cmp(b).unwrap())
+                        .map(|(index, _)| index)
+                        .unwrap();
                     let _ = action_i_p.insert(best_a_index);
                 }
 
                 let q_sp_ap = if Q.contains_key(&(state_p, action_i_p.unwrap())) {
                     *Q.get(&(state_p, action_i_p.unwrap())).unwrap()
-                } else { (0., 0) }.0;
+                } else {
+                    (0., 0)
+                }
+                .0;
                 let q_s_a = Q.get(&(state, action_i.unwrap())).unwrap().0;
 
                 target = (1. - alpha) * q_s_a + alpha * (gamma * q_sp_ap + r);
@@ -148,7 +155,6 @@ pub fn sarsa<E: Environment>(
 
             Q.insert((state, action_i.unwrap()), (target, action));
         }
-
     }
     for s in 0..E::num_states() {
         let mut best_a: Option<usize> = None;
@@ -205,24 +211,41 @@ mod tests {
         println!("gridworld,{}", test_env_policy(&mut gridworld, "gridworld"));
 
         let mut monty_hall = MontyHall1::new();
-        println!("montyhall,{}", test_env_policy(&mut monty_hall, "montyhall"));
+        println!(
+            "montyhall,{}",
+            test_env_policy(&mut monty_hall, "montyhall")
+        );
 
         let mut two_round_rps = TwoRoundRPS::new();
-        println!("tworoundrps,{}", test_env_policy(&mut two_round_rps, "tworoundrps"));
+        println!(
+            "tworoundrps,{}",
+            test_env_policy(&mut two_round_rps, "tworoundrps")
+        );
 
         let mut secret_env0 = SecretEnv0::new();
-        println!("secretenv0,{}", test_env_policy(&mut secret_env0, "secretenv0"));
+        println!(
+            "secretenv0,{}",
+            test_env_policy(&mut secret_env0, "secretenv0")
+        );
 
         let mut secret_env1 = SecretEnv1::new();
-        println!("secretenv1,{}", test_env_policy(&mut secret_env1, "secretenv1"));
+        println!(
+            "secretenv1,{}",
+            test_env_policy(&mut secret_env1, "secretenv1")
+        );
 
         let mut secret_env2 = SecretEnv2::new();
-        println!("secretenv2,{}", test_env_policy(&mut secret_env2, "secretenv2"));
+        println!(
+            "secretenv2,{}",
+            test_env_policy(&mut secret_env2, "secretenv2")
+        );
 
         let mut secret_env3 = SecretEnv3::new();
-        println!("secretenv3,{}", test_env_policy(&mut secret_env3, "secretenv3"));
+        println!(
+            "secretenv3,{}",
+            test_env_policy(&mut secret_env3, "secretenv3")
+        );
     }
-
 
     #[test]
     fn sarsa_policy_lineworld() {
@@ -274,7 +297,6 @@ mod tests {
         println!("stat ID :{:?}", env.state_id());
 
         let policy = sarsa(&mut env, 0.1, 0.1, 0.999, 1000, 1000, 42);
-
 
         println!("{:?}", policy);
         let nb_run: usize = 1000;

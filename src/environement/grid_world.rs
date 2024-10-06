@@ -7,7 +7,7 @@ use ndarray_rand::rand::SeedableRng;
 use rand::prelude::StdRng;
 use rand::Rng;
 
-use crate::environement::environment::Environment;
+use crate::environement::environment_traits::Environment;
 
 /// The `GridWorld` struct represents a grid-based environment where an agent can navigate a 5x5 grid.
 /// The agent starts at the top-left corner of the grid and can move left, right, up, or down.
@@ -31,49 +31,109 @@ pub struct GridWorld {
 
 impl GridWorld {
     fn build_transition_matrix() -> ArrayBase<OwnedRepr<f32>, Ix4> {
-        let mut transition_probability_matrix = Array4::zeros((Self::num_states(), Self::num_actions(), Self::num_states(), Self::num_rewards()));
+        let mut transition_probability_matrix = Array4::zeros((
+            Self::num_states(),
+            Self::num_actions(),
+            Self::num_states(),
+            Self::num_rewards(),
+        ));
 
         for s in 0..Self::num_states() {
             for a in 0..Self::num_actions() {
                 for s_p in 0..Self::num_states() {
                     for r in 0..Self::num_rewards() {
                         // cas aller à gauche valide
-                        if s > 0 && s % 7 >= 2 && s % 7 <= 5 && s < 40 && s > 7 && s_p == s - 1 && a == 0 && Self::get_reward(r) == 0. && s != 12
+                        if s > 0
+                            && s % 7 >= 2
+                            && s % 7 <= 5
+                            && s < 40
+                            && s > 7
+                            && s_p == s - 1
+                            && a == 0
+                            && Self::get_reward(r) == 0.
+                            && s != 12
                         {
                             transition_probability_matrix[[s, a, s_p, r]] = 1.0;
                         }
                         // cas aller à gauche out of bound
-                        if s > 0 && s % 7 == 1 && s < 41 && s > 7 && s_p == s - 1 && a == 0 && Self::get_reward(r) == -1.
+                        if s > 0
+                            && s % 7 == 1
+                            && s < 41
+                            && s > 7
+                            && s_p == s - 1
+                            && a == 0
+                            && Self::get_reward(r) == -1.
                         {
                             transition_probability_matrix[[s, a, s_p, r]] = 1.0;
                         }
                         // cas aller à droite valide
-                        if s > 0 && s % 7 >= 1 && s % 7 <= 4 && s < 40 && s > 7 && s_p == s + 1 && a == 1 && Self::get_reward(r) == 0. && s != 12
+                        if s > 0
+                            && s % 7 >= 1
+                            && s % 7 <= 4
+                            && s < 40
+                            && s > 7
+                            && s_p == s + 1
+                            && a == 1
+                            && Self::get_reward(r) == 0.
+                            && s != 12
                         {
                             transition_probability_matrix[[s, a, s_p, r]] = 1.0;
                         }
                         // cas aller à droite out of bound
-                        if s > 0 && s % 7 == 5 && s < 40 && s > 7 && s_p == s + 1 && a == 1 && Self::get_reward(r) == -1. && s != 12
+                        if s > 0
+                            && s % 7 == 5
+                            && s < 40
+                            && s > 7
+                            && s_p == s + 1
+                            && a == 1
+                            && Self::get_reward(r) == -1.
+                            && s != 12
                         {
                             transition_probability_matrix[[s, a, s_p, r]] = 1.0;
                         }
                         // cas aller en bas valide
-                        if s > 0 && s % 7 >= 1 && s % 7 <= 5 && s < 34 && s > 7 && s_p == s + 7 && a == 2 && Self::get_reward(r) == 0. && s != 12 && s != 40
+                        if s > 0
+                            && s % 7 >= 1
+                            && s % 7 <= 5
+                            && s < 34
+                            && s > 7
+                            && s_p == s + 7
+                            && a == 2
+                            && Self::get_reward(r) == 0.
+                            && s != 12
+                            && s != 40
                         {
                             transition_probability_matrix[[s, a, s_p, r]] = 1.0;
                         }
                         // cas aller à bas out of bound
-                        if s > 0 && s < 40 && s > 35 && s_p == s + 7 && a == 2 && Self::get_reward(r) == -1.
+                        if s > 0
+                            && s < 40
+                            && s > 35
+                            && s_p == s + 7
+                            && a == 2
+                            && Self::get_reward(r) == -1.
                         {
                             transition_probability_matrix[[s, a, s_p, r]] = 1.0;
                         }
                         // cas aller en haut valide
-                        if s > 0 && s % 7 >= 1 && s % 7 <= 5 && s < 40 && s > 14 && s_p == s - 7 && a == 3 && Self::get_reward(r) == 0.
+                        if s > 0
+                            && s % 7 >= 1
+                            && s % 7 <= 5
+                            && s < 40
+                            && s > 14
+                            && s_p == s - 7
+                            && a == 3
+                            && Self::get_reward(r) == 0.
                         {
                             transition_probability_matrix[[s, a, s_p, r]] = 1.0;
                         }
                         // cas aller à haut out of bound
-                        if s > 0 && s < 7 && s > 12 && s_p == s - 7 && a == 3 && Self::get_reward(r) == -1.
+                        if s > 0
+                            && s < 7
+                            && s > 12
+                            && s_p == s - 7
+                            && a == 3
+                            && Self::get_reward(r) == -1.
                         {
                             transition_probability_matrix[[s, a, s_p, r]] = 1.0;
                         }
@@ -87,7 +147,7 @@ impl GridWorld {
         transition_probability_matrix[[39, 1, 40, 3]] = 1.0;
         transition_probability_matrix[[33, 2, 40, 3]] = 1.0;
 
-        return transition_probability_matrix
+        return transition_probability_matrix;
     }
 }
 
@@ -95,14 +155,13 @@ impl Environment for GridWorld {
     fn new() -> Self {
         GridWorld {
             agent_pos: 8,
-            transition_probability_matrix: Self::build_transition_matrix()
+            transition_probability_matrix: Self::build_transition_matrix(),
         }
     }
 
     fn state_id(&self) -> usize {
         self.agent_pos as usize
     }
-
 
     fn from_random_state() -> Self {
         let mut rng = rand::thread_rng();
@@ -116,8 +175,8 @@ impl Environment for GridWorld {
 
         return GridWorld {
             agent_pos,
-            transition_probability_matrix: Self::build_transition_matrix()
-        }
+            transition_probability_matrix: Self::build_transition_matrix(),
+        };
     }
 
     fn reset(&mut self) {
@@ -142,16 +201,16 @@ impl Environment for GridWorld {
             1 => -1.,
             2 => 0.,
             3 => 1.,
-            _ => panic!("reward out of range")
+            _ => panic!("reward out of range"),
         }
     }
 
     fn build_transition_probability(s: usize, a: usize, s_p: usize, r: usize) -> f32 {
         let matrix = Self::build_transition_matrix();
-        return matrix[[s, a, s_p, r]]
+        return matrix[[s, a, s_p, r]];
     }
     fn get_transition_probability(&mut self, s: usize, a: usize, s_p: usize, r: usize) -> f32 {
-        return self.transition_probability_matrix[[s, a, s_p, r]]
+        return self.transition_probability_matrix[[s, a, s_p, r]];
     }
 
     fn reset_random_state(&mut self, seed: u64) {
@@ -178,22 +237,22 @@ impl Environment for GridWorld {
             x if x % 7 == 0 => true,
             x if x % 7 == 6 => true,
             12 | 40 => true,
-            _ => false
+            _ => false,
         }
     }
 
     fn is_forbidden(&self, action: usize) -> bool {
         if self.agent_pos % 7 == 0 && action == 0 {
-            return true
+            return true;
         }
         if (self.agent_pos % 7) == 6 && action == 1 {
-            return true
+            return true;
         }
         if self.agent_pos >= 40 && action == 2 {
-            return true
+            return true;
         }
         if self.agent_pos < 7 && action == 3 {
-            return true
+            return true;
         }
         false
     }
@@ -220,7 +279,7 @@ impl Environment for GridWorld {
             12 => -3.0,
             40 => 3.0,
             x if x > 7 && x < 40 && x % 7 >= 1 && x % 7 <= 5 => 0.0,
-            _ => -1.0
+            _ => -1.0,
         }
     }
 
@@ -245,7 +304,6 @@ impl Environment for GridWorld {
         }
         println!()
     }
-
 }
 
 #[cfg(test)]
@@ -260,20 +318,32 @@ mod tests {
         lw.reset_random_state(seed);
         println!("position : {}, rng : {}", lw.agent_pos, rng);
 
-        assert_eq!(lw.agent_pos, rng, "With seed {}, expected pos {}", seed, lw.agent_pos)
+        assert_eq!(
+            lw.agent_pos, rng,
+            "With seed {}, expected pos {}",
+            seed, lw.agent_pos
+        )
     }
 
     #[test]
     fn test_new() {
         let lw = GridWorld::new();
-        assert_eq!(lw.agent_pos, 8, "should be 8, {} find instead", lw.agent_pos)
+        assert_eq!(
+            lw.agent_pos, 8,
+            "should be 8, {} find instead",
+            lw.agent_pos
+        )
     }
 
     #[test]
     fn test_available_action() {
         let gw = GridWorld::new();
 
-        assert_eq!(gw.available_action(), array![0, 1, 2, 3], "should be [1, 2], found [] instead");
+        assert_eq!(
+            gw.available_action(),
+            array![0, 1, 2, 3],
+            "should be [1, 2], found [] instead"
+        );
     }
 
     #[test]
@@ -289,7 +359,6 @@ mod tests {
         gw.display();
         gw.step(3);
         gw.display();
-
 
         assert_eq!(gw.state_id(), 8)
     }
