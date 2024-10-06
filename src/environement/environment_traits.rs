@@ -146,8 +146,15 @@ pub trait DeepDiscreteActionsEnv<const NUM_STATES_FEATURES: usize, const NUM_ACT
     fn reset(&mut self);
 }
 
-
+/// Trait that defines the capability for a game to be played interactively with a human player.
+/// Implementing this trait allows a game to be run in an interactive mode,
+/// utilizing all the provided methods to facilitate a complete game session.
 pub trait Playable : Default + Clone {
+    /// Starts an interactive game session with a human player.
+    ///
+    /// This function should orchestrate the game flow, handling user input and game state updates.
+    /// It should leverage all the existing methods to allow a real game of Farkle to be played,
+    /// including initializing the game state, processing player actions, and determining game outcomes.
     fn play_with_human();
     fn play_with_random_ai();
 }

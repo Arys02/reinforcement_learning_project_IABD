@@ -1,5 +1,5 @@
 pub mod farkle {
-    use crate::environement::environment_traits::DeepDiscreteActionsEnv;
+    use crate::environement::environment_traits::{DeepDiscreteActionsEnv, Playable};
     use rand::prelude::IteratorRandom;
     use rand::Rng;
     use std::fmt::Display;
@@ -342,6 +342,33 @@ pub mod farkle {
             }
 
             Ok(())
+        }
+
+    }
+    /// Trait that defines the capability for a game to be played interactively with a human player.
+    /// Implementing this trait allows a game to be run in an interactive mode,
+    /// utilizing all the provided methods to facilitate a complete game session.
+    impl Playable for Farkle {
+        /// Initiates a full game of Farkle to be played with a human player.
+        ///
+        /// The objective is to utilize all existing methods to manage the game state and interactions.
+        /// This function should:
+        /// - Initialize the game and any necessary variables.
+        /// - Enter a game loop that continues until the game is over.
+        /// - Display the current game state to the player at each turn.
+        /// - Prompt the player for input and handle their chosen actions.
+        /// - Update the game state based on the player's actions and game rules.
+        /// - Handle the AI player's turns, if applicable.
+        /// - Conclude the game by displaying the final scores and the winner.
+        ///
+        /// **Note:** This method is currently unimplemented and needs to be filled out
+        /// to allow a real game of Farkle to be played interactively.
+        fn play_with_human() {
+            todo!()
+        }
+
+        fn play_with_random_ai() {
+            todo!()
         }
     }
     #[cfg(test)]
