@@ -145,3 +145,9 @@ pub trait DeepDiscreteActionsEnv<const NUM_STATES_FEATURES: usize, const NUM_ACT
     fn score(&self) -> f32;
     fn reset(&mut self);
 }
+
+
+pub trait Playable : Default + Clone {
+    fn play_with_human();
+    fn play_with_random_ai();
+}
