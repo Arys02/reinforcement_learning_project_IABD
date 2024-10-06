@@ -1,7 +1,5 @@
 extern crate rand;
 
-use std::collections::HashMap;
-
 use ndarray::{array, Array1, Array4, ArrayBase, Ix4, OwnedRepr};
 use rand::prelude::StdRng;
 use rand::{Rng, SeedableRng};
@@ -146,7 +144,7 @@ impl Environment for LineWorld {
         }
     }
 
-    fn is_forbidden(&self, action: usize) -> bool {
+    fn is_forbidden(&self, _action: usize) -> bool {
         todo!()
     }
 

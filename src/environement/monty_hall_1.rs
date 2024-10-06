@@ -1,10 +1,6 @@
 extern crate rand;
 
-use std::collections::HashMap;
-
 use ndarray::{array, Array1, Array4, ArrayBase, Ix4, OwnedRepr};
-use ndarray_rand::rand::SeedableRng;
-use rand::prelude::StdRng;
 use rand::Rng;
 
 use crate::environement::environment_traits::Environment;
@@ -58,7 +54,7 @@ impl Environment for MontyHall1 {
         //let mut rng = StdRng::seed_from_u64(42);
 
         let mut rng = rand::thread_rng();
-        let mut dore_win: usize = rng.gen_range(1..=3);
+        let dore_win: usize = rng.gen_range(1..=3);
         MontyHall1 {
             state: 0,
             agent_pos: 0,
@@ -73,20 +69,20 @@ impl Environment for MontyHall1 {
 
     fn from_random_state() -> Self {
         let mut rng = rand::thread_rng();
-        let mut agent_pos: usize = rng.gen_range(0..=3);
-        let mut door_win: usize = rng.gen_range(1..=3);
+        let agent_pos: usize = rng.gen_range(0..=3);
+        let door_win: usize = rng.gen_range(1..=3);
 
-        return MontyHall1 {
+        MontyHall1 {
             state: agent_pos,
             agent_pos,
             door_win,
             transition_probability_matrix: Self::build_transition_matrix(),
-        };
+        }
     }
 
     fn reset(&mut self) {
         let mut rng = rand::thread_rng();
-        let mut dore_win: usize = rng.gen_range(1..=3);
+        let dore_win: usize = rng.gen_range(1..=3);
         self.door_win = dore_win;
         self.state = 0;
     }
@@ -119,7 +115,7 @@ impl Environment for MontyHall1 {
         return self.transition_probability_matrix[[s, a, s_p, r]];
     }
 
-    fn reset_random_state(&mut self, seed: u64) {
+    fn reset_random_state(&mut self, _seed: u64) {
         let mut rng = rand::thread_rng();
         let agent_pos: usize = rng.gen_range(0..=3);
         let dore_win: usize = rng.gen_range(1..=3);
@@ -180,13 +176,10 @@ impl Environment for MontyHall1 {
     }
 
     fn score(&self) -> f32 {
-        if self.state < 0 {
-            return 0.;
-        }
         if self.agent_pos == self.door_win {
             return 1.;
         }
-        return 0.;
+        0.
     }
 
     fn display(&self) {
@@ -262,8 +255,6 @@ impl Environment for MontyHall1 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::environement::two_round_rps;
-    use rand::distributions::WeightedError::TooMany;
 
     #[test]
     fn test_new() {

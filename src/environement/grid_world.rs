@@ -1,7 +1,5 @@
 extern crate rand;
 
-use std::collections::HashMap;
-
 use ndarray::{array, Array1, Array4, ArrayBase, Ix4, OwnedRepr};
 use ndarray_rand::rand::SeedableRng;
 use rand::prelude::StdRng;
@@ -308,6 +306,7 @@ impl Environment for GridWorld {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::HashMap;
     use super::*;
 
     #[test]

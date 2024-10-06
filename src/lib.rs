@@ -1,4 +1,4 @@
-#![allow(warnings)]
+#![allow(non_snake_case)]
 
 pub mod environement;
 pub mod ml_core;

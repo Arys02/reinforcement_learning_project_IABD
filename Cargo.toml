@@ -5,8 +5,16 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [lib]
-crate-type = ["cdylib"]
+crate-type = ["cdylib", "lib"]
 path = "src/lib.rs"
+
+[[bin]]
+name = "display_test"
+path = "src/bin/display_tests.rs"
+
+[[bin]]
+name = "main"
+path = "src/bin/main.rs"
 
 [profile.release]
 opt-level = 3

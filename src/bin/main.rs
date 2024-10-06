@@ -1,86 +1,68 @@
-#![allow(warnings)]
+extern crate IABD4_reinforcement_learning;
 
-use std::collections::{btree_map::Entry, BTreeMap};
-use termtree::{GlyphPalette, Tree};
+use burn::backend::Autodiff;
 
-#[derive(Debug)]
-enum Node<'s> {
-    Path(BTreeMap<&'s str, Node<'s>>),
-    Status(&'s str),
-}
-const LOG_CONTENT: &str = include_str!("../../test.log");
+use burn::prelude::*;
+use rand_xoshiro::rand_core::SeedableRng;
+use rand_xoshiro::Xoshiro256PlusPlus;
+use IABD4_reinforcement_learning::environement::environment_traits::DeepDiscreteActionsEnv;
+use IABD4_reinforcement_learning::environement::tic_tac_toe::tic_tac_toe::{TicTacToeVersusRandom, NUM_ACTIONS,
+                                                                           NUM_STATE_FEATURES};
+use burn::module::AutodiffModule;
+use IABD4_reinforcement_learning::ml_core::mlp::MyQMLP;
+
+type GameEnv = TicTacToeVersusRandom;
+use IABD4_reinforcement_learning::reinforcement_learning_functions::deep_reinforcement_learning_functions::episodic_semi_gradiant_sarsa::{episodic_semi_gradient_sarsa, epsilon_greedy_action};
+
+type MyBackend = burn::backend::LibTorch;
+type MyAutodiffBackend = Autodiff<MyBackend>;
 
 fn main() {
-    println!("{}", pretty_test(LOG_CONTENT).unwrap());
-}
+    let device = &Default::default();
 
-fn pretty_test(output: &str) -> Option<Tree<&str>> {
-    let mut path = BTreeMap::new();
-    for line in output.trim().lines() {
-        let mut iter = line.trim().splitn(3, ' ');
-        let mut split = iter.nth(1)?.split("::");
-        let next = split.next();
-        let status = iter.next()?;
-        make_mods(split, status, &mut path, next);
-    }
-    let mut tree = Tree::new("test");
-    for (root, child) in path {
-        make_tree(root, &child, &mut tree);
-    }
-    Some(tree)
-}
+    // Create the model
+    let model = MyQMLP::<MyAutodiffBackend>::new(device,
+                                                 NUM_STATE_FEATURES,
+                                                 NUM_ACTIONS);
 
-// Add paths to Node
-fn make_mods<'s>(
-    mut split: impl Iterator<Item = &'s str>,
-    status: &'s str,
-    path: &mut BTreeMap<&'s str, Node<'s>>,
-    key: Option<&'s str>,
-) {
-    let Some(key) = key else { return };
-    let next = split.next();
-    match path.entry(key) {
-        Entry::Vacant(empty) => {
-            if next.is_some() {
-                let mut btree = BTreeMap::new();
-                make_mods(split, status, &mut btree, next);
-                empty.insert(Node::Path(btree));
-            } else {
-                empty.insert(Node::Status(status));
-            }
-        }
-        Entry::Occupied(mut node) => {
-            if let Node::Path(btree) = node.get_mut() {
-                make_mods(split, status, btree, next)
-            }
-        }
-    }
-}
+    // Train the model
+    let model =
+        episodic_semi_gradient_sarsa::<
+            NUM_STATE_FEATURES,
+            NUM_ACTIONS,
+            _,
+            MyAutodiffBackend,
+            GameEnv,
+        >(
+            model,
+            50_000,
+            0.999f32,
+            3e-3,
+            1.0f32,
+            1e-5f32,
+            device,
+        );
 
-// Add Node to Tree
-fn make_tree<'s>(root: &'s str, node: &Node<'s>, parent: &mut Tree<&'s str>) {
-    match node {
-        Node::Path(btree) => {
-            let mut t = Tree::new(root);
-            for (path, child) in btree {
-                make_tree(path, child, &mut t);
-            }
-            parent.push(t);
+    // Let's play some games (press enter to show the next game)
+    let device = &Default::default();
+    let mut env = GameEnv::default();
+    let mut rng = Xoshiro256PlusPlus::from_entropy();
+    loop {
+        env.reset();
+        while !env.is_game_over() {
+            println!("{}", env);
+            let s = env.state_description();
+            let s_tensor: Tensor<MyBackend, 1> = Tensor::from_floats(s.as_slice(), device);
+
+            let mask = env.action_mask();
+            let mask_tensor: Tensor<MyBackend, 1> = Tensor::from(mask).to_device(device);
+            let q_s = model.valid().forward(s_tensor);
+
+            let a = epsilon_greedy_action::<MyBackend, NUM_STATE_FEATURES, NUM_ACTIONS>(&q_s, &mask_tensor, env.available_actions_ids(), 1e-5f32, &mut rng);
+            env.step(a);
         }
-        Node::Status(s) => {
-            parent.push(Tree::new(root).with_glyphs(set_status(s)));
-        }
+        println!("{}", env);
+        let mut s = String::new();
+        std::io::stdin().read_line(&mut s).unwrap();
     }
 }
-
-// Display with a status icon
-fn set_status(status: &str) -> GlyphPalette {
-    let mut glyph = GlyphPalette::new();
-    glyph.item_indent = if status.ends_with("ok") {
-        "─ ✅ "
-    } else {
-        "─ ❌ "
-    };
-    glyph
-}
-use std::ffi::c_void;

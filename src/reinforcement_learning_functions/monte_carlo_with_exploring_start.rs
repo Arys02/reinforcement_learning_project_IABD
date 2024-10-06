@@ -2,9 +2,7 @@ use crate::environement::environment_traits::Environment;
 use ndarray_rand::rand::SeedableRng;
 use rand::prelude::{IteratorRandom, StdRng};
 use rand::Rng;
-use serde::Serialize;
 use std::collections::HashMap;
-use std::error::Error;
 
 /// Executes the Monte Carlo with Exploring Starts algorithm for a given environment.
 ///
@@ -48,7 +46,7 @@ use std::error::Error;
 /// which helps in discovering better policies. The target policy `pi` is iteratively improved based on the observed returns.
 
 pub fn monte_carlo_with_exploring_start<E: Environment>(
-    mut env: &mut E,
+    env: &mut E,
     gamma: f32,
     nb_iter: i32,
     max_steps: i32,
@@ -70,9 +68,6 @@ pub fn monte_carlo_with_exploring_start<E: Environment>(
         while !env.is_terminal() && step_count < max_steps {
             let state = env.state_id();
             let available_action = env.available_action();
-            let available_action_vec = available_action.to_vec();
-            //println!("state : {:?}", state);
-            //println!("available action : {:?}", available_action);
 
             if !pi.contains_key(&state) {
                 pi.insert(state, *available_action.iter().choose(&mut rng).unwrap());

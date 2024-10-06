@@ -4,9 +4,7 @@ use ndarray_rand::rand::SeedableRng;
 use ndarray_stats::QuantileExt;
 use rand::prelude::{IteratorRandom, StdRng};
 use rand::Rng;
-use serde::Serialize;
 use std::collections::HashMap;
-use std::error::Error;
 
 /// Executes the Q-Learning algorithm for a given environment.
 ///
@@ -69,7 +67,7 @@ pub fn q_learning<E: Environment>(
 
     for _ in 0..nb_iter {
         env.reset();
-        let mut step = 0;
+        let step = 0;
 
         while !env.is_terminal() && step < nb_step {
             let state = env.state_id();
@@ -121,7 +119,7 @@ pub fn q_learning<E: Environment>(
             let state_p = env.state_id();
             let available_action_p = env.available_action();
 
-            let mut target: f32;
+            let target: f32;
 
             if env.is_terminal() {
                 target = alpha * r;
@@ -147,7 +145,6 @@ pub fn q_learning<E: Environment>(
                 let array_q_s_p = Array::from_vec(q_s_p);
                 //TODO check if it's working like that
                 let max = array_q_s_p.max().unwrap();
-                let max_i = array_q_s_p.iter().position(|&x| x == *max);
                 target = r + gamma * max
             }
             let q_s_a = *Q
@@ -170,7 +167,7 @@ pub fn q_learning<E: Environment>(
         let mut best_a: Option<usize> = None;
         let mut best_a_score = f32::MIN;
 
-        for (&(action_i, action), &a_score) in actions {
+        for (&(_, action), &a_score) in actions {
             if best_a.is_none() || best_a_score <= a_score {
                 best_a = Some(action);
                 best_a_score = a_score;
@@ -179,7 +176,7 @@ pub fn q_learning<E: Environment>(
         pi.insert(s, best_a.unwrap());
     }
     println!("{:?}", pi);
-    return (pi, Q);
+    (pi, Q)
 }
 
 #[cfg(test)]

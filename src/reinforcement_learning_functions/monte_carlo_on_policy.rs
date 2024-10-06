@@ -1,11 +1,9 @@
 use crate::environement::environment_traits::Environment;
 use ndarray_rand::rand::SeedableRng;
 use rand::distributions::WeightedIndex;
-use rand::prelude::{Distribution, IteratorRandom, StdRng};
+use rand::prelude::{Distribution, StdRng};
 use rand::Rng;
-use serde::Serialize;
 use std::collections::HashMap;
-use std::error::Error;
 
 /// Executes the Monte Carlo On-Policy algorithm for a given environment.
 ///
@@ -48,7 +46,7 @@ use std::error::Error;
 /// balancing exploration and exploitation. The target policy `pi` is iteratively improved based on the observed returns.
 
 pub fn monte_carlo_on_policy<E: Environment>(
-    mut env: &mut E,
+    env: &mut E,
     gamma: f32,
     nb_iter: i32,
     max_steps: i32,
@@ -71,7 +69,6 @@ pub fn monte_carlo_on_policy<E: Environment>(
         while !env.is_terminal() && step_count < max_steps {
             let state = env.state_id();
             let available_action = env.available_action();
-            let vec_aa = available_action.to_vec();
 
             if !pi.contains_key(&state) {
                 let mut tmp_action_vector = Vec::with_capacity(available_action.len());
@@ -99,7 +96,7 @@ pub fn monte_carlo_on_policy<E: Environment>(
             }
 
             let actions = pi.get(&state).unwrap().to_owned().0;
-            let mut dist = WeightedIndex::new(actions).unwrap();
+            let dist = WeightedIndex::new(actions).unwrap();
             let action = dist.sample(&mut rng);
 
             let prev_score = env.score();
@@ -113,8 +110,6 @@ pub fn monte_carlo_on_policy<E: Environment>(
         let mut g = 0.;
 
         for (t, &(s, a, r, ref aa)) in trajectory.iter().enumerate().rev() {
-            let av_vec = aa.to_vec();
-
             g = gamma * g + r;
             //unless the pair St, At appear
             if trajectory[..t]
@@ -180,8 +175,6 @@ mod tests {
     use crate::environement::secret_env_2::SecretEnv2;
     use crate::environement::secret_env_3::SecretEnv3;
     use crate::environement::two_round_rps::TwoRoundRPS;
-    use crate::reinforcement_learning_functions::monte_carlo_off_policy::monte_carlo_off_policy;
-    use crate::reinforcement_learning_functions::monte_carlo_with_exploring_start::monte_carlo_with_exploring_start;
 
     use super::*;
 

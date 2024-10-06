@@ -2,7 +2,7 @@ use crate::ml_core::ml_traits::Forward;
 use burn::prelude::*;
 
 #[derive(Module, Debug)]
-struct MyQMLP<B: Backend> {
+pub struct MyQMLP<B: Backend> {
     linear1: nn::Linear<B>,
     linear2: nn::Linear<B>,
     linear3: nn::Linear<B>,
@@ -10,7 +10,7 @@ struct MyQMLP<B: Backend> {
 }
 
 impl<B: burn::prelude::Backend> MyQMLP<B> {
-    fn new(device: &B::Device, input_state_features: usize, output_actions: usize) -> Self {
+    pub fn new(device: &B::Device, input_state_features: usize, output_actions: usize) -> Self {
         let linear1 = nn::LinearConfig::new(input_state_features, 64)
             .with_bias(true)
             .init(device);
@@ -27,7 +27,7 @@ impl<B: burn::prelude::Backend> MyQMLP<B> {
         }
     }
 
-    fn forward<const D: usize>(&self, x: Tensor<B, D>) -> Tensor<B, D> {
+    pub fn forward<const D: usize>(&self, x: Tensor<B, D>) -> Tensor<B, D> {
         let x = self.linear1.forward(x);
         let x = x.tanh();
         let x = self.linear2.forward(x);

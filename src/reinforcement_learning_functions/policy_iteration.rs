@@ -1,12 +1,7 @@
 use crate::environement::environment_traits::Environment;
 use ndarray::Array;
-use ndarray_rand::rand::SeedableRng;
-use ndarray_rand::rand_distr::num_traits::abs;
 use ndarray_rand::RandomExt;
 use rand::distributions::Uniform;
-use rand::prelude::{SliceRandom, StdRng};
-use serde::Serialize;
-use std::error::Error;
 
 /// Executes the Policy Iteration algorithm for a given environment.
 ///
@@ -50,19 +45,17 @@ pub fn policy_iteration<E: Environment>(gamma: f32, theta: f32) -> Vec<usize> {
     let mut V = Array::random((num_states, 1), Uniform::new(0.0, 1.0)).into_raw_vec();
 
     let mut pi = vec![];
-    for i in 0..num_states {
+    for _ in 0..num_states {
         pi.push(0)
     }
     println!("pi : {:?}", pi);
 
-    let mut i = 0;
     loop {
-        let mut j = 0;
         loop {
             let mut delta: f32 = 0.;
             for s in 0..num_states {
                 let a = pi[s];
-                let mut v = V[s];
+                let v = V[s];
                 let mut total = 0.;
                 for s_p in 0..num_states {
                     for r in 0..num_rewards {

@@ -1,7 +1,5 @@
 extern crate rand;
 
-use std::collections::HashMap;
-
 use ndarray::{array, Array1, Array4, ArrayBase, Ix4, OwnedRepr};
 use ndarray_rand::rand::SeedableRng;
 use rand::prelude::StdRng;

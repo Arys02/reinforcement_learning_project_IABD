@@ -19,10 +19,10 @@ pub fn policy_evaluation<E: Environment>(
     loop {
         let mut delta: f32 = 0.;
         for s in 0..num_states {
-            let mut v = V[s];
+            let v = V[s];
             let mut total = 0.;
             for a in 0..num_actions {
-                let mut pi_s_a: f32 = policy[[s, a]] as f32;
+                let pi_s_a: f32 = policy[[s, a]] as f32;
                 for s_p in 0..num_states {
                     for r in 0..num_rewards {
                         total += pi_s_a

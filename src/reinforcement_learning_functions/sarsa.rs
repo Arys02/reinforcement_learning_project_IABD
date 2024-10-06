@@ -1,10 +1,8 @@
 use crate::environement::environment_traits::Environment;
 use ndarray_rand::rand::SeedableRng;
-use rand::prelude::{Distribution, IteratorRandom, StdRng};
+use rand::prelude::StdRng;
 use rand::Rng;
-use serde::Serialize;
 use std::collections::HashMap;
-use std::error::Error;
 
 /// Executes the SARSA (State-Action-Reward-State-Action) algorithm for a given environment.
 ///
@@ -50,7 +48,7 @@ use std::error::Error;
 /// The SARSA algorithm updates the policy `pi` based on the learned action-value function `Q`
 /// by selecting the action with the highest value for each state.
 pub fn sarsa<E: Environment>(
-    mut env: &mut E,
+    env: &mut E,
     alpha: f32,
     epsilon: f32,
     gamma: f32,
@@ -88,7 +86,7 @@ pub fn sarsa<E: Environment>(
                 let q_s: Vec<(f32, usize)> = aa
                     .iter()
                     .enumerate()
-                    .map(|(i, &a)| *Q.get(&(state, i)).unwrap())
+                    .map(|(i, _)| *Q.get(&(state, i)).unwrap())
                     .collect();
 
                 let best_a_index = q_s
@@ -109,7 +107,7 @@ pub fn sarsa<E: Environment>(
             let state_p = env.state_id();
             let available_action_p = env.available_action();
 
-            let mut target: f32;
+            let target: f32;
 
             if env.is_terminal() {
                 target = alpha * r
@@ -130,7 +128,7 @@ pub fn sarsa<E: Environment>(
                     let q_s: Vec<(f32, usize)> = available_action_p
                         .iter()
                         .enumerate()
-                        .map(|(i, &a)| *Q.get(&(state_p, i)).unwrap())
+                        .map(|(i, _)| *Q.get(&(state_p, i)).unwrap())
                         .collect();
 
                     let best_a_index = q_s
@@ -147,7 +145,7 @@ pub fn sarsa<E: Environment>(
                 } else {
                     (0., 0)
                 }
-                .0;
+                    .0;
                 let q_s_a = Q.get(&(state, action_i.unwrap())).unwrap().0;
 
                 target = (1. - alpha) * q_s_a + alpha * (gamma * q_sp_ap + r);

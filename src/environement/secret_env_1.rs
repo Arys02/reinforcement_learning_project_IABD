@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::ffi::c_void;
 
 use ndarray::Array1;
@@ -69,7 +68,7 @@ impl Environment for SecretEnv1 {
         return unsafe { secret_env_1_transition_probability(s, a, s_p, r) };
     }
 
-    fn reset_random_state(&mut self, seed: u64) {
+    fn reset_random_state(&mut self, _seed: u64) {
         unsafe {
             let secret_env_1_from_random_state: libloading::Symbol<
                 unsafe extern "C" fn() -> *mut c_void,

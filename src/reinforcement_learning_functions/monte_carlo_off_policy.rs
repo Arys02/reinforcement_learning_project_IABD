@@ -2,15 +2,11 @@ extern crate csv;
 extern crate serde;
 
 use crate::environement::environment_traits::Environment;
-use csv::Writer;
 use ndarray_rand::rand::SeedableRng;
 use rand::distributions::WeightedIndex;
-use rand::prelude::{Distribution, IteratorRandom, StdRng};
+use rand::prelude::{Distribution, StdRng};
 use rand::Rng;
 use std::collections::HashMap;
-use std::error::Error;
-
-use serde::Serialize;
 
 /// Executes the Monte Carlo Off-Policy algorithm for a given environment.
 ///
@@ -55,7 +51,7 @@ use serde::Serialize;
 /// balancing exploration and exploitation. The target policy `pi` is iteratively improved based on the observed returns.
 
 pub fn monte_carlo_off_policy<E: Environment>(
-    mut env: &mut E,
+    env: &mut E,
     gamma: f32,
     nb_iter: i32,
     max_steps: i32,
@@ -69,7 +65,7 @@ pub fn monte_carlo_off_policy<E: Environment>(
     let mut C: HashMap<(usize, usize), f32> = HashMap::new();
 
     //loop forever for each episode
-    for i in 0..nb_iter {
+    for _ in 0..nb_iter {
         seed += 1;
         env.reset();
 
@@ -119,7 +115,7 @@ pub fn monte_carlo_off_policy<E: Environment>(
                 }
             }
 
-            let mut dist = WeightedIndex::new(&tmp_action_vector).unwrap();
+            let dist = WeightedIndex::new(&tmp_action_vector).unwrap();
             let action = dist.sample(&mut rng);
 
             b.insert(state, tmp_action_vector.clone());
@@ -136,9 +132,7 @@ pub fn monte_carlo_off_policy<E: Environment>(
         let mut g = 0.;
         let mut w = 1.;
 
-        for (t, &(s, a, r, ref aa)) in trajectory.iter().enumerate().rev() {
-            let av_vec = aa.to_vec();
-
+        for (_, &(s, a, r, ref aa)) in trajectory.iter().enumerate().rev() {
             g = gamma * g + r;
             C.insert((s, a), C.get(&(s, a)).unwrap() + w);
             Q.insert(
@@ -186,7 +180,6 @@ mod tests {
     use crate::environement::secret_env_2::SecretEnv2;
     use crate::environement::secret_env_3::SecretEnv3;
     use crate::environement::two_round_rps::TwoRoundRPS;
-    use ndarray_stats::histogram::Grid;
 
     use super::*;
 
