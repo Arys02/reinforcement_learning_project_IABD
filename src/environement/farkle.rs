@@ -2,6 +2,16 @@ pub mod farkle{
     use crate::environement::environment_traits::DeepDiscreteActionsEnv;
     use rand::prelude::IteratorRandom;
     use std::fmt::Display;
+    use colored::*;
+
+    const DICE_ART: [&str; 6] = [
+        "┌─────┐\n│     │\n│  ●  │\n│     │\n└─────┘",
+        "┌─────┐\n│●    │\n│     │\n│    ●│\n└─────┘",
+        "┌─────┐\n│●    │\n│  ●  │\n│    ●│\n└─────┘",
+        "┌─────┐\n│●   ●│\n│     │\n│●   ●│\n└─────┘",
+        "┌─────┐\n│●   ●│\n│  ●  │\n│●   ●│\n└─────┘",
+        "┌─────┐\n│●   ●│\n│●   ●│\n│●   ●│\n└─────┘",
+    ];
 
     pub const NUM_STATE_FEATURES: usize = 36;
     pub const NUM_ACTIONS: usize = 12;
@@ -15,6 +25,7 @@ pub mod farkle{
         pub round: u8,
         pub score: f32,
         pub is_game_over: bool,
+        pub is_player_turn: bool,
     }
 
     impl Default for Farkle{
@@ -27,6 +38,7 @@ pub mod farkle{
                 round: 0,
                 score: 0.0,
                 is_game_over: false,
+                is_player_turn: true,
             }
         }
     }
@@ -177,10 +189,41 @@ pub mod farkle{
 
     impl Display for Farkle{
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-            todo!()
-            /*
+            writeln!(f, "{}",
+                     "=== Farkle Game ===".bold().underline().blue()
+            )?;
+            writeln!(f, "Round: {}", self.round)?;
+            writeln!(f, "Player Score: {}", self.player_score)?;
+            writeln!(f, "AI Score: {}", self.ai_score)?;
+            writeln!(f, "Game Over: {}", self.is_game_over)?;
+            writeln!(f, "Remaining Dice: {}", self.remaining_dice)?;
+            writeln!(f, "Current Round Score: {}", self.score)?;
+            writeln!(f, "Current Turn: {}", if self.is_player_turn { "Player".green() } else { "AI".red() })?;
+            writeln!(f, "Dice:")?;
+
+            // Prepare lines for ASCII art
+            let mut dice_lines = vec![String::new(); 5];
+
+            for &die in &self.board {
+                let face = if die >= 1 && die <=6 {
+                    DICE_ART[(die - 1) as usize]
+                } else {
+                    // Represent kept aside or not rolled dice with blank dice
+                    "┌─────┐\n│     │\n│     │\n│     │\n└─────┘"
+                };
+                let face_lines: Vec<&str> = face.split('\n').collect();
+                for (i, line) in face_lines.iter().enumerate() {
+                    dice_lines[i].push_str(line);
+                    dice_lines[i].push_str("  "); // Space between dice
+                }
+            }
+
+            // Write the collected ASCII art lines
+            for line in dice_lines {
+                writeln!(f, "{}", line)?;
+            }
+
             Ok(())
-             */
         }
     }
 }
