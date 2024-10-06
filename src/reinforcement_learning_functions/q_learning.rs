@@ -189,7 +189,6 @@ mod tests {
     use crate::environement::secret_env_2::SecretEnv2;
     use crate::environement::secret_env_3::SecretEnv3;
     use crate::environement::two_round_rps::TwoRoundRPS;
-    use crate::reinforcement_learning_functions::sarsa::sarsa;
 
     use super::*;
 

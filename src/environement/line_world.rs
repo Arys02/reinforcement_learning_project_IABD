@@ -214,15 +214,7 @@ mod tests {
 
     #[test]
     fn test_available_action() {
-        let lw = LineWorld::new();
-        let lw2 = LineWorld {
-            agent_pos: 0,
-            transition_probability_matrix: LineWorld::build_transition_matrix(),
-        };
-        let lw3 = LineWorld {
-            agent_pos: 4,
-            transition_probability_matrix: LineWorld::build_transition_matrix(),
-        };
+
     }
 
     #[test]

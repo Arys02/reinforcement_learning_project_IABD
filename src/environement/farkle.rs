@@ -7,7 +7,7 @@ pub mod farkle {
     pub const NUM_STATE_FEATURES: usize = 36;
     pub const NUM_ACTIONS: usize = 12;
 
-    #[derive(Clone)]
+    #[derive(Clone, Debug)]
     pub struct Farkle {
         pub board: [u8; 6],
         pub player: u8,
@@ -16,7 +16,7 @@ pub mod farkle {
         pub round: u8,
         pub score: f32,
         pub is_game_over: bool,
-        pub reroll_allowed: bool
+        pub reroll_allowed: bool,
     }
 
     impl Farkle {
@@ -24,7 +24,7 @@ pub mod farkle {
             self.board = [0u8; 6];
             let mut rng = rand::thread_rng();
             for _ in 0..self.remaining_dice as usize {
-                let n: usize = rng.gen_range(1..=6);
+                let n: usize = rng.gen_range(0..6);
                 self.board[n] += 1;
             }
         }
@@ -50,16 +50,18 @@ pub mod farkle {
 
     impl Default for Farkle {
         fn default() -> Self {
-            Self {
+            let mut farkle = Self {
                 board: [0u8; 6],
                 player: 0,
-                remaining_dice: 0,
+                remaining_dice: 6,
                 total_score: [0; 2],
                 round: 0,
                 score: 0.0,
                 is_game_over: false,
                 reroll_allowed: false,
-            }
+            };
+            farkle.roll();
+            farkle
         }
     }
 
@@ -95,12 +97,10 @@ pub mod farkle {
             if self.board[4] > 2 { v[8] = Some(8) };
             if self.board[5] > 0 { v[9] = Some(9) };
 
-            let is_farkle = v.iter().all(|&x| x.is_none());
 
-            if !is_farkle {
-                v.insert(11, Some(11));
-            }
-            if !self.reroll_allowed {
+            v.insert(11, Some(11));
+
+            if self.reroll_allowed {
                 v.insert(10, Some(10));
             }
 
@@ -143,6 +143,7 @@ pub mod farkle {
                     // random move
                     let mut rng = rand::thread_rng();
                     let random_action = self.available_actions_ids().choose(&mut rng).unwrap();
+                    println!("IA play : {:?}", random_action);
                     self.step(random_action);
                 } else {
                     self.round += 1;
@@ -164,6 +165,8 @@ pub mod farkle {
                         // random move
                         let mut rng = rand::thread_rng();
                         let random_action = self.available_actions_ids().choose(&mut rng).unwrap();
+
+                        println!("IA play : {:?}", random_action);
                         self.step(random_action);
                     } else {
                         self.player = 0;
@@ -236,12 +239,14 @@ pub mod farkle {
         fn reset(&mut self) {
             self.board = [0u8; 6];
             self.player = 0;
-            self.remaining_dice = 0;
+            self.remaining_dice = 6;
             self.total_score = [0; 2];
             self.round = 0;
             self.score = 0.0;
             self.is_game_over = false;
             self.reroll_allowed = false;
+
+            self.roll()
         }
     }
 
@@ -252,5 +257,81 @@ pub mod farkle {
             Ok(())
              */
         }
+    }
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+        #[test]
+        fn test_default_initialization() {
+            let game = Farkle::default();
+            assert_eq!(game.board, [0u8; 6]);
+            assert_eq!(game.player, 0);
+            assert_eq!(game.remaining_dice, 0);
+            assert_eq!(game.total_score, [0; 2]);
+            assert_eq!(game.round, 0);
+            assert_eq!(game.score, 0.0);
+            assert!(!game.is_game_over);
+            assert!(!game.reroll_allowed);
+        }
+    }
+    #[test]
+    fn test_available_actions_ids() {
+        let mut game = Farkle::default();
+        game.board = [3, 0, 2, 0, 1, 0]; // Trois '1'
+
+        let actions: Vec<usize> = game.available_actions_ids().collect();
+        assert_eq!(actions, vec![0, 1, 2, 6, 11]); // Actions pour 1, 11, 111, stop
+
+        game.reroll_allowed = true;
+        let actions: Vec<usize> = game.available_actions_ids().collect();
+        assert_eq!(actions, vec![0, 1, 2, 6, 10, 11]); // 'roll' n'est pas disponible
+
+        game.reroll_allowed = false;
+        game.board = [0, 0, 0, 0, 0, 0];
+        let actions: Vec<usize> = game.available_actions_ids().collect();
+        assert!(actions.is_empty()); // Aucune action disponible
+    }
+    #[test]
+    fn test_step_action_scoring() {
+        let mut game = Farkle::default();
+        game.board = [1, 0, 0, 0, 0, 0];
+        game.remaining_dice = 1;
+
+        // Action pour '1' (index 0)
+        game.step(0);
+        assert_eq!(game.score, 100.0);
+        assert_eq!(game.remaining_dice, 0);
+        assert_eq!(game.board, [0, 0, 0, 0, 0, 0]);
+        assert!(game.reroll_allowed);
+        println!("{:?}", game);
+
+        game.reroll_allowed = false;
+
+        // Comme 'reroll_allowed' est vrai, 'roll' n'est pas disponible
+        let actions: Vec<usize> = game.available_actions_ids().collect();
+        //assert_eq!(actions, vec![]); // Seulement 'stop' est disponible
+
+        // Action 'stop' (index 11)
+        game.step(11);
+        assert_eq!(game.total_score[0], 100);
+        assert_eq!(game.score, 0.0);
+        assert_eq!(game.player, 1); // Changement de joueur
+    }
+
+
+    #[test]
+    fn test_roll() {
+        /*
+        let mut game = Farkle::default();
+        println!("{:?}", game);
+        game.step(game.available_actions_ids().nth(0).unwrap());
+        println!("{:?}", game);
+        game.roll();
+        println!("{:?}", game);
+
+         */
+
+        // Utiliser un RNG avec une graine fixe pour des résultats reproductibles
+
     }
 }

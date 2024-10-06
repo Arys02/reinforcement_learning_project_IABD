@@ -135,7 +135,6 @@ mod tests {
     use crate::environement::secret_env_2::SecretEnv2;
     use crate::environement::secret_env_3::SecretEnv3;
     use crate::environement::two_round_rps::TwoRoundRPS;
-    use crate::reinforcement_learning_functions::monte_carlo_on_policy::monte_carlo_on_policy;
 
     fn test_env_policy<E: Environment>(mut env: &mut E, label: &str) -> u64 {
         let mut env_test = E::new();
