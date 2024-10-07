@@ -3,6 +3,8 @@
   the state vectorized should be able to give every information to be able to get back
 
 */
+use crate::environement::farkle::farkle::Farkle;
+
 pub mod farkle {
     use crate::environement::environment_traits::{DeepDiscreteActionsEnv, Playable};
     use rand::prelude::IteratorRandom;
@@ -10,6 +12,8 @@ pub mod farkle {
     use std::fmt::Display;
     use std::io;
     use colored::*;
+    use std::io::Write;
+    use std::io;
 
     const DICE_ART: [&str; 6] = [
         "┌─────┐\n│     │\n│  ●  │\n│     │\n└─────┘",
@@ -78,13 +82,64 @@ pub mod farkle {
                 self.player = 1;
                 // random move
                 let mut rng = rand::thread_rng();
-                let random_action = self.available_actions_ids().choose(&mut rng).unwrap();
-                self.step(random_action);
+                while self.player == 1
+                {
+                    let random_action = self.available_actions_ids().choose(&mut rng).unwrap();
+                    self.step(random_action);
+                }
             } else {
                 self.round += 1;
                 self.player = 0;
             }
         }
+
+        fn get_user_choice(&self) -> usize {
+            loop {
+                // Prompt the user
+                println!("Please enter your choice (1-4):");
+
+                // Create a mutable String to store the input
+                let mut option_choice = String::new();
+
+                // Read the input from the user
+                io::stdin()
+                    .read_line(&mut option_choice)
+                    .expect("Failed to read line");
+
+                // Trim the input to remove any trailing newline characters
+                let option_choice = option_choice.trim();
+
+                // Attempt to parse the input to a usize
+                match option_choice.parse::<usize>() {
+                    Ok(num) => {
+                        // Collect available actions into a Vec
+                        let available_actions: Vec<usize> = self.available_actions_ids().collect();
+
+                        // Check if the input number is within the valid range
+                        if num >= 1 && num <= available_actions.len() {
+                            // Map the display number to the actual action ID
+                            let action_id = available_actions[num - 1];
+                            return action_id;
+                        } else {
+                            // Invalid choice; inform the user
+                            println!(
+                                "Invalid choice: {}. Please enter a number between 1 and {}.",
+                                num,
+                                available_actions.len()
+                            );
+                        }
+                    }
+                    Err(_) => {
+                        // Parsing failed; inform the user
+                        println!(
+                            "Invalid input: '{}'. Please enter a valid number.",
+                            option_choice
+                        );
+                    }
+                }
+            }
+        }
+
     }
 
     impl Default for Farkle {
@@ -166,7 +221,7 @@ pub mod farkle {
             }
 
             if !self.available_actions_ids().any(|a| a == action) {
-                panic!("Action non disponible : {}", action);
+                panic!("Action unavailable : {}", action);
             }
 
             if self.round >= 50 {
@@ -272,6 +327,7 @@ pub mod farkle {
     }
 
     impl Display for Farkle {
+        //use std::fmt;
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             writeln!(
                 f,
@@ -352,12 +408,49 @@ pub mod farkle {
                 writeln!(f, "{}", line)?;
             }
 
+            writeln!(f, "\nAvailable Actions:")?;
+            let available_actions: Vec<usize> = self.available_actions_ids().collect();
+            for (index, action_id) in available_actions.iter().enumerate() {
+                let display_number = index + 1;
+                let description = if *action_id < ACTION_DESCRIPTIONS.len() {
+                    ACTION_DESCRIPTIONS[*action_id]
+                } else {
+                    "Unknown action"
+                };
+                writeln!(f, "{}: {}", display_number, description)?;
+            }
+
             Ok(())
         }
     }
+
+    const ACTION_DESCRIPTIONS: [&str; 12] = [
+        "Take 1 die of 1",
+        "Take 2 dice of 1",
+        "Take 3 dice of 1",
+        "Take 3 dice of 2",
+        "Take 3 dice of 3",
+        "Take 3 dice of 4",
+        "Take 1 die of 5",
+        "Take 2 dice of 5",
+        "Take 3 dice of 5",
+        "Take 3 die of 6",
+        "Roll again",
+        "Stop and bank score",
+    ];
+
+    fn clear_screen() {
+        print!("{}[2J{}[1;1H", 27 as char, 27 as char);
+        use std::io::{self, Write};
+        io::stdout().flush().unwrap();
+    }
+
+
     /// Trait that defines the capability for a game to be played interactively with a human player.
     /// Implementing this trait allows a game to be run in an interactive mode,
     /// utilizing all the provided methods to facilitate a complete game session.
+    ///
+
     impl Playable for Farkle {
         /// Initiates a full game of Farkle to be played with a human player.
         ///
@@ -373,40 +466,24 @@ pub mod farkle {
         ///
         /// **Note:** This method is currently unimplemented and needs to be filled out
         /// to allow a real game of Farkle to be played interactively.
+        ///
+        ///
         fn play_as_human() {
             let mut env: Farkle = Farkle::default();
 
-            while !env.is_game_over {
+            writeln!(std::io::stdout(), "Welcome to the Land of Farkle\nYour adventure begins now")
+                .expect("Failed to write welcome message");
+            env.reset(); // self is the current instance of Farkle
+            while !env.is_game_over()
+            {
+                clear_screen();
                 println!("{}", env);
-                let aa = env.available_actions_ids().collect::<Vec<_>>();
-                println!("Choose choose the action between :");
-                for i in aa {
-                    match i {
-                        0 => println!("0 - 1"),
-                        1 => println!("1 - 11"),
-                        2 => println!("2 - 111"),
-                        3 => println!("3 - 222"),
-                        4 => println!("4 - 333"),
-                        5 => println!("5 - 444"),
-                        6 => println!("6 - 5"),
-                        7 => println!("7 - 55"),
-                        8 => println!("8 - 555"),
-                        9 => println!("9 - 666"),
-                        10 => println!("10 - Reroll"),
-                        11 => println!("11 - Validate"),
-                        _ => {}
-                    }
-                }
-                let mut input = String::new();
+                let option_choice = env.get_user_choice();
+                env.step(option_choice);
+            }
 
-                io::stdin()
-                    .read_line(&mut input)
-                    .expect("Échec de la lecture de l'entrée");
-
-                let number: usize = input.trim().parse().expect("Veuillez entrer un nombre valide !");
-                env.step(number);
-
-
+            println!("Game Over!");
+            println!("Final Scores: {:?}", env.total_score);
 
 
             }
@@ -420,6 +497,10 @@ pub mod farkle {
             }
         }
     }
+
+
+
+
     #[cfg(test)]
     mod tests {
         use super::*;
@@ -458,6 +539,8 @@ pub mod farkle {
         let actions: Vec<usize> = game.available_actions_ids().collect();
         assert!(actions.is_empty()); // Aucune action disponible
     }
+
+
     #[test]
     fn test_step_action_scoring() {
         let mut game = Farkle::default();
@@ -502,3 +585,4 @@ pub mod farkle {
 
     }
 }
+
