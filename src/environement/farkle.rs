@@ -8,6 +8,7 @@ pub mod farkle {
     use rand::prelude::IteratorRandom;
     use rand::Rng;
     use std::fmt::Display;
+    use std::io;
     use colored::*;
 
     const DICE_ART: [&str; 6] = [
@@ -64,13 +65,13 @@ pub mod farkle {
             }
         }
 
-        fn endTurn(&mut self) {
+        fn endTurn(&mut self, switch: bool) {
             self.total_score[self.player as usize] += self.score as usize;
             self.score = 0.;
             self.remaining_dice = 6;
 
             self.roll();
-            while self.available_actions_ids().count() == 0 {
+            while self.available_actions_ids().count() <= 1 {
                 self.roll();
             }
             if self.player == 0 {
@@ -99,6 +100,9 @@ pub mod farkle {
                 reroll_allowed: false,
             };
             farkle.roll();
+            while farkle.available_actions_ids().count() == 0 {
+                farkle.roll();
+            }
             farkle
         }
     }
@@ -156,7 +160,7 @@ pub mod farkle {
 
         fn step(&mut self, action: usize) {
             let aa: Vec<usize> = self.available_actions_ids().collect();
-            println!("player {:?} with action : {:?} playes {action} on \n{:?} ", self.player, aa, self);
+            //println!("player {:?} with action : {:?} playes {action} on \n {} ", self.player, aa, self);
             if self.is_game_over {
                 panic!("Trying to play while Game is Over");
             }
@@ -165,7 +169,7 @@ pub mod farkle {
                 panic!("Action non disponible : {}", action);
             }
 
-            if self.round >= 10 {
+            if self.round >= 50 {
                 self.is_game_over = true;
                 self.score = (self.total_score[0] as f32 - self.total_score[1] as f32);
                 return;
@@ -173,7 +177,7 @@ pub mod farkle {
 
             //stop and get the points
             if action == 11 {
-                self.endTurn()
+                self.endTurn(true)
             }
 
             //reroll
@@ -183,9 +187,9 @@ pub mod farkle {
                 let available_actions: Vec<usize> = self.available_actions_ids().collect();
                 //farkle
                 if available_actions.is_empty() {
-                    println!("FARKELED");
+                    //println!("FARKELED");
                     self.score = 0.;
-                    self.endTurn();
+                    self.endTurn(true);
                 }
             }
             //[   1,  11, 111, 222, 333, 444,   5,  55, 555, 666, roll, stop ]
@@ -369,12 +373,51 @@ pub mod farkle {
         ///
         /// **Note:** This method is currently unimplemented and needs to be filled out
         /// to allow a real game of Farkle to be played interactively.
-        fn play_with_human() {
-            todo!()
+        fn play_as_human() {
+            let mut env: Farkle = Farkle::default();
+
+            while !env.is_game_over {
+                println!("{}", env);
+                let aa = env.available_actions_ids().collect::<Vec<_>>();
+                println!("Choose choose the action between :");
+                for i in aa {
+                    match i {
+                        0 => println!("0 - 1"),
+                        1 => println!("1 - 11"),
+                        2 => println!("2 - 111"),
+                        3 => println!("3 - 222"),
+                        4 => println!("4 - 333"),
+                        5 => println!("5 - 444"),
+                        6 => println!("6 - 5"),
+                        7 => println!("7 - 55"),
+                        8 => println!("8 - 555"),
+                        9 => println!("9 - 666"),
+                        10 => println!("10 - Reroll"),
+                        11 => println!("11 - Validate"),
+                        _ => {}
+                    }
+                }
+                let mut input = String::new();
+
+                io::stdin()
+                    .read_line(&mut input)
+                    .expect("Échec de la lecture de l'entrée");
+
+                let number: usize = input.trim().parse().expect("Veuillez entrer un nombre valide !");
+                env.step(number);
+
+
+
+
+            }
         }
 
-        fn play_with_random_ai() {
-            todo!()
+        fn play_as_random_ai() {
+            let mut env: Farkle = Farkle::default();
+            while !env.is_game_over {
+                let aa = env.available_actions_ids().choose(&mut rand::thread_rng()).unwrap();
+                env.step(aa);
+            }
         }
     }
     #[cfg(test)]
@@ -392,6 +435,11 @@ pub mod farkle {
             assert!(!game.is_game_over);
             assert!(!game.reroll_allowed);
         }
+    }
+
+    #[test]
+    fn play_with_human_test(){
+        Farkle::play_as_human();
     }
     #[test]
     fn test_available_actions_ids() {
