@@ -14,7 +14,6 @@ pub mod farkle {
     use std::io::Write;
     use std::io;
 
-
     const DICE_ART: [&str; 6] = [
         "┌─────┐\n│     │\n│  ●  │\n│     │\n└─────┘",
         "┌─────┐\n│●    │\n│     │\n│    ●│\n└─────┘",
