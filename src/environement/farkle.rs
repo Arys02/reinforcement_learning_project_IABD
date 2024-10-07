@@ -12,6 +12,8 @@ pub mod farkle {
     use std::fmt::Display;
     use colored::*;
     use std::io::Write;
+    use std::io;
+
 
     const DICE_ART: [&str; 6] = [
         "┌─────┐\n│     │\n│  ●  │\n│     │\n└─────┘",
@@ -87,6 +89,54 @@ pub mod farkle {
                 self.player = 0;
             }
         }
+
+        fn get_user_choice(&self) -> usize {
+            loop {
+                // Prompt the user
+                println!("Please enter your choice (1-4):");
+
+                // Create a mutable String to store the input
+                let mut option_choice = String::new();
+
+                // Read the input from the user
+                io::stdin()
+                    .read_line(&mut option_choice)
+                    .expect("Failed to read line");
+
+                // Trim the input to remove any trailing newline characters
+                let option_choice = option_choice.trim();
+
+                // Attempt to parse the input to a usize
+                match option_choice.parse::<usize>() {
+                    Ok(num) => {
+                        // Collect available actions into a Vec
+                        let available_actions: Vec<usize> = self.available_actions_ids().collect();
+
+                        // Check if the input number is within the valid range
+                        if num >= 1 && num <= available_actions.len() {
+                            // Map the display number to the actual action ID
+                            let action_id = available_actions[num - 1];
+                            return action_id;
+                        } else {
+                            // Invalid choice; inform the user
+                            println!(
+                                "Invalid choice: {}. Please enter a number between 1 and {}.",
+                                num,
+                                available_actions.len()
+                            );
+                        }
+                    }
+                    Err(_) => {
+                        // Parsing failed; inform the user
+                        println!(
+                            "Invalid input: '{}'. Please enter a valid number.",
+                            option_choice
+                        );
+                    }
+                }
+            }
+        }
+
     }
 
     impl Default for Farkle {
@@ -353,15 +403,16 @@ pub mod farkle {
             }
 
             writeln!(f, "\nAvailable Actions:")?;
-            for action_id in self.available_actions_ids() {
-                let description = if action_id < ACTION_DESCRIPTIONS.len() {
-                    ACTION_DESCRIPTIONS[action_id]
+            let available_actions: Vec<usize> = self.available_actions_ids().collect();
+            for (index, action_id) in available_actions.iter().enumerate() {
+                let display_number = index + 1;
+                let description = if *action_id < ACTION_DESCRIPTIONS.len() {
+                    ACTION_DESCRIPTIONS[*action_id]
                 } else {
                     "Unknown action"
                 };
-                writeln!(f, "{}: {}", action_id, description)?;
+                writeln!(f, "{}: {}", display_number, description)?;
             }
-
 
             Ok(())
         }
@@ -377,10 +428,16 @@ pub mod farkle {
         "Take 1 die of 5",
         "Take 2 dice of 5",
         "Take 3 dice of 5",
-        "Take 1 die of 6",
+        "Take 3 die of 6",
         "Roll again",
         "Stop and bank score",
     ];
+
+    fn clear_screen() {
+        print!("{}[2J{}[1;1H", 27 as char, 27 as char);
+        use std::io::{self, Write};
+        io::stdout().flush().unwrap();
+    }
 
 
     /// Trait that defines the capability for a game to be played interactively with a human player.
@@ -409,15 +466,25 @@ pub mod farkle {
             writeln!(std::io::stdout(), "Welcome to the Land of Farkle\nYour adventure begins now")
                 .expect("Failed to write welcome message");
             self.reset(); // self is the current instance of Farkle
-            println!("{}", self);
+            while !self.is_game_over()
+            {
+                clear_screen();
+                println!("{}", self);
+                let option_choice = self.get_user_choice();
+                self.step(option_choice);
+            }
 
-            println!("{:?}", self.available_actions_ids().collect::<Vec<usize>>());
-
+            println!("Game Over!");
+            println!("Final Scores: {:?}", self.total_score);
         }
         fn play_with_random_ai() {
             todo!()
         }
     }
+
+
+
+
     #[cfg(test)]
     mod tests {
         use super::*;
