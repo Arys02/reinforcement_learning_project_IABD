@@ -1,3 +1,4 @@
+use std::fmt::Debug;
 use crate::environement::environment_traits::DeepDiscreteActionsEnv;
 
 use burn::module::AutodiffModule;
@@ -40,7 +41,7 @@ pub fn episodic_semi_gradient_sarsa<
     const NUM_ACTIONS: usize,
     M: Forward<B = B> + AutodiffModule<B>,
     B: AutodiffBackend<FloatElem = f32, IntElem = i64>,
-    Env: DeepDiscreteActionsEnv<NUM_STATE_FEATURES, NUM_ACTIONS>,
+    Env: DeepDiscreteActionsEnv<NUM_STATE_FEATURES, NUM_ACTIONS> + Debug,
 >(
     mut model: M,
     num_episodes: usize,
@@ -67,7 +68,7 @@ where
         let decayed_epsilon = (1.0 - progress) * start_epsilon + progress * final_epsilon;
 
         if ep_id % 1000 == 0 {
-            println!("Mean Score: {}", total_score / 1000.0);
+            //println!("Mean Score: {}", total_score / 1000.0);
             total_score = 0.0;
         }
         env.reset();
@@ -83,6 +84,7 @@ where
         let mask_tensor: Tensor<B, 1> = Tensor::from(mask).to_device(device);
         let mut q_s = model.forward(s_tensor);
 
+
         let mut a = epsilon_greedy_action::<B, NUM_STATE_FEATURES, NUM_ACTIONS>(
             &q_s,
             &mask_tensor,
@@ -93,6 +95,7 @@ where
 
         while !env.is_game_over() {
             let prev_score = env.score();
+
             env.step(a);
             let r = env.score() - prev_score;
 

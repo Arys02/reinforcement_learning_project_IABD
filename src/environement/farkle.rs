@@ -1,3 +1,8 @@
+/** TODO
+  hot dice : when a player take all 6 dice, he can play again
+  the state vectorized should be able to give every information to be able to get back
+
+*/
 pub mod farkle {
     use crate::environement::environment_traits::{DeepDiscreteActionsEnv, Playable};
     use rand::prelude::IteratorRandom;
@@ -37,7 +42,9 @@ pub mod farkle {
                 let n: usize = rng.gen_range(0..6);
                 self.board[n] += 1;
             }
+            self.reroll_allowed = false;
         }
+
 
         fn getScore(&mut self, action: usize) -> f32 {
             //[   1,  11, 111, 222, 333, 444,   5,  55, 555, 666, roll, stop ]
@@ -54,6 +61,27 @@ pub mod farkle {
                 8 => 500.,
                 9 => 600.,
                 _ => panic!("Invalid action {}", action),
+            }
+        }
+
+        fn endTurn(&mut self) {
+            self.total_score[self.player as usize] += self.score as usize;
+            self.score = 0.;
+            self.remaining_dice = 6;
+
+            self.roll();
+            while self.available_actions_ids().count() == 0 {
+                self.roll();
+            }
+            if self.player == 0 {
+                self.player = 1;
+                // random move
+                let mut rng = rand::thread_rng();
+                let random_action = self.available_actions_ids().choose(&mut rng).unwrap();
+                self.step(random_action);
+            } else {
+                self.round += 1;
+                self.player = 0;
             }
         }
     }
@@ -107,11 +135,12 @@ pub mod farkle {
             if self.board[4] > 2 { v[8] = Some(8) };
             if self.board[5] > 2 { v[9] = Some(9) };
 
-
-            v.insert(11, Some(11));
-
             if self.reroll_allowed {
                 v.insert(10, Some(10));
+            }
+
+            if !v.iter().all(|&x| x.is_none()) {
+                v.insert(11, Some(11));
             }
 
             v.into_iter().filter_map(|x| x)
@@ -126,7 +155,8 @@ pub mod farkle {
         }
 
         fn step(&mut self, action: usize) {
-            println!("player {:?} playes {action} on {:?}", self.player, self);
+            let aa: Vec<usize> = self.available_actions_ids().collect();
+            println!("player {:?} with action : {:?} playes {action} on \n{:?} ", self.player, aa, self);
             if self.is_game_over {
                 panic!("Trying to play while Game is Over");
             }
@@ -137,29 +167,13 @@ pub mod farkle {
 
             if self.round >= 10 {
                 self.is_game_over = true;
-                self.score = (self.total_score[0] - self.total_score[1]) as f32;
+                self.score = (self.total_score[0] as f32 - self.total_score[1] as f32);
                 return;
             }
 
             //stop and get the points
             if action == 11 {
-                self.total_score[self.player as usize] += self.score as usize;
-                self.score = 0.;
-                self.remaining_dice = 6;
-
-                self.roll();
-                self.reroll_allowed = false;
-                if self.player == 0 {
-                    self.player = 1;
-                    // random move
-                    let mut rng = rand::thread_rng();
-                    let random_action = self.available_actions_ids().choose(&mut rng).unwrap();
-                    println!("IA play : {:?}", random_action);
-                    self.step(random_action);
-                } else {
-                    self.round += 1;
-                    self.player = 0;
-                }
+                self.endTurn()
             }
 
             //reroll
@@ -169,20 +183,9 @@ pub mod farkle {
                 let available_actions: Vec<usize> = self.available_actions_ids().collect();
                 //farkle
                 if available_actions.is_empty() {
+                    println!("FARKELED");
                     self.score = 0.;
-                    //change player
-                    if self.player == 0 {
-                        self.player = 1;
-                        // random move
-                        let mut rng = rand::thread_rng();
-                        let random_action = self.available_actions_ids().choose(&mut rng).unwrap();
-
-                        println!("IA play : {:?}", random_action);
-                        self.step(random_action);
-                    } else {
-                        self.player = 0;
-                        self.round += 1;
-                    }
+                    self.endTurn();
                 }
             }
             //[   1,  11, 111, 222, 333, 444,   5,  55, 555, 666, roll, stop ]
@@ -257,7 +260,10 @@ pub mod farkle {
             self.is_game_over = false;
             self.reroll_allowed = false;
 
-            self.roll()
+            self.roll();
+            while self.available_actions_ids().count() == 0 {
+                self.roll();
+            }
         }
     }
 
@@ -277,7 +283,7 @@ pub mod farkle {
             writeln!(
                 f,
                 "Current Turn: {}",
-                if self.player == 0{
+                if self.player == 0 {
                     "Player".green()
                 } else {
                     "AI".red()
@@ -344,7 +350,6 @@ pub mod farkle {
 
             Ok(())
         }
-
     }
     /// Trait that defines the capability for a game to be played interactively with a human player.
     /// Implementing this trait allows a game to be run in an interactive mode,

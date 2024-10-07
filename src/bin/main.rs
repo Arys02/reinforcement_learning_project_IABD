@@ -59,6 +59,8 @@ fn main() {
             let mask_tensor: Tensor<MyBackend, 1> = Tensor::from(mask).to_device(device);
             let q_s = model.valid().forward(s_tensor);
 
+
+            println!("STATE 3 :: {:?}", env);
             let a = epsilon_greedy_action::<MyBackend, NUM_STATE_FEATURES, NUM_ACTIONS>(&q_s, &mask_tensor, env.available_actions_ids(), 1e-5f32, &mut rng);
             env.step(a);
         }
