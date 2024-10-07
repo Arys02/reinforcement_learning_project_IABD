@@ -3,12 +3,15 @@
   the state vectorized should be able to give every information to be able to get back
 
 */
+use crate::environement::farkle::farkle::Farkle;
+
 pub mod farkle {
     use crate::environement::environment_traits::{DeepDiscreteActionsEnv, Playable};
     use rand::prelude::IteratorRandom;
     use rand::Rng;
     use std::fmt::Display;
     use colored::*;
+    use std::io::Write;
 
     const DICE_ART: [&str; 6] = [
         "┌─────┐\n│     │\n│  ●  │\n│     │\n└─────┘",
@@ -162,7 +165,7 @@ pub mod farkle {
             }
 
             if !self.available_actions_ids().any(|a| a == action) {
-                panic!("Action non disponible : {}", action);
+                panic!("Action unavailable : {}", action);
             }
 
             if self.round >= 10 {
@@ -268,6 +271,7 @@ pub mod farkle {
     }
 
     impl Display for Farkle {
+        //use std::fmt;
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             writeln!(
                 f,
@@ -348,12 +352,42 @@ pub mod farkle {
                 writeln!(f, "{}", line)?;
             }
 
+            writeln!(f, "\nAvailable Actions:")?;
+            for action_id in self.available_actions_ids() {
+                let description = if action_id < ACTION_DESCRIPTIONS.len() {
+                    ACTION_DESCRIPTIONS[action_id]
+                } else {
+                    "Unknown action"
+                };
+                writeln!(f, "{}: {}", action_id, description)?;
+            }
+
+
             Ok(())
         }
     }
+
+    const ACTION_DESCRIPTIONS: [&str; 12] = [
+        "Take 1 die of 1",
+        "Take 2 dice of 1",
+        "Take 3 dice of 1",
+        "Take 3 dice of 2",
+        "Take 3 dice of 3",
+        "Take 3 dice of 4",
+        "Take 1 die of 5",
+        "Take 2 dice of 5",
+        "Take 3 dice of 5",
+        "Take 1 die of 6",
+        "Roll again",
+        "Stop and bank score",
+    ];
+
+
     /// Trait that defines the capability for a game to be played interactively with a human player.
     /// Implementing this trait allows a game to be run in an interactive mode,
     /// utilizing all the provided methods to facilitate a complete game session.
+    ///
+
     impl Playable for Farkle {
         /// Initiates a full game of Farkle to be played with a human player.
         ///
@@ -369,10 +403,17 @@ pub mod farkle {
         ///
         /// **Note:** This method is currently unimplemented and needs to be filled out
         /// to allow a real game of Farkle to be played interactively.
-        fn play_with_human() {
-            todo!()
-        }
+        ///
+        ///
+        fn play_with_human(&mut self) {
+            writeln!(std::io::stdout(), "Welcome to the Land of Farkle\nYour adventure begins now")
+                .expect("Failed to write welcome message");
+            self.reset(); // self is the current instance of Farkle
+            println!("{}", self);
 
+            println!("{:?}", self.available_actions_ids().collect::<Vec<usize>>());
+
+        }
         fn play_with_random_ai() {
             todo!()
         }
@@ -410,6 +451,8 @@ pub mod farkle {
         let actions: Vec<usize> = game.available_actions_ids().collect();
         assert!(actions.is_empty()); // Aucune action disponible
     }
+
+
     #[test]
     fn test_step_action_scoring() {
         let mut game = Farkle::default();
@@ -454,3 +497,4 @@ pub mod farkle {
 
     }
 }
+
