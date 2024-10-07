@@ -81,8 +81,11 @@ pub mod farkle {
                 self.player = 1;
                 // random move
                 let mut rng = rand::thread_rng();
-                let random_action = self.available_actions_ids().choose(&mut rng).unwrap();
-                self.step(random_action);
+                while self.player == 1
+                {
+                    let random_action = self.available_actions_ids().choose(&mut rng).unwrap();
+                    self.step(random_action);
+                }
             } else {
                 self.round += 1;
                 self.player = 0;
