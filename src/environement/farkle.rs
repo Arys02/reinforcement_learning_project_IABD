@@ -10,7 +10,6 @@ pub mod farkle {
     use rand::prelude::IteratorRandom;
     use rand::Rng;
     use std::fmt::Display;
-    use std::io;
     use colored::*;
     use std::io::Write;
     use std::io;
@@ -487,7 +486,6 @@ pub mod farkle {
 
 
             }
-        }
 
         fn play_as_random_ai() {
             let mut env: Farkle = Farkle::default();
@@ -497,6 +495,10 @@ pub mod farkle {
             }
         }
     }
+
+
+
+
 
 
 
