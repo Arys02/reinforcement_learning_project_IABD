@@ -16,6 +16,10 @@ path = "src/bin/display_tests.rs"
 name = "main"
 path = "src/bin/main.rs"
 
+[[bin]]
+name = "side_main"
+path = "src/environement/test_main.rs"
+
 [profile.release]
 opt-level = 3
 lto = "fat"
