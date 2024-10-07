@@ -105,7 +105,7 @@ pub mod farkle {
             if self.board[4] > 0 { v[6] = Some(6) };
             if self.board[4] > 1 { v[7] = Some(7) };
             if self.board[4] > 2 { v[8] = Some(8) };
-            if self.board[5] > 0 { v[9] = Some(9) };
+            if self.board[5] > 2 { v[9] = Some(9) };
 
 
             v.insert(11, Some(11));
@@ -126,6 +126,7 @@ pub mod farkle {
         }
 
         fn step(&mut self, action: usize) {
+            println!("player {:?} playes {action} on {:?}", self.player, self);
             if self.is_game_over {
                 panic!("Trying to play while Game is Over");
             }
