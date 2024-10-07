@@ -155,6 +155,6 @@ pub trait Playable : Default + Clone {
     /// This function should orchestrate the game flow, handling user input and game state updates.
     /// It should leverage all the existing methods to allow a real game of Farkle to be played,
     /// including initializing the game state, processing player actions, and determining game outcomes.
-    fn play_with_human(&mut self);
-    fn play_with_random_ai();
+    fn play_as_human();
+    fn play_as_random_ai();
 }

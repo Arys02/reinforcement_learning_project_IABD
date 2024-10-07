@@ -461,22 +461,25 @@ pub mod farkle {
         /// to allow a real game of Farkle to be played interactively.
         ///
         ///
-        fn play_with_human(&mut self) {
+        fn play_as_human() {
+            let mut env: Farkle = Farkle::default();
+
             writeln!(std::io::stdout(), "Welcome to the Land of Farkle\nYour adventure begins now")
                 .expect("Failed to write welcome message");
-            self.reset(); // self is the current instance of Farkle
-            while !self.is_game_over()
+            env.reset(); // self is the current instance of Farkle
+            while !env.is_game_over()
             {
                 clear_screen();
-                println!("{}", self);
-                let option_choice = self.get_user_choice();
-                self.step(option_choice);
+                println!("{}", env);
+                let option_choice = env.get_user_choice();
+                env.step(option_choice);
             }
 
             println!("Game Over!");
-            println!("Final Scores: {:?}", self.total_score);
+            println!("Final Scores: {:?}", env.total_score);
         }
-        fn play_with_random_ai() {
+
+        fn play_as_random_ai() {
             todo!()
         }
     }
