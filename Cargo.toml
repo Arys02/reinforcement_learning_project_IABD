@@ -18,7 +18,7 @@ path = "src/bin/main.rs"
 
 [[bin]]
 name = "side_main"
-path = "src/environement/test_main.rs"
+path = "src/bin/test_main.rs"
 
 [[bin]]
 name = "main_test"

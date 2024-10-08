@@ -26,6 +26,8 @@ pub mod farkle {
     pub const NUM_STATE_FEATURES: usize = 36;
     pub const NUM_ACTIONS: usize = 12;
 
+    pub const MAX_GAME: usize = 50;
+
     #[derive(Clone, Debug)]
     pub struct Farkle {
         pub board: [u8; 6],
@@ -213,6 +215,11 @@ pub mod farkle {
         }
 
         fn step(&mut self, action: usize) {
+            /*
+            if self.player == 1 {
+                println!("{}\n IA selected : {action}", self)
+            }
+             */
             let aa: Vec<usize> = self.available_actions_ids().collect();
             //println!("player {:?} with action : {:?} playes {action} on \n {} ", self.player, aa, self);
             if self.is_game_over {
@@ -223,7 +230,7 @@ pub mod farkle {
                 panic!("Action unavailable : {}", action);
             }
 
-            if self.round >= 50 {
+            if self.round >= MAX_GAME as u8 {
                 self.is_game_over = true;
                 self.score = (self.total_score[0] as f32 - self.total_score[1] as f32);
                 return;
@@ -334,8 +341,8 @@ pub mod farkle {
                 "=== Farkle Game ===".bold().underline().blue()
             )?;
             writeln!(f, "Round: {}", self.round)?;
-            writeln!(f, "Player Score: {}", self.total_score[0])?;
-            writeln!(f, "AI Score: {}", self.total_score[1])?;
+            writeln!(f, "{} {}", "Player Score: ".green(), self.total_score[0])?;
+            writeln!(f, "{} {}", "AI Score: ".red(), self.total_score[1])?;
             writeln!(f, "Game Over: {}", self.is_game_over)?;
             writeln!(f, "Remaining Dice: {}", self.remaining_dice)?;
             writeln!(f, "Current Round Score: {:.2}", self.score)?;
@@ -487,12 +494,13 @@ pub mod farkle {
 
             }
 
-        fn play_as_random_ai() {
+        fn play_as_random_ai() -> [usize; 2]{
             let mut env: Farkle = Farkle::default();
             while !env.is_game_over {
                 let aa = env.available_actions_ids().choose(&mut rand::thread_rng()).unwrap();
                 env.step(aa);
             }
+            env.total_score
         }
     }
 
