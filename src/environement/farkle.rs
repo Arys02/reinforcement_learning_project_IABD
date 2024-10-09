@@ -1,6 +1,6 @@
 /** TODO
-  hot dice : when a player take all 6 dice, he can play again
-  the state vectorized should be able to give every information to be able to get back
+ hot dice : when a player take all 6 dice, he can play again
+ the state vectorized should be able to give every information to be able to get back
 
 */
 use crate::environement::farkle::farkle::Farkle;
@@ -14,15 +14,6 @@ pub mod farkle {
     use std::io::Write;
     use std::io;
 
-    const DICE_ART: [&str; 6] = [
-        "┌─────┐\n│     │\n│  ●  │\n│     │\n└─────┘",
-        "┌─────┐\n│●    │\n│     │\n│    ●│\n└─────┘",
-        "┌─────┐\n│●    │\n│  ●  │\n│    ●│\n└─────┘",
-        "┌─────┐\n│●   ●│\n│     │\n│●   ●│\n└─────┘",
-        "┌─────┐\n│●   ●│\n│  ●  │\n│●   ●│\n└─────┘",
-        "┌─────┐\n│●   ●│\n│●   ●│\n│●   ●│\n└─────┘",
-    ];
-
     pub const NUM_STATE_FEATURES: usize = 36;
     pub const NUM_ACTIONS: usize = 12;
 
@@ -33,6 +24,7 @@ pub mod farkle {
         pub board: [u8; 6],
         pub player: u8,
         pub remaining_dice: u8,
+        pub action_stored: [usize; NUM_ACTIONS],
         pub total_score: [usize; 2],
         pub round: u8,
         pub score: f32,
@@ -55,6 +47,22 @@ pub mod farkle {
         fn getScore(&mut self, action: usize) -> f32 {
             //[   1,  11, 111, 222, 333, 444,   5,  55, 555, 666, roll, stop ]
             //[   0,   1,   2,   3,   4,   5,   6,   7,   8,   9,   10,   11 ]
+
+            //[ 1, 11, 111, 1111, 11111, 111111,
+            //[  222, 2222, 22222, 222222,
+            //[  333, 3333, 33333, 333333,
+            //[  444, 4444, 44444, 444444,
+            //[  5, 55, 555, 5555, 55555, 555555,
+            //[  666, 6666, 66666, 666666,
+            //[ 15, 115, 1115, 11115, 111115,
+            //[ 155, 1155, 11155, 111155,
+            //[ 1555, 11555, 111555,
+            //[ 15555, 115555,
+            //[ 155555
+            //[ 112233, 112244, 112255, 112266, 223344, 223355, 223366, 334455, 335566, 445566,
+            //[ 123456
+            //[ reroll, stop
+            //[
             match action {
                 0 => 100.,
                 1 => 200.,
@@ -70,10 +78,11 @@ pub mod farkle {
             }
         }
 
-        fn endTurn(&mut self, switch: bool) {
+        fn endTurn(&mut self) {
             self.total_score[self.player as usize] += self.score as usize;
             self.score = 0.;
             self.remaining_dice = 6;
+            self.action_stored = [0usize; NUM_ACTIONS];
 
             self.roll();
             while self.available_actions_ids().count() <= 1 {
@@ -140,7 +149,6 @@ pub mod farkle {
                 }
             }
         }
-
     }
 
     impl Default for Farkle {
@@ -149,6 +157,7 @@ pub mod farkle {
                 board: [0u8; 6],
                 player: 0,
                 remaining_dice: 6,
+                action_stored: [0usize; NUM_ACTIONS],
                 total_score: [0; 2],
                 round: 0,
                 score: 0.0,
@@ -219,9 +228,11 @@ pub mod farkle {
             if self.player == 1 {
                 println!("{}\n IA selected : {action}", self)
             }
-             */
+            */ /*
             let aa: Vec<usize> = self.available_actions_ids().collect();
-            //println!("player {:?} with action : {:?} playes {action} on \n {} ", self.player, aa, self);
+            println!("player {:?} with action : {:?} playes {action} on \n {} ", self.player, aa, self);
+             */
+
             if self.is_game_over {
                 panic!("Trying to play while Game is Over");
             }
@@ -238,24 +249,23 @@ pub mod farkle {
 
             //stop and get the points
             if action == 11 {
-                self.endTurn(true)
+                self.endTurn()
             }
 
             //reroll
             else if action == 10 {
                 self.roll();
-                self.reroll_allowed = false;
                 let available_actions: Vec<usize> = self.available_actions_ids().collect();
                 //farkle
                 if available_actions.is_empty() {
-                    //println!("FARKELED");
                     self.score = 0.;
-                    self.endTurn(true);
+                    self.endTurn();
                 }
             }
             //[   1,  11, 111, 222, 333, 444,   5,  55, 555, 666, roll, stop ]
             //[   0,   1,   2,   3,   4,   5,   6,   7,   8,   9,   10,   11 ]
             else if action < 10 {
+                self.action_stored[action] += 1;
                 self.score += self.getScore(action);
 
                 match action {
@@ -320,6 +330,7 @@ pub mod farkle {
             self.player = 0;
             self.remaining_dice = 6;
             self.total_score = [0; 2];
+            self.action_stored = [0usize; NUM_ACTIONS];
             self.round = 0;
             self.score = 0.0;
             self.is_game_over = false;
@@ -490,11 +501,9 @@ pub mod farkle {
 
             println!("Game Over!");
             println!("Final Scores: {:?}", env.total_score);
+        }
 
-
-            }
-
-        fn play_as_random_ai() -> [usize; 2]{
+        fn play_as_random_ai() -> [usize; 2] {
             let mut env: Farkle = Farkle::default();
             while !env.is_game_over {
                 let aa = env.available_actions_ids().choose(&mut rand::thread_rng()).unwrap();
@@ -503,12 +512,6 @@ pub mod farkle {
             env.total_score
         }
     }
-
-
-
-
-
-
 
 
     #[cfg(test)]
@@ -529,7 +532,7 @@ pub mod farkle {
     }
 
     #[test]
-    fn play_with_human_test(){
+    fn play_with_human_test() {
         Farkle::play_as_human();
     }
     #[test]
