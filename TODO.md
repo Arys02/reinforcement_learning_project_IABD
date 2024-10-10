@@ -1,28 +1,35 @@
-Farkle : [ ]
--- [ ] add others combinaison
--- [ ] fix the 1 - 11 - 11 scoring
--- [ ] add feature to calculate the right amount for the network
--- [ ] select all dice ?
--- [ ] fix - rejouer quand tout les dé sont pris
--- [ ] rethink the step with action logic
+# Env
+## grid world
+- [ ] implementation
+## line world
+- [ ] implementation
+## tic tac toe 
+- [ ] implementation
+## - [ ] Farkle : 
+- [ ] add others combinaison
+- [ ] fix the 1 - 11 - 11 scoring
+- [ ] add feature to calculate the right amount for the network
+- [ ] select all dice ?
+- [ ] fix - rejouer quand tout les dé sont pris
+- [ ] rethink the step with action logic
 
-Algo : [ ]
--- [ ] Random
--- [ ] TabularQLearning (quand possible)
--- [ ] DeepQLearning
--- [ ] DoubleDeepQLearning
--- [ ] DoubleDeepQLearningWithExperienceReplay
--- [ ] DoubleDeepQLearningWithPrioritizedExperienceReplay
--- [ ] REINFORCE
--- [ ] REINFORCE with mean baseline
--- [ ] REINFORCE with Baseline Learned by a Critic
--- [ ] PPO A2C style
--- [ ] RandomRollout
--- [ ] Monte Carlo Tree Search (UCT)
--- [ ] Expert Apprentice
--- [ ] Alpha Zero
--- [ ] MuZero
--- [ ] MuZero stochastique
+# Algo : - [ ]
+- [ ] Random
+- [ ] TabularQLearning (quand possible)
+- [ ] DeepQLearning
+- [ ] DoubleDeepQLearning
+- [ ] DoubleDeepQLearningWithExperienceReplay
+- [ ] DoubleDeepQLearningWithPrioritizedExperienceReplay
+- [ ] REINFORCE
+- [ ] REINFORCE with mean baseline
+- [ ] REINFORCE with Baseline Learned by a Critic
+- [ ] PPO A2C style
+- [ ] RandomRollout
+- [ ] Monte Carlo Tree Search (UCT)
+- [ ] Expert Apprentice
+- [ ] Alpha Zero
+- [ ] MuZero
+- [ ] MuZero stochastique
 
 
 Métriques à obtenir (attention métriques pour la policy obtenue, pas pour la policy en mode entrainement)
