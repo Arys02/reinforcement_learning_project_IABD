@@ -223,11 +223,12 @@ pub mod farkle {
         }
 
         fn step(&mut self, action: usize) {
-            /*
+            #[cfg(feature = "print")]
             if self.player == 1 {
                 println!("{}\n IA selected : {action}", self)
             }
-            */ /*
+
+             /*
             let aa: Vec<usize> = self.available_actions_ids().collect();
             println!("player {:?} with action : {:?} playes {action} on \n {} ", self.player, aa, self);
              */

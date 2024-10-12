@@ -29,6 +29,9 @@ opt-level = 3
 lto = "fat"
 codegen-units = 1
 
+[features]
+print = []
+
 [dependencies]
 rand = "0.8.5"
 ndarray = "0.15.6"
