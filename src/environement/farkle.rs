@@ -105,10 +105,9 @@ pub mod farkle {
 
         fn get_user_choice(&self) -> usize {
             loop {
-                // Prompt the user
+                #[cfg(feature = "print")]
                 println!("Please enter your choice (1-4):");
 
-                // Create a mutable String to store the input
                 let mut option_choice = String::new();
 
                 // Read the input from the user
