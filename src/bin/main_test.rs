@@ -15,10 +15,11 @@ use IABD4_reinforcement_learning::ml_core::mlp::MyQMLP;
 
 fn main() {
     //Farkle::play_as_human();
+    println!("Start running now");
 
     let start = std::time::Instant::now();
     let mut total_score = Vec::new();
-    let max = 10000;
+    let max = 10_000;
     for i in 0..max{
         total_score.push(Farkle::play_as_random_ai());
     }
