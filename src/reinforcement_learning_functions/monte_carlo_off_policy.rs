@@ -2,11 +2,16 @@ extern crate csv;
 extern crate serde;
 
 use crate::environement::environment_traits::Environment;
+
+use crate::environement::environment_traits::BaseEnv;
+use crate::environement::environment_traits::ActionEnv;
+
 use ndarray_rand::rand::SeedableRng;
 use rand::distributions::WeightedIndex;
 use rand::prelude::{Distribution, StdRng};
 use rand::Rng;
 use std::collections::HashMap;
+use std::fmt::Debug;
 
 /// Executes the Monte Carlo Off-Policy algorithm for a given environment.
 ///
@@ -50,8 +55,12 @@ use std::collections::HashMap;
 /// The behavior policy selects actions based on a probability distribution influenced by the epsilon parameter,
 /// balancing exploration and exploitation. The target policy `pi` is iteratively improved based on the observed returns.
 
-pub fn monte_carlo_off_policy<E: Environment>(
-    env: &mut E,
+pub fn monte_carlo_off_policy<
+    const NUM_STATES: usize,
+    const NUM_ACTIONS: usize,
+    const NUM_REWARDS: usize,
+    Env: Environment<NUM_STATES, NUM_ACTIONS, NUM_REWARDS> + Debug>
+(
     gamma: f32,
     nb_iter: i32,
     max_steps: i32,
@@ -67,7 +76,7 @@ pub fn monte_carlo_off_policy<E: Environment>(
     //loop forever for each episode
     for _ in 0..nb_iter {
         seed += 1;
-        env.reset();
+        let mut env = Env::default();
 
         let mut trajectory = Vec::new();
         let mut step_count = 0;
@@ -76,7 +85,8 @@ pub fn monte_carlo_off_policy<E: Environment>(
         // generat an episode from S0 following pi
         while !env.is_terminal() && step_count < max_steps {
             let state = env.state_id();
-            let available_action = env.available_action();
+            let available_action = env.available_actions_ids()
+                .collect::<Vec<usize>>();
 
             if !Q.contains_key(&(state, available_action[0])) {
                 let mut max_val = f32::MIN;
@@ -172,16 +182,15 @@ pub fn monte_carlo_off_policy<E: Environment>(
 
 #[cfg(test)]
 mod tests {
-    use crate::environement::grid_world::GridWorld;
-    use crate::environement::line_world::LineWorld;
-    use crate::environement::monty_hall_1::MontyHall1;
-    use crate::environement::secret_env_0::SecretEnv0;
-    use crate::environement::secret_env_1::SecretEnv1;
-    use crate::environement::secret_env_2::SecretEnv2;
-    use crate::environement::secret_env_3::SecretEnv3;
-    use crate::environement::two_round_rps::TwoRoundRPS;
-
     use super::*;
+    use crate::environement::grid_world::grid_world;
+    use crate::environement::grid_world::grid_world::GridWorld;
+    use crate::environement::line_world::line_world;
+    use crate::environement::line_world::line_world::LineWorld;
+    use crate::environement::monty_hall_1::monty_hall;
+    use crate::environement::monty_hall_1::monty_hall::MontyHall1;
+    use crate::environement::two_round_rps::two_round_rps;
+    use crate::environement::two_round_rps::two_round_rps::TwoRoundRPS;
 
     fn build_policy(map: &HashMap<usize, Vec<f32>>) -> HashMap<usize, usize> {
         let mut result: HashMap<usize, usize> = HashMap::new();
@@ -198,76 +207,23 @@ mod tests {
         result
     }
 
-    fn test_env_policy<E: Environment>(mut env: &mut E, label: &str) -> u64 {
-        let mut env_test = E::new();
-
-        use std::time::Instant;
-        let now = Instant::now();
-        let policy_map = monte_carlo_off_policy(env, 0.999, 1000, 1000, 0.4, 42);
-        let elapsed = now.elapsed();
-
-        let path = format!("record/monte_carlo_off_{}.csv", label);
-
-        env_test.play_strategy(policy_map.clone(), false);
-        return elapsed.as_millis() as u64;
-    }
-    #[test]
-    fn monte_carlo_off_all_env() {
-        let mut lineworld = LineWorld::new();
-        println!("lineworld,{}", test_env_policy(&mut lineworld, "lineworld"));
-
-        let mut gridworld = GridWorld::new();
-        println!("gridworld,{}", test_env_policy(&mut gridworld, "gridworld"));
-
-        let mut monty_hall = MontyHall1::new();
-        println!(
-            "montyhall,{}",
-            test_env_policy(&mut monty_hall, "montyhall")
-        );
-
-        let mut two_round_rps = TwoRoundRPS::new();
-        println!(
-            "tworoundrps,{}",
-            test_env_policy(&mut two_round_rps, "tworoundrps")
-        );
-
-        let mut secret_env0 = SecretEnv0::new();
-        println!(
-            "secretenv0,{}",
-            test_env_policy(&mut secret_env0, "secretenv0")
-        );
-
-        let mut secret_env1 = SecretEnv1::new();
-        println!(
-            "secretenv1,{}",
-            test_env_policy(&mut secret_env1, "secretenv1")
-        );
-
-        let mut secret_env2 = SecretEnv2::new();
-        println!(
-            "secretenv2,{}",
-            test_env_policy(&mut secret_env2, "secretenv2")
-        );
-
-        let mut secret_env3 = SecretEnv3::new();
-        println!(
-            "secretenv3,{}",
-            test_env_policy(&mut secret_env3, "secretenv3")
-        );
-    }
-
     #[test]
     fn monte_carlo_off_policy_lineworld() {
-        let mut lw = LineWorld::new();
+        const nb_states: usize = line_world::NUM_STATES;
+        const nb_action: usize = line_world::NUM_ACTIONS;
+        const nb_rewards: usize = line_world::NUM_REWARDS;
+
+        let lw = LineWorld::default();
 
         println!("stat ID :{:?}", lw.state_id());
 
         use std::time::Instant;
         let now = Instant::now();
-        let policy_map = monte_carlo_off_policy(&mut lw, 0.999, 1000, 1000, 0.4, 42);
+        let policy_map = monte_carlo_off_policy::<nb_states, nb_action, nb_rewards, LineWorld>
+            (0.999, 1000, 1000, 0.4, 42);
         let elapsed = now.elapsed();
 
-        let mut gw2 = LineWorld::new();
+        let mut gw2 = LineWorld::default();
         gw2.play_strategy(policy_map.clone(), false);
         assert_eq!(gw2.state_id(), 4)
     }
@@ -275,41 +231,55 @@ mod tests {
     #[test]
     fn monte_carlo_off_policy_grid_world() {
         println!("gridworld : ");
-        let mut gw = GridWorld::new();
+        const nb_states: usize = grid_world::NUM_STATES;
+        const nb_action: usize = grid_world::NUM_ACTIONS;
+        const nb_rewards: usize = grid_world::NUM_REWARDS;
+        let gw = GridWorld::default();
 
-        let policy = monte_carlo_off_policy(&mut gw, 0.999, 10000, 1000, 0.1, 42);
+        let policy = monte_carlo_off_policy::<nb_states, nb_action, nb_rewards, GridWorld>
+            (0.999, 1000, 1000, 0.4, 42);
+
 
         println!("{:?}", policy);
 
         //let policy = build_policy(&policy);
-        let mut gw2 = GridWorld::new();
+        let mut gw2 = GridWorld::default();
         gw2.play_strategy(policy.clone(), false);
         assert_eq!(gw2.state_id(), 40)
     }
     #[test]
     fn monte_carlo_off_policy_rps() {
         println!("twoRoundRPS: ");
-        let mut gw = TwoRoundRPS::new();
+        let gw = TwoRoundRPS::default();
+        const nb_states: usize = two_round_rps::NUM_STATES;
+        const nb_action: usize = two_round_rps::NUM_ACTIONS;
+        const nb_rewards: usize = two_round_rps::NUM_REWARDS;
 
         println!("stat ID :{:?}", gw.state_id());
+        let policy = monte_carlo_off_policy::<nb_states, nb_action, nb_rewards, TwoRoundRPS>
+            (0.999, 1000, 1000, 0.4, 42);
 
-        let policy = monte_carlo_off_policy(&mut gw, 0.999, 10000, 1000, 0.1, 42);
 
         println!("{:?}", policy);
 
         //let policy = build_policy(&policy);
-        let mut gw2 = TwoRoundRPS::new();
+        let mut gw2 = TwoRoundRPS::default();
         gw2.play_strategy(policy.clone(), false);
         assert_eq!(gw2.score(), 1.)
     }
     #[test]
     fn monte_carlo_off_policy_monty_hall_1() {
         println!("Monty Hall 1: ");
-        let mut env = MontyHall1::new();
+        let mut env = MontyHall1::default();
 
         println!("stat ID :{:?}", env.state_id());
+        const nb_states: usize = monty_hall::NUM_STATES;
+        const nb_action: usize = monty_hall::NUM_ACTIONS;
+        const nb_rewards: usize = monty_hall::NUM_REWARDS;
 
-        let policy = monte_carlo_off_policy(&mut env, 0.999, 10000, 1000, 0.1, 42);
+        let policy = monte_carlo_off_policy::<nb_states, nb_action, nb_rewards, MontyHall1>
+            (0.999, 1000, 1000, 0.4, 42);
+
 
         println!("{:?}", policy);
         let nb_run: usize = 1000;
