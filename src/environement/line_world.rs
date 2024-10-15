@@ -1,7 +1,7 @@
 pub mod line_world {
     extern crate rand;
 
-    use ndarray::{array, Array1, Array4, ArrayBase, Ix4, OwnedRepr};
+    use ndarray::{Array4, ArrayBase, Ix4, OwnedRepr};
     use rand::prelude::StdRng;
     use rand::{Rng, SeedableRng};
 

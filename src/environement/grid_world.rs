@@ -1,7 +1,7 @@
 pub mod grid_world {
     extern crate rand;
 
-    use ndarray::{array, Array4, ArrayBase, Ix4, OwnedRepr};
+    use ndarray::{Array4, ArrayBase, Ix4, OwnedRepr};
     use ndarray_rand::rand::SeedableRng;
     use rand::prelude::StdRng;
     use rand::Rng;

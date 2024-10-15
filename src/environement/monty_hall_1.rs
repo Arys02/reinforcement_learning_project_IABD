@@ -1,7 +1,7 @@
 pub mod monty_hall {
     extern crate rand;
 
-    use ndarray::{array, Array1, Array4, ArrayBase, Ix4, OwnedRepr};
+    use ndarray::{Array4, ArrayBase, Ix4, OwnedRepr};
     use rand::Rng;
 
     use crate::environement::environment_traits::{BaseEnv, Environment};

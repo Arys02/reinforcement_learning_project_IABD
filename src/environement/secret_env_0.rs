@@ -1,6 +1,5 @@
 use std::ffi::c_void;
 
-use ndarray::Array1;
 
 use crate::environement::environment_traits::{BaseEnv, Environment};
 use crate::utils::lib_utils::LIB;

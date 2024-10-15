@@ -1,7 +1,4 @@
 use std::collections::HashMap;
-use std::{io, print};
-use std::io::Write;
-use ndarray::Array1;
 
 /// The `Environment` trait defines the common interface for environments used in reinforcement learning.
 /// It includes methods for managing the environment's state, executing actions, and retrieving rewards and transition probabilities.

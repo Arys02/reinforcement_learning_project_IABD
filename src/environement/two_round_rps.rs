@@ -1,7 +1,7 @@
 pub mod two_round_rps {
     extern crate rand;
 
-    use ndarray::{array, Array4, ArrayBase, Ix4, OwnedRepr};
+    use ndarray::{Array4, ArrayBase, Ix4, OwnedRepr};
     use ndarray_rand::rand::SeedableRng;
     use rand::prelude::StdRng;
     use rand::Rng;
@@ -153,7 +153,7 @@ pub mod two_round_rps {
 
         fn from_random_state() -> Self {
             let mut rng = rand::thread_rng();
-            let mut agent_pos: usize = rng.gen_range(0..=9);
+            let agent_pos: usize = rng.gen_range(0..=9);
 
             return TwoRoundRPS {
                 agent_pos,
@@ -215,7 +215,7 @@ pub mod two_round_rps {
                 let mut rng = rand::thread_rng();
 
                 let ia_move = rng.gen_range(0..=2);
-                self.agent_pos = (action * 3 + ia_move + 1);
+                self.agent_pos = action * 3 + ia_move + 1;
             } else {
                 let ia_move = (self.agent_pos - 1) / 3;
                 self.agent_pos = (action * 3 + ia_move + 1) + 9;
