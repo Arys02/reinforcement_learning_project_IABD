@@ -5,13 +5,13 @@
 - [ ] implementation
 ## tic tac toe 
 - [ ] implementation
-## - [ ] Farkle : 
-- [ ] add others combinaison
-- [ ] fix the 1 - 11 - 11 scoring
-- [ ] add feature to calculate the right amount for the network
-- [ ] select all dice ?
-- [ ] fix - rejouer quand tout les dé sont pris
-- [ ] rethink the step with action logic
+## - [x] Farkle : 
+- [x] add others combinaison
+- [x] fix the 1 - 11 - 11 scoring
+- [x] add feature to calculate the right amount for the network
+- [x] select all dice ?
+- [x] fix - rejouer quand tout les dé sont pris
+- [x] rethink the step with action logic
 
 # Algo : - [ ]
 - [ ] Random
