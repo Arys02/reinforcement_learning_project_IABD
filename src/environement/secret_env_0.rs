@@ -219,7 +219,7 @@ mod tests {
         assert_eq!(SecretEnv0::get_reward(1), 0.0);
         assert_eq!(SecretEnv0::get_reward(2), 1.0);
 
-        let mut env = SecretEnv0::default();
+        let env = SecretEnv0::default();
         dbg!(env.state_id());
 
 

@@ -205,7 +205,7 @@ mod tests {
         const nb_action: usize = line_world::NUM_ACTIONS;
         const nb_rewards: usize = line_world::NUM_REWARDS;
 
-        let mut lw = LineWorld::default();
+        let lw = LineWorld::default();
 
         println!("stat ID :{:?}", lw.state_id());
 
@@ -226,7 +226,7 @@ mod tests {
         const nb_states: usize = grid_world::NUM_STATES;
         const nb_action: usize = grid_world::NUM_ACTIONS;
         const nb_rewards: usize = grid_world::NUM_REWARDS;
-        let mut gw = GridWorld::default();
+        let gw = GridWorld::default();
 
         let policy = monte_carlo_on_policy::<nb_states, nb_action, nb_rewards, GridWorld>
             (0.999, 10000,

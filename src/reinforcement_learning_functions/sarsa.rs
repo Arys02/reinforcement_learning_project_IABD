@@ -183,17 +183,17 @@ pub fn sarsa<
 #[cfg(test)]
 mod tests {
     use crate::environement::grid_world::grid_world;
-    use crate::environement::grid_world::grid_world::*;
+    
     use crate::environement::grid_world::grid_world::GridWorld;
     use crate::environement::line_world::line_world;
-    use crate::environement::line_world::line_world::*;
+    
 
     use crate::environement::line_world::line_world::LineWorld;
     use crate::environement::monty_hall_1::monty_hall;
-    use crate::environement::monty_hall_1::monty_hall::*;
+    
     use crate::environement::monty_hall_1::monty_hall::MontyHall1;
     use crate::environement::two_round_rps::two_round_rps;
-    use crate::environement::two_round_rps::two_round_rps::*;
+    
     use crate::environement::two_round_rps::two_round_rps::TwoRoundRPS;
     use super::*;
 
