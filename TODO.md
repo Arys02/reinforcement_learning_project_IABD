@@ -12,6 +12,7 @@
 - [x] select all dice ?
 - [x] fix - rejouer quand tout les dé sont pris
 - [x] rethink the step with action logic
+- [ ] Handle farkle from first dice (with score)
 
 # Algo : - [ ]
 - [ ] Random
