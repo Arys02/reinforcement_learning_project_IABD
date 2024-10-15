@@ -1,7 +1,7 @@
 use std::ffi::c_void;
 
 
-use crate::environement::environment_traits::{BaseEnv, Environment};
+use crate::environement::environment_traits::{ActionEnv, BaseEnv, Environment};
 use crate::utils::lib_utils::LIB;
 
 pub const NUM_ACTIONS: usize = 8192;
@@ -54,7 +54,38 @@ impl BaseEnv for SecretEnv0 {
                 .expect("Failed to load function `secret_env_0_reset`");
         unsafe { secret_env_0_reset(self.env) };
     }
+}
 
+impl ActionEnv<NUM_ACTIONS> for SecretEnv0 {
+    fn available_actions_ids(&self) -> impl Iterator<Item=usize> {
+        unsafe {
+            let secret_env_0_available_actions: libloading::Symbol<
+                unsafe extern "C" fn(*const c_void) -> *const usize,
+            > = LIB
+                .get(b"secret_env_0_available_actions")
+                .expect("Failed to load function `secret_env_0_available_actions`");
+            let actions = secret_env_0_available_actions(self.env);
+
+            let secret_env_0_available_actions_len: libloading::Symbol<
+                unsafe extern "C" fn(*const c_void) -> usize,
+            > = LIB
+                .get(b"secret_env_0_available_actions_len")
+                .expect("Failed to load function `secret_env_0_available_actions_len`");
+            let len = secret_env_0_available_actions_len(self.env);
+
+            let actions_slice = std::slice::from_raw_parts(actions, len);
+
+            actions_slice.iter().cloned()
+        }
+    }
+    fn step(&mut self, action: usize) {
+        unsafe {
+            let secret_env_0_step: libloading::Symbol<unsafe extern "C" fn(*mut c_void, usize)> =
+                LIB.get(b"secret_env_0_step")
+                    .expect("Failed to load function `secret_env_0_step`");
+            secret_env_0_step(self.env, action);
+        }
+    }
 }
 
 impl Environment<NUM_STATES, NUM_ACTIONS, NUM_REWARDS> for SecretEnv0 {
@@ -77,7 +108,6 @@ impl Environment<NUM_STATES, NUM_ACTIONS, NUM_REWARDS> for SecretEnv0 {
             SecretEnv0 { env }
         }
     }
-
 
 
     fn num_states() -> usize {
@@ -129,28 +159,6 @@ impl Environment<NUM_STATES, NUM_ACTIONS, NUM_REWARDS> for SecretEnv0 {
         }
     }
 
-    fn available_actions_ids(&self) -> impl Iterator<Item=usize> {
-        unsafe {
-            let secret_env_0_available_actions: libloading::Symbol<
-                unsafe extern "C" fn(*const c_void) -> *const usize,
-            > = LIB
-                .get(b"secret_env_0_available_actions")
-                .expect("Failed to load function `secret_env_0_available_actions`");
-            let actions = secret_env_0_available_actions(self.env);
-
-            let secret_env_0_available_actions_len: libloading::Symbol<
-                unsafe extern "C" fn(*const c_void) -> usize,
-            > = LIB
-                .get(b"secret_env_0_available_actions_len")
-                .expect("Failed to load function `secret_env_0_available_actions_len`");
-            let len = secret_env_0_available_actions_len(self.env);
-
-            let actions_slice = std::slice::from_raw_parts(actions, len);
-
-            actions_slice.iter().cloned()
-
-        }
-    }
 
     /*
     fn is_forbidden(&self, action: usize) -> bool {
@@ -167,16 +175,6 @@ impl Environment<NUM_STATES, NUM_ACTIONS, NUM_REWARDS> for SecretEnv0 {
     }
 
 
-
-    fn step(&mut self, action: usize) {
-        unsafe {
-            let secret_env_0_step: libloading::Symbol<unsafe extern "C" fn(*mut c_void, usize)> =
-                LIB.get(b"secret_env_0_step")
-                    .expect("Failed to load function `secret_env_0_step`");
-            secret_env_0_step(self.env, action);
-        }
-    }
-
     fn delete(&mut self) {
         unsafe {
             let secret_env_0_delete: libloading::Symbol<unsafe extern "C" fn(*mut c_void)> = LIB
@@ -185,7 +183,6 @@ impl Environment<NUM_STATES, NUM_ACTIONS, NUM_REWARDS> for SecretEnv0 {
             secret_env_0_delete(self.env)
         }
     }
-
 
 
     fn display(&self) {

@@ -4,7 +4,7 @@ pub mod monty_hall {
     use ndarray::{Array4, ArrayBase, Ix4, OwnedRepr};
     use rand::Rng;
 
-    use crate::environement::environment_traits::{BaseEnv, Environment};
+    use crate::environement::environment_traits::{ActionEnv, BaseEnv, Environment};
 
 
     pub const NUM_ACTIONS: usize = 5;
@@ -88,9 +88,36 @@ pub mod monty_hall {
             self.door_win = dore_win;
             self.state = 0;
         }
+    }
 
+    impl ActionEnv<NUM_ACTIONS> for MontyHall1 {
+        fn available_actions_ids(&self) -> impl Iterator<Item=usize> {
+            if self.state == 0 {
+                0..=2
+            } else {
+                3..=4
+            }
+        }
+        fn step(&mut self, action: usize) {
+            assert_eq!(self.is_terminal(), false);
+            assert_eq!(self.available_actions_ids().any(|x| x == action), true);
 
-
+            if self.state == 0 {
+                self.state = action + 1;
+                self.agent_pos = action + 1;
+            } else {
+                self.state = if action == 3 {
+                    4
+                } else {
+                    if self.agent_pos != self.door_win {
+                        self.agent_pos = self.door_win
+                    } else {
+                        self.agent_pos += 1 % 3
+                    }
+                    5
+                }
+            }
+        }
     }
 
     impl Environment<NUM_STATES, NUM_ACTIONS, NUM_REWARDS> for MontyHall1 {
@@ -144,40 +171,11 @@ pub mod monty_hall {
             self.state = agent_pos
         }
 
-        fn available_actions_ids(&self) -> impl Iterator<Item=usize> {
-            if self.state == 0 {
-                0..=2
-            } else {
-                3..=4
-            }
-        }
 
         fn available_action_delete(&self) {
             todo!()
         }
 
-
-
-        fn step(&mut self, action: usize) {
-            assert_eq!(self.is_terminal(), false);
-            assert_eq!(self.available_actions_ids().any(|x| x == action), true);
-
-            if self.state == 0 {
-                self.state = action + 1;
-                self.agent_pos = action + 1;
-            } else {
-                self.state = if action == 3 {
-                    4
-                } else {
-                    if self.agent_pos != self.door_win {
-                        self.agent_pos = self.door_win
-                    } else {
-                        self.agent_pos += 1 % 3
-                    }
-                    5
-                }
-            }
-        }
 
         fn delete(&mut self) {
             todo!()

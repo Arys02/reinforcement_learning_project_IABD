@@ -6,7 +6,7 @@ pub mod grid_world {
     use rand::prelude::StdRng;
     use rand::Rng;
 
-    use crate::environement::environment_traits::{BaseEnv, Environment};
+    use crate::environement::environment_traits::{ActionEnv, BaseEnv, Environment};
     pub const NUM_ACTIONS: usize = 4;
     pub const NUM_STATES: usize = 49;
     pub const NUM_REWARDS: usize = 4;
@@ -188,6 +188,25 @@ pub mod grid_world {
         }
     }
 
+    impl ActionEnv<NUM_ACTIONS> for GridWorld {
+        fn available_actions_ids(&self) -> impl Iterator<Item=usize> {
+            0..4
+        }
+
+        fn step(&mut self, action: usize) {
+            assert_eq!(self.is_terminal(), false);
+            assert_eq!(self.available_actions_ids().any(|x| x == action), true);
+
+            match action {
+                0 => self.agent_pos -= 1,
+                1 => self.agent_pos += 1,
+                2 => self.agent_pos += 7,
+                3 => self.agent_pos -= 7,
+                _ => {}
+            }
+        }
+    }
+
     impl Environment<NUM_STATES, NUM_ACTIONS, NUM_REWARDS> for GridWorld {
         fn state_id(&self) -> usize {
             self.agent_pos as usize
@@ -245,27 +264,11 @@ pub mod grid_world {
             self.agent_pos = agent_pos
         }
 
-        fn available_actions_ids(&self) -> impl Iterator<Item=usize> {
-            0..4
-        }
 
         fn available_action_delete(&self) {
             todo!()
         }
 
-
-        fn step(&mut self, action: usize) {
-            assert_eq!(self.is_terminal(), false);
-            assert_eq!(self.available_actions_ids().any(|x| x == action), true);
-
-            match action {
-                0 => self.agent_pos -= 1,
-                1 => self.agent_pos += 1,
-                2 => self.agent_pos += 7,
-                3 => self.agent_pos -= 7,
-                _ => {}
-            }
-        }
 
         fn delete(&mut self) {
             todo!()

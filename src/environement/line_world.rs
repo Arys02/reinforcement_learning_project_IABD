@@ -5,7 +5,7 @@ pub mod line_world {
     use rand::prelude::StdRng;
     use rand::{Rng, SeedableRng};
 
-    use crate::environement::environment_traits::{BaseEnv, Environment};
+    use crate::environement::environment_traits::{ActionEnv, BaseEnv, Environment};
     pub const NUM_ACTIONS: usize = 5;
     pub const NUM_STATES: usize = 2;
     pub const NUM_REWARDS: usize = 3;
@@ -96,6 +96,25 @@ pub mod line_world {
         }
     }
 
+    impl ActionEnv<NUM_ACTIONS> for LineWorld {
+        fn available_actions_ids(&self) -> impl Iterator<Item=usize> {
+            match self.agent_pos {
+                1 | 2 | 3 => 0..=1,
+                _ => 0..=0
+            }
+        }
+        fn step(&mut self, action: usize) {
+            assert_eq!(self.is_terminal(), false);
+            assert_eq!(self.available_actions_ids().any(|x| x == action), true);
+
+            match action {
+                0 => self.agent_pos -= 1,
+                1 => self.agent_pos += 1,
+                _ => {}
+            }
+        }
+    }
+
     impl Environment<NUM_STATES, NUM_ACTIONS, NUM_REWARDS> for LineWorld {
         fn state_id(&self) -> usize {
             self.agent_pos
@@ -108,7 +127,6 @@ pub mod line_world {
                 agent_pos: agent_pos_,
             }
         }
-
 
 
         fn num_states() -> usize {
@@ -143,13 +161,6 @@ pub mod line_world {
             let agent_pos_: usize = rng.gen_range(1..4);
             self.agent_pos = agent_pos_
         }
-        fn available_actions_ids(&self) -> impl Iterator<Item=usize> {
-            match self.agent_pos {
-                1 | 2 | 3 => 0..=1,
-                _ => 0..=0
-            }
-        }
-
 
 
         fn available_action_delete(&self) {
@@ -157,22 +168,9 @@ pub mod line_world {
         }
 
 
-
-        fn step(&mut self, action: usize) {
-            assert_eq!(self.is_terminal(), false);
-            assert_eq!(self.available_actions_ids().any(|x| x == action), true);
-
-            match action {
-                0 => self.agent_pos -= 1,
-                1 => self.agent_pos += 1,
-                _ => {}
-            }
-        }
-
         fn delete(&mut self) {
             todo!()
         }
-
 
 
         fn display(&self) {

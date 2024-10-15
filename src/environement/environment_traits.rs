@@ -3,7 +3,7 @@ use std::collections::HashMap;
 /// The `Environment` trait defines the common interface for environments used in reinforcement learning.
 /// It includes methods for managing the environment's state, executing actions, and retrieving rewards and transition probabilities.
 pub trait Environment<const NUM_STATES: usize, const NUM_ACTIONS: usize, const NUM_REWARDS:
-usize> : Default + Clone + BaseEnv {
+usize> : Default + Clone + BaseEnv + ActionEnv<NUM_ACTIONS> {
     /// Creates a new instance of the environment.
 
     fn state_id(&self) -> usize;
@@ -44,23 +44,11 @@ usize> : Default + Clone + BaseEnv {
     /// - `seed`: The seed for the random state generator.
     fn reset_random_state(&mut self, seed: u64);
 
-    /// Retrieves the available actions in the current state as an array.
-    ///
-    /// # Returns
-    /// An `Array1` containing the available actions.
-    fn available_actions_ids(&self) -> impl Iterator<Item=usize>;
 
     /// Deletes available actions (presumably from some internal state or structure).
     fn available_action_delete(&self);
 
 
-    //remove
-
-    /// Executes a step in the environment with the given action.
-    ///
-    /// # Parameters
-    /// - `action`: The action to execute.
-    fn step(&mut self, action: usize);
 
     /// Deletes the environment (presumably some cleanup operation).
     fn delete(&mut self);
@@ -103,11 +91,6 @@ usize> : Default + Clone + BaseEnv {
     }
 }
 
-pub trait TabularEnv<const NUM_STATES: usize, const NUM_ACTIONS: usize, const NUM_REWARDS: usize> :
-Default + Clone + BaseEnv +
-ActionEnv<NUM_ACTIONS>{
-
-}
 
 pub trait BaseEnv : Default + Clone {
     fn is_terminal(&self) -> bool;

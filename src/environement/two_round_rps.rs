@@ -6,7 +6,7 @@ pub mod two_round_rps {
     use rand::prelude::StdRng;
     use rand::Rng;
 
-    use crate::environement::environment_traits::{BaseEnv, Environment};
+    use crate::environement::environment_traits::{ActionEnv, BaseEnv, Environment};
 
     pub const NUM_ACTIONS: usize = 19;
     pub const NUM_STATES: usize = 3;
@@ -146,6 +146,32 @@ pub mod two_round_rps {
         }
     }
 
+    impl ActionEnv<NUM_ACTIONS> for TwoRoundRPS {
+        fn available_actions_ids(&self) -> impl Iterator<Item=usize> {
+            if self.agent_pos > 18 {
+                0..0
+            } else {
+                0..3
+            }
+        }
+        fn step(&mut self, action: usize) {
+            assert_eq!(self.is_terminal(), false);
+            assert_eq!(self.available_actions_ids().any(|x| x == action), true);
+
+            if self.agent_pos == 0 {
+                let mut rng = rand::thread_rng();
+
+                let ia_move = rng.gen_range(0..=2);
+                self.agent_pos = action * 3 + ia_move + 1;
+            } else {
+                let ia_move = (self.agent_pos - 1) / 3;
+                self.agent_pos = (action * 3 + ia_move + 1) + 9;
+            };
+        }
+
+
+    }
+
     impl Environment<NUM_STATES, NUM_ACTIONS, NUM_REWARDS> for TwoRoundRPS {
         fn state_id(&self) -> usize {
             self.agent_pos as usize
@@ -194,33 +220,13 @@ pub mod two_round_rps {
             self.agent_pos = agent_pos
         }
 
-        fn available_actions_ids(&self) -> impl Iterator<Item=usize> {
-            if self.agent_pos > 18 {
-                0..0
-            } else {
-                0..3
-            }
-        }
+
 
         fn available_action_delete(&self) {
             todo!()
         }
 
 
-        fn step(&mut self, action: usize) {
-            assert_eq!(self.is_terminal(), false);
-            assert_eq!(self.available_actions_ids().any(|x| x == action), true);
-
-            if self.agent_pos == 0 {
-                let mut rng = rand::thread_rng();
-
-                let ia_move = rng.gen_range(0..=2);
-                self.agent_pos = action * 3 + ia_move + 1;
-            } else {
-                let ia_move = (self.agent_pos - 1) / 3;
-                self.agent_pos = (action * 3 + ia_move + 1) + 9;
-            };
-        }
 
         fn delete(&mut self) {
             todo!()
