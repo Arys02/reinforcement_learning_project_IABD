@@ -2,7 +2,7 @@ use std::ffi::c_void;
 
 use ndarray::Array1;
 
-use crate::environement::environment_traits::Environment;
+use crate::environement::environment_traits::{BaseEnv, Environment};
 use crate::utils::lib_utils::LIB;
 
 pub const NUM_ACTIONS: usize = 8192;
@@ -33,6 +33,30 @@ impl Default for SecretEnv0 {
     }
 }
 
+impl BaseEnv for SecretEnv0 {
+    fn is_terminal(&self) -> bool {
+        let secret_env_0_is_game_over: libloading::Symbol<
+            unsafe extern "C" fn(*const c_void) -> bool,
+        > = unsafe { LIB.get(b"secret_env_0_is_game_over") }
+            .expect("Failed to load function `secret_env_0_is_game_over`");
+        return unsafe { secret_env_0_is_game_over(self.env) };
+    }
+    fn score(&self) -> f32 {
+        unsafe {
+            let secret_env_0_score: libloading::Symbol<unsafe extern "C" fn(*const c_void) -> f32> =
+                LIB.get(b"secret_env_0_score")
+                    .expect("Failed to load function `secret_env_0_score`");
+            secret_env_0_score(self.env)
+        }
+    }
+    fn reset(&mut self) {
+        let secret_env_0_reset: libloading::Symbol<unsafe extern "C" fn(*mut c_void)> =
+            unsafe { LIB.get(b"secret_env_0_reset") }
+                .expect("Failed to load function `secret_env_0_reset`");
+        unsafe { secret_env_0_reset(self.env) };
+    }
+
+}
 
 impl Environment<NUM_STATES, NUM_ACTIONS, NUM_REWARDS> for SecretEnv0 {
     fn state_id(&self) -> usize {
@@ -55,12 +79,7 @@ impl Environment<NUM_STATES, NUM_ACTIONS, NUM_REWARDS> for SecretEnv0 {
         }
     }
 
-    fn reset(&mut self) {
-        let secret_env_0_reset: libloading::Symbol<unsafe extern "C" fn(*mut c_void)> =
-            unsafe { LIB.get(b"secret_env_0_reset") }
-                .expect("Failed to load function `secret_env_0_reset`");
-        unsafe { secret_env_0_reset(self.env) };
-    }
+
 
     fn num_states() -> usize {
         let secret_env_0_num_states: libloading::Symbol<unsafe extern "C" fn() -> usize> =
@@ -149,13 +168,7 @@ impl Environment<NUM_STATES, NUM_ACTIONS, NUM_REWARDS> for SecretEnv0 {
         todo!()
     }
 
-    fn is_terminal(&self) -> bool {
-        let secret_env_0_is_game_over: libloading::Symbol<
-            unsafe extern "C" fn(*const c_void) -> bool,
-        > = unsafe { LIB.get(b"secret_env_0_is_game_over") }
-            .expect("Failed to load function `secret_env_0_is_game_over`");
-        return unsafe { secret_env_0_is_game_over(self.env) };
-    }
+
 
     fn step(&mut self, action: usize) {
         unsafe {
@@ -175,14 +188,7 @@ impl Environment<NUM_STATES, NUM_ACTIONS, NUM_REWARDS> for SecretEnv0 {
         }
     }
 
-    fn score(&self) -> f32 {
-        unsafe {
-            let secret_env_0_score: libloading::Symbol<unsafe extern "C" fn(*const c_void) -> f32> =
-                LIB.get(b"secret_env_0_score")
-                    .expect("Failed to load function `secret_env_0_score`");
-            secret_env_0_score(self.env)
-        }
-    }
+
 
     fn display(&self) {
         unsafe {

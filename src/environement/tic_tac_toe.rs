@@ -97,7 +97,7 @@ pub mod tic_tac_toe {
     }
 
     impl BaseEnv for TicTacToeVersusRandom {
-        fn is_game_over(&self) -> bool {
+        fn is_terminal(&self) -> bool {
             self.is_game_over
         }
 

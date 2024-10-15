@@ -361,7 +361,7 @@ pub mod farkle {
     }
 
     impl BaseEnv for Farkle {
-        fn is_game_over(&self) -> bool {
+        fn is_terminal(&self) -> bool {
             self.is_game_over
         }
 
@@ -576,7 +576,7 @@ pub mod farkle {
             writeln!(std::io::stdout(), "Welcome to the Land of Farkle\nYour adventure begins now")
                 .expect("Failed to write welcome message");
             env.reset(); // self is the current instance of Farkle
-            while !env.is_game_over()
+            while !env.is_terminal()
             {
                 clear_screen();
                 println!("{}", env);

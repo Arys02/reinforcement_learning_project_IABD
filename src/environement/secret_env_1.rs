@@ -2,7 +2,7 @@ use std::ffi::c_void;
 
 use ndarray::Array1;
 
-use crate::environement::environment_traits::Environment;
+use crate::environement::environment_traits::{BaseEnv, Environment};
 use crate::utils::lib_utils::LIB;
 
 pub const NUM_ACTIONS: usize = 4;
@@ -29,6 +29,30 @@ impl Default for SecretEnv1 {
             let env = secret_env_1_new();
             SecretEnv1 { env }
         }
+    }
+}
+
+impl BaseEnv for SecretEnv1 {
+    fn is_terminal(&self) -> bool {
+        let secret_env_1_is_game_over: libloading::Symbol<
+            unsafe extern "C" fn(*const c_void) -> bool,
+        > = unsafe { LIB.get(b"secret_env_1_is_game_over") }
+            .expect("Failed to load function `secret_env_1_is_game_over`");
+        return unsafe { secret_env_1_is_game_over(self.env) };
+    }
+    fn score(&self) -> f32 {
+        unsafe {
+            let secret_env_1_score: libloading::Symbol<unsafe extern "C" fn(*const c_void) -> f32> =
+                LIB.get(b"secret_env_1_score")
+                    .expect("Failed to load function `secret_env_1_score`");
+            secret_env_1_score(self.env)
+        }
+    }
+    fn reset(&mut self) {
+        let secret_env_1_reset: libloading::Symbol<unsafe extern "C" fn(*mut c_void)> =
+            unsafe { LIB.get(b"secret_env_1_reset") }
+                .expect("Failed to load function `secret_env_1_reset`");
+        unsafe { secret_env_1_reset(self.env) };
     }
 }
 
@@ -68,7 +92,6 @@ impl Environment<NUM_STATES, NUM_ACTIONS, NUM_REWARDS> for SecretEnv1 {
                 .expect("Failed to load function `secret_env_1_reward`");
         return unsafe { secret_env_1_reward(i) };
     }
-
 
 
     fn reset_random_state(&mut self, _seed: u64) {
@@ -123,13 +146,6 @@ impl Environment<NUM_STATES, NUM_ACTIONS, NUM_REWARDS> for SecretEnv1 {
         todo!()
     }
 
-    fn is_terminal(&self) -> bool {
-        let secret_env_1_is_game_over: libloading::Symbol<
-            unsafe extern "C" fn(*const c_void) -> bool,
-        > = unsafe { LIB.get(b"secret_env_1_is_game_over") }
-            .expect("Failed to load function `secret_env_1_is_game_over`");
-        return unsafe { secret_env_1_is_game_over(self.env) };
-    }
 
     /*
     fn is_forbidden(&self, action: usize) -> bool {
@@ -159,14 +175,6 @@ impl Environment<NUM_STATES, NUM_ACTIONS, NUM_REWARDS> for SecretEnv1 {
         }
     }
 
-    fn score(&self) -> f32 {
-        unsafe {
-            let secret_env_1_score: libloading::Symbol<unsafe extern "C" fn(*const c_void) -> f32> =
-                LIB.get(b"secret_env_1_score")
-                    .expect("Failed to load function `secret_env_1_score`");
-            secret_env_1_score(self.env)
-        }
-    }
 
     fn display(&self) {
         unsafe {
@@ -177,12 +185,6 @@ impl Environment<NUM_STATES, NUM_ACTIONS, NUM_REWARDS> for SecretEnv1 {
         }
     }
 
-    fn reset(&mut self) {
-        let secret_env_1_reset: libloading::Symbol<unsafe extern "C" fn(*mut c_void)> =
-            unsafe { LIB.get(b"secret_env_1_reset") }
-                .expect("Failed to load function `secret_env_1_reset`");
-        unsafe { secret_env_1_reset(self.env) };
-    }
 
     fn build_transition_probability(s: usize, a: usize, s_p: usize, r: usize) -> f32 {
         let secret_env_1_transition_probability: libloading::Symbol<
@@ -218,7 +220,7 @@ mod tests {
         dbg!(env.state_id());
 
         assert_eq!(
-            SecretEnv1::build_transition_probability( 0, 0, 0, 0),
+            SecretEnv1::build_transition_probability(0, 0, 0, 0),
             0.0
         );
 

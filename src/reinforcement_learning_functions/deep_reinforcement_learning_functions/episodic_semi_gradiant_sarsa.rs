@@ -73,7 +73,7 @@ where
         }
         env.reset();
 
-        if env.is_game_over() {
+        if env.is_terminal() {
             continue;
         }
 
@@ -93,7 +93,7 @@ where
             &mut rng,
         );
 
-        while !env.is_game_over() {
+        while !env.is_terminal() {
             let prev_score = env.score();
 
             env.step(a);
@@ -106,7 +106,7 @@ where
             let mask_p_tensor: Tensor<B, 1> = Tensor::from(mask_p).to_device(device);
             let q_s_p = Tensor::from_inner(model.valid().forward(s_p_tensor.clone().inner()));
 
-            let (a_p, q_s_p_a_p) = if env.is_game_over() {
+            let (a_p, q_s_p_a_p) = if env.is_terminal() {
                 (0, Tensor::from([0f32]).to_device(device))
             } else {
                 let a_p = epsilon_greedy_action::<B, NUM_STATE_FEATURES, NUM_ACTIONS>(

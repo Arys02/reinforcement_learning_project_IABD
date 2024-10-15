@@ -4,7 +4,7 @@ pub mod monty_hall {
     use ndarray::{array, Array1, Array4, ArrayBase, Ix4, OwnedRepr};
     use rand::Rng;
 
-    use crate::environement::environment_traits::Environment;
+    use crate::environement::environment_traits::{BaseEnv, Environment};
 
 
     pub const NUM_ACTIONS: usize = 5;
@@ -68,6 +68,31 @@ pub mod monty_hall {
         }
     }
 
+    impl BaseEnv for MontyHall1 {
+        fn is_terminal(&self) -> bool {
+            match self.state {
+                4 => true,
+                5 => true,
+                _ => false,
+            }
+        }
+        fn score(&self) -> f32 {
+            if self.agent_pos == self.door_win {
+                return 1.;
+            }
+            0.
+        }
+        fn reset(&mut self) {
+            let mut rng = rand::thread_rng();
+            let dore_win: usize = rng.gen_range(1..=3);
+            self.door_win = dore_win;
+            self.state = 0;
+        }
+
+
+
+    }
+
     impl Environment<NUM_STATES, NUM_ACTIONS, NUM_REWARDS> for MontyHall1 {
         fn state_id(&self) -> usize {
             self.state as usize
@@ -85,12 +110,6 @@ pub mod monty_hall {
             }
         }
 
-        fn reset(&mut self) {
-            let mut rng = rand::thread_rng();
-            let dore_win: usize = rng.gen_range(1..=3);
-            self.door_win = dore_win;
-            self.state = 0;
-        }
 
         fn num_states() -> usize {
             6
@@ -137,13 +156,7 @@ pub mod monty_hall {
             todo!()
         }
 
-        fn is_terminal(&self) -> bool {
-            match self.state {
-                4 => true,
-                5 => true,
-                _ => false,
-            }
-        }
+
 
         fn step(&mut self, action: usize) {
             assert_eq!(self.is_terminal(), false);
@@ -170,12 +183,6 @@ pub mod monty_hall {
             todo!()
         }
 
-        fn score(&self) -> f32 {
-            if self.agent_pos == self.door_win {
-                return 1.;
-            }
-            0.
-        }
 
         fn display(&self) {
             println!("--------------");

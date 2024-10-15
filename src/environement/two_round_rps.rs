@@ -6,7 +6,7 @@ pub mod two_round_rps {
     use rand::prelude::StdRng;
     use rand::Rng;
 
-    use crate::environement::environment_traits::Environment;
+    use crate::environement::environment_traits::{BaseEnv, Environment};
 
     pub const NUM_ACTIONS: usize = 19;
     pub const NUM_STATES: usize = 3;
@@ -125,6 +125,29 @@ pub mod two_round_rps {
         }
     }
 
+    impl BaseEnv for TwoRoundRPS {
+        fn is_terminal(&self) -> bool {
+            match self.agent_pos {
+                x if x > 9 => true,
+                _ => false,
+            }
+        }
+
+        fn score(&self) -> f32 {
+            match self.agent_pos {
+                n if vec![2, 6, 7, 11, 15, 16].contains(&n) => -1.,
+                n if vec![0, 1, 5, 9, 10, 14, 18].contains(&n) => 0.,
+                n if vec![3, 4, 8, 12, 13, 17].contains(&n) => 1.,
+                _ => 0.,
+            }
+        }
+        fn reset(&mut self) {
+            self.agent_pos = 0;
+        }
+
+
+    }
+
     impl Environment<NUM_STATES, NUM_ACTIONS, NUM_REWARDS> for TwoRoundRPS {
         fn state_id(&self) -> usize {
             self.agent_pos as usize
@@ -139,9 +162,7 @@ pub mod two_round_rps {
             };
         }
 
-        fn reset(&mut self) {
-            self.agent_pos = 0;
-        }
+
 
         fn num_states() -> usize {
             19
@@ -187,12 +208,6 @@ pub mod two_round_rps {
             todo!()
         }
 
-        fn is_terminal(&self) -> bool {
-            match self.agent_pos {
-                x if x > 9 => true,
-                _ => false,
-            }
-        }
 
 
         fn step(&mut self, action: usize) {
@@ -214,14 +229,6 @@ pub mod two_round_rps {
             todo!()
         }
 
-        fn score(&self) -> f32 {
-            match self.agent_pos {
-                n if vec![2, 6, 7, 11, 15, 16].contains(&n) => -1.,
-                n if vec![0, 1, 5, 9, 10, 14, 18].contains(&n) => 0.,
-                n if vec![3, 4, 8, 12, 13, 17].contains(&n) => 1.,
-                _ => 0.,
-            }
-        }
 
         fn display(&self) {
             if vec![1, 2, 3, 10, 11, 12].contains(&self.agent_pos) {

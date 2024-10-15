@@ -6,15 +6,14 @@ use ndarray::Array1;
 /// The `Environment` trait defines the common interface for environments used in reinforcement learning.
 /// It includes methods for managing the environment's state, executing actions, and retrieving rewards and transition probabilities.
 pub trait Environment<const NUM_STATES: usize, const NUM_ACTIONS: usize, const NUM_REWARDS:
-usize> : Default + Clone {
+usize> : Default + Clone + BaseEnv {
     /// Creates a new instance of the environment.
 
     fn state_id(&self) -> usize;
     /// Creates a new instance of the environment from a random state.
     fn from_random_state() -> Self;
     /// Resets the environment to its initial state.
-    fn reset(&mut self);
-    /// Returns the total number of states in the environment.
+
     fn num_states() -> usize;
     /// Returns the total number of actions available in the environment.
     fn num_actions() -> usize;
@@ -57,11 +56,7 @@ usize> : Default + Clone {
     /// Deletes available actions (presumably from some internal state or structure).
     fn available_action_delete(&self);
 
-    /// Checks if the current state is terminal.
-    ///
-    /// # Returns
-    /// `true` if the current state is terminal, `false` otherwise.
-    fn is_terminal(&self) -> bool;
+
     //remove
 
     /// Executes a step in the environment with the given action.
@@ -73,11 +68,6 @@ usize> : Default + Clone {
     /// Deletes the environment (presumably some cleanup operation).
     fn delete(&mut self);
 
-    /// Retrieves the current score of the environment.
-    ///
-    /// # Returns
-    /// The score as a `f32`.
-    fn score(&self) -> f32;
 
     /// Displays the current state of the environment (for debugging or visualization).
     fn display(&self);
@@ -123,7 +113,7 @@ ActionEnv<NUM_ACTIONS>{
 }
 
 pub trait BaseEnv : Default + Clone {
-    fn is_game_over(&self) -> bool;
+    fn is_terminal(&self) -> bool;
     fn score(&self) -> f32;
     fn reset(&mut self);
 

@@ -5,7 +5,7 @@ pub mod line_world {
     use rand::prelude::StdRng;
     use rand::{Rng, SeedableRng};
 
-    use crate::environement::environment_traits::Environment;
+    use crate::environement::environment_traits::{BaseEnv, Environment};
     pub const NUM_ACTIONS: usize = 5;
     pub const NUM_STATES: usize = 2;
     pub const NUM_REWARDS: usize = 3;
@@ -77,6 +77,25 @@ pub mod line_world {
         }
     }
 
+    impl BaseEnv for LineWorld {
+        fn is_terminal(&self) -> bool {
+            match self.agent_pos {
+                1 | 2 | 3 => false,
+                _ => true,
+            }
+        }
+        fn score(&self) -> f32 {
+            match self.agent_pos {
+                0 => -1.0,
+                4 => 1.0,
+                _ => 0.0,
+            }
+        }
+        fn reset(&mut self) {
+            self.agent_pos = 2
+        }
+    }
+
     impl Environment<NUM_STATES, NUM_ACTIONS, NUM_REWARDS> for LineWorld {
         fn state_id(&self) -> usize {
             self.agent_pos
@@ -90,9 +109,7 @@ pub mod line_world {
             }
         }
 
-        fn reset(&mut self) {
-            self.agent_pos = 2
-        }
+
 
         fn num_states() -> usize {
             5
@@ -138,12 +155,6 @@ pub mod line_world {
             todo!()
         }
 
-        fn is_terminal(&self) -> bool {
-            match self.agent_pos {
-                1 | 2 | 3 => false,
-                _ => true,
-            }
-        }
 
 
         fn step(&mut self, action: usize) {
@@ -161,13 +172,7 @@ pub mod line_world {
             todo!()
         }
 
-        fn score(&self) -> f32 {
-            match self.agent_pos {
-                0 => -1.0,
-                4 => 1.0,
-                _ => 0.0,
-            }
-        }
+
 
         fn display(&self) {
             for i in 0..5 {

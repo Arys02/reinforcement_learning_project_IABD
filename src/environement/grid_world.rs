@@ -6,7 +6,7 @@ pub mod grid_world {
     use rand::prelude::StdRng;
     use rand::Rng;
 
-    use crate::environement::environment_traits::Environment;
+    use crate::environement::environment_traits::{BaseEnv, Environment};
     pub const NUM_ACTIONS: usize = 4;
     pub const NUM_STATES: usize = 49;
     pub const NUM_REWARDS: usize = 4;
@@ -161,6 +161,35 @@ pub mod grid_world {
         }
     }
 
+    impl BaseEnv for GridWorld {
+        fn is_terminal(&self) -> bool {
+            match self.agent_pos {
+                x if x < 8 => true,
+                x if x > 40 => true,
+                x if x % 7 == 0 => true,
+                x if x % 7 == 6 => true,
+                12 | 40 => true,
+                _ => false,
+            }
+        }
+
+        fn score(&self) -> f32 {
+            match self.agent_pos {
+                12 => -3.0,
+                40 => 3.0,
+                x if x > 7 && x < 40 && x % 7 >= 1 && x % 7 <= 5 => 0.0,
+                _ => -1.0,
+            }
+        }
+
+
+        fn reset(&mut self) {
+            self.agent_pos = 8;
+        }
+
+
+    }
+
     impl Environment<NUM_STATES, NUM_ACTIONS, NUM_REWARDS> for GridWorld {
         fn state_id(&self) -> usize {
             self.agent_pos as usize
@@ -181,9 +210,7 @@ pub mod grid_world {
             }
         }
 
-        fn reset(&mut self) {
-            self.agent_pos = 8;
-        }
+
 
         fn num_states() -> usize {
             NUM_STATES
@@ -229,16 +256,7 @@ pub mod grid_world {
             todo!()
         }
 
-        fn is_terminal(&self) -> bool {
-            match self.agent_pos {
-                x if x < 8 => true,
-                x if x > 40 => true,
-                x if x % 7 == 0 => true,
-                x if x % 7 == 6 => true,
-                12 | 40 => true,
-                _ => false,
-            }
-        }
+
 
         fn step(&mut self, action: usize) {
             assert_eq!(self.is_terminal(), false);
@@ -257,14 +275,7 @@ pub mod grid_world {
             todo!()
         }
 
-        fn score(&self) -> f32 {
-            match self.agent_pos {
-                12 => -3.0,
-                40 => 3.0,
-                x if x > 7 && x < 40 && x % 7 >= 1 && x % 7 <= 5 => 0.0,
-                _ => -1.0,
-            }
-        }
+
 
         fn display(&self) {
             for j in 0..7 {
