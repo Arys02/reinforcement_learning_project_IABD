@@ -1,4 +1,7 @@
 use crate::environement::environment_traits::Environment;
+
+use crate::environement::environment_traits::BaseEnv;
+use crate::environement::environment_traits::ActionEnv;
 use ndarray::Array;
 use ndarray_rand::RandomExt;
 use rand::distributions::Uniform;
@@ -119,9 +122,6 @@ mod tests {
 
     use crate::environement::monty_hall_1::{monty_hall};
     use crate::environement::secret_env_0::SecretEnv0;
-    use crate::environement::secret_env_1::SecretEnv1;
-    use crate::environement::secret_env_2::SecretEnv2;
-    use crate::environement::secret_env_3::SecretEnv3;
     use crate::environement::two_round_rps::{two_round_rps};
     use std::collections::HashMap;
     use crate::environement::grid_world::grid_world;

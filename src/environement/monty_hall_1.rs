@@ -144,11 +144,11 @@ pub mod monty_hall {
             self.state = agent_pos
         }
 
-        fn available_actions_ids(&self) -> Array1<usize> {
+        fn available_actions_ids(&self) -> impl Iterator<Item=usize> {
             if self.state == 0 {
-                array![0, 1, 2]
+                0..=2
             } else {
-                array![3, 4]
+                3..=4
             }
         }
 
@@ -160,7 +160,7 @@ pub mod monty_hall {
 
         fn step(&mut self, action: usize) {
             assert_eq!(self.is_terminal(), false);
-            assert_eq!(self.available_actions_ids().iter().any(|&x| x == action), true);
+            assert_eq!(self.available_actions_ids().any(|x| x == action), true);
 
             if self.state == 0 {
                 self.state = action + 1;
@@ -269,8 +269,8 @@ pub mod monty_hall {
             let gw = MontyHall1::default();
 
             assert_eq!(
-                gw.available_actions_ids(),
-                array![0, 1, 2],
+                gw.available_actions_ids().collect::<Vec<_>>(),
+                vec![0, 1, 2],
                 "should be [0, 1, 2], found [] instead"
             );
         }

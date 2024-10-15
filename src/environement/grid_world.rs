@@ -1,7 +1,7 @@
 pub mod grid_world {
     extern crate rand;
 
-    use ndarray::{array, Array1, Array4, ArrayBase, Ix4, OwnedRepr};
+    use ndarray::{array, Array4, ArrayBase, Ix4, OwnedRepr};
     use ndarray_rand::rand::SeedableRng;
     use rand::prelude::StdRng;
     use rand::Rng;
@@ -186,8 +186,6 @@ pub mod grid_world {
         fn reset(&mut self) {
             self.agent_pos = 8;
         }
-
-
     }
 
     impl Environment<NUM_STATES, NUM_ACTIONS, NUM_REWARDS> for GridWorld {
@@ -209,7 +207,6 @@ pub mod grid_world {
                 agent_pos,
             }
         }
-
 
 
         fn num_states() -> usize {
@@ -248,8 +245,8 @@ pub mod grid_world {
             self.agent_pos = agent_pos
         }
 
-        fn available_actions_ids(&self) -> Array1<usize> {
-            return array![0, 1, 2, 3];
+        fn available_actions_ids(&self) -> impl Iterator<Item=usize> {
+            0..4
         }
 
         fn available_action_delete(&self) {
@@ -257,10 +254,9 @@ pub mod grid_world {
         }
 
 
-
         fn step(&mut self, action: usize) {
             assert_eq!(self.is_terminal(), false);
-            assert_eq!(self.available_actions_ids().iter().any(|&x| x == action), true);
+            assert_eq!(self.available_actions_ids().any(|x| x == action), true);
 
             match action {
                 0 => self.agent_pos -= 1,
@@ -274,7 +270,6 @@ pub mod grid_world {
         fn delete(&mut self) {
             todo!()
         }
-
 
 
         fn display(&self) {
@@ -335,8 +330,8 @@ pub mod grid_world {
             let gw = GridWorld::default();
 
             assert_eq!(
-                gw.available_actions_ids(),
-                array![0, 1, 2, 3],
+                gw.available_actions_ids().collect::<Vec<_>>(),
+                vec![0, 1, 2, 3],
                 "should be [1, 2], found [] instead"
             );
         }

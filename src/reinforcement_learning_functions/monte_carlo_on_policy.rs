@@ -1,4 +1,7 @@
 use crate::environement::environment_traits::Environment;
+
+use crate::environement::environment_traits::BaseEnv;
+use crate::environement::environment_traits::ActionEnv;
 use ndarray_rand::rand::SeedableRng;
 use rand::distributions::WeightedIndex;
 use rand::prelude::{Distribution, StdRng};
@@ -73,7 +76,8 @@ pub fn monte_carlo_on_policy<
         // generat an episode from S0 following pi
         while !env.is_terminal() && step_count < max_steps {
             let state = env.state_id();
-            let available_action = env.available_actions_ids();
+            let available_action = env.available_actions_ids()
+                .collect::<Vec<usize>>();
 
             if !pi.contains_key(&state) {
                 let mut tmp_action_vector = Vec::with_capacity(available_action.len());

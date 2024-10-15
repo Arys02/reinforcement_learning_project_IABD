@@ -51,7 +51,7 @@ usize> : Default + Clone + BaseEnv {
     ///
     /// # Returns
     /// An `Array1` containing the available actions.
-    fn available_actions_ids(&self) -> Array1<usize>;
+    fn available_actions_ids(&self) -> impl Iterator<Item=usize>;
 
     /// Deletes available actions (presumably from some internal state or structure).
     fn available_action_delete(&self);

@@ -143,13 +143,14 @@ pub mod line_world {
             let agent_pos_: usize = rng.gen_range(1..4);
             self.agent_pos = agent_pos_
         }
-
-        fn available_actions_ids(&self) -> Array1<usize> {
+        fn available_actions_ids(&self) -> impl Iterator<Item=usize> {
             match self.agent_pos {
-                1 | 2 | 3 => array![0, 1],
-                _ => array![],
+                1 | 2 | 3 => 0..=1,
+                _ => 0..=0
             }
         }
+
+
 
         fn available_action_delete(&self) {
             todo!()
@@ -159,7 +160,7 @@ pub mod line_world {
 
         fn step(&mut self, action: usize) {
             assert_eq!(self.is_terminal(), false);
-            assert_eq!(self.available_actions_ids().iter().any(|&x| x == action), true);
+            assert_eq!(self.available_actions_ids().any(|x| x == action), true);
 
             match action {
                 0 => self.agent_pos -= 1,

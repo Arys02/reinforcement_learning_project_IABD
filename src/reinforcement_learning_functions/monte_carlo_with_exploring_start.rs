@@ -1,4 +1,7 @@
 use crate::environement::environment_traits::Environment;
+
+use crate::environement::environment_traits::BaseEnv;
+use crate::environement::environment_traits::ActionEnv;
 use ndarray_rand::rand::SeedableRng;
 use rand::prelude::{IteratorRandom, StdRng};
 use rand::Rng;
@@ -73,7 +76,8 @@ pub fn monte_carlo_with_exploring_start<
 
         while !env.is_terminal() && step_count < max_steps {
             let state = env.state_id();
-            let available_action = env.available_actions_ids();
+            let available_action = env.available_actions_ids()
+                .collect::<Vec<usize>>();
 
             if !pi.contains_key(&state) {
                 pi.insert(state, *available_action.iter().choose(&mut rng).unwrap());

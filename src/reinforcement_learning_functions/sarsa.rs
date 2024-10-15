@@ -1,4 +1,6 @@
 use crate::environement::environment_traits::Environment;
+use crate::environement::environment_traits::BaseEnv;
+use crate::environement::environment_traits::ActionEnv;
 use ndarray_rand::rand::SeedableRng;
 use rand::prelude::StdRng;
 use rand::Rng;
@@ -71,7 +73,7 @@ pub fn sarsa<
 
         while !env.is_terminal() && step < nb_step {
             step += 1;
-            let aa = env.available_actions_ids();
+            let aa = env.available_actions_ids().collect::<Vec<usize>>();
             let state = env.state_id();
 
             if !Q.contains_key(&(state, aa[0])) {
@@ -109,7 +111,7 @@ pub fn sarsa<
             let r = env.score() - prev_score;
 
             let state_p = env.state_id();
-            let available_action_p = env.available_actions_ids();
+            let available_action_p = env.available_actions_ids().collect::<Vec<usize>>();
 
             let target: f32;
 
@@ -181,13 +183,17 @@ pub fn sarsa<
 #[cfg(test)]
 mod tests {
     use crate::environement::grid_world::grid_world;
+    use crate::environement::grid_world::grid_world::*;
     use crate::environement::grid_world::grid_world::GridWorld;
     use crate::environement::line_world::line_world;
+    use crate::environement::line_world::line_world::*;
 
     use crate::environement::line_world::line_world::LineWorld;
     use crate::environement::monty_hall_1::monty_hall;
+    use crate::environement::monty_hall_1::monty_hall::*;
     use crate::environement::monty_hall_1::monty_hall::MontyHall1;
     use crate::environement::two_round_rps::two_round_rps;
+    use crate::environement::two_round_rps::two_round_rps::*;
     use crate::environement::two_round_rps::two_round_rps::TwoRoundRPS;
     use super::*;
 
@@ -255,6 +261,7 @@ mod tests {
         const nb_states: usize = monty_hall::NUM_STATES;
         const nb_action: usize = monty_hall::NUM_ACTIONS;
         const nb_rewards: usize = monty_hall::NUM_REWARDS;
+
 
 
         let policy = sarsa::<nb_states, nb_action, nb_rewards, MontyHall1>

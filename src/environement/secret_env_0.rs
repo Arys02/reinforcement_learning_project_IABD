@@ -130,9 +130,8 @@ impl Environment<NUM_STATES, NUM_ACTIONS, NUM_REWARDS> for SecretEnv0 {
         }
     }
 
-    fn available_actions_ids(&self) -> Array1<usize> {
+    fn available_actions_ids(&self) -> impl Iterator<Item=usize> {
         unsafe {
-            let mut aa = Vec::new();
             let secret_env_0_available_actions: libloading::Symbol<
                 unsafe extern "C" fn(*const c_void) -> *const usize,
             > = LIB
@@ -145,12 +144,12 @@ impl Environment<NUM_STATES, NUM_ACTIONS, NUM_REWARDS> for SecretEnv0 {
             > = LIB
                 .get(b"secret_env_0_available_actions_len")
                 .expect("Failed to load function `secret_env_0_available_actions_len`");
+            let len = secret_env_0_available_actions_len(self.env);
 
-            // show all available actions
-            for i in 0..secret_env_0_available_actions_len(self.env) {
-                aa.push(*actions.add(i));
-            }
-            Array1::from_vec(aa)
+            let actions_slice = std::slice::from_raw_parts(actions, len);
+
+            actions_slice.iter().cloned()
+
         }
     }
 

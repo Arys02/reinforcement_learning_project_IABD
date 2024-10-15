@@ -1,7 +1,7 @@
 pub mod two_round_rps {
     extern crate rand;
 
-    use ndarray::{array, Array1, Array4, ArrayBase, Ix4, OwnedRepr};
+    use ndarray::{array, Array4, ArrayBase, Ix4, OwnedRepr};
     use ndarray_rand::rand::SeedableRng;
     use rand::prelude::StdRng;
     use rand::Rng;
@@ -144,8 +144,6 @@ pub mod two_round_rps {
         fn reset(&mut self) {
             self.agent_pos = 0;
         }
-
-
     }
 
     impl Environment<NUM_STATES, NUM_ACTIONS, NUM_REWARDS> for TwoRoundRPS {
@@ -161,7 +159,6 @@ pub mod two_round_rps {
                 agent_pos,
             };
         }
-
 
 
         fn num_states() -> usize {
@@ -197,11 +194,12 @@ pub mod two_round_rps {
             self.agent_pos = agent_pos
         }
 
-        fn available_actions_ids(&self) -> Array1<usize> {
+        fn available_actions_ids(&self) -> impl Iterator<Item=usize> {
             if self.agent_pos > 18 {
-                return Array1::zeros(0);
-            };
-            return array![0, 1, 2];
+                0..0
+            } else {
+                0..3
+            }
         }
 
         fn available_action_delete(&self) {
@@ -209,10 +207,9 @@ pub mod two_round_rps {
         }
 
 
-
         fn step(&mut self, action: usize) {
             assert_eq!(self.is_terminal(), false);
-            assert_eq!(self.available_actions_ids().iter().any(|&x| x == action), true);
+            assert_eq!(self.available_actions_ids().any(|x| x == action), true);
 
             if self.agent_pos == 0 {
                 let mut rng = rand::thread_rng();
@@ -290,8 +287,8 @@ pub mod two_round_rps {
             let gw = TwoRoundRPS::default();
 
             assert_eq!(
-                gw.available_actions_ids(),
-                array![0, 1, 2],
+                gw.available_actions_ids().collect::<Vec<_>>(),
+                vec![0, 1, 2],
                 "should be [0, 1, 2], found [] instead"
             );
         }

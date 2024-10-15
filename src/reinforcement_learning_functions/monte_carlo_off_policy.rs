@@ -2,6 +2,10 @@ extern crate csv;
 extern crate serde;
 
 use crate::environement::environment_traits::Environment;
+
+use crate::environement::environment_traits::BaseEnv;
+use crate::environement::environment_traits::ActionEnv;
+
 use ndarray_rand::rand::SeedableRng;
 use rand::distributions::WeightedIndex;
 use rand::prelude::{Distribution, StdRng};
@@ -81,7 +85,8 @@ pub fn monte_carlo_off_policy<
         // generat an episode from S0 following pi
         while !env.is_terminal() && step_count < max_steps {
             let state = env.state_id();
-            let available_action = env.available_actions_ids();
+            let available_action = env.available_actions_ids()
+                .collect::<Vec<usize>>();
 
             if !Q.contains_key(&(state, available_action[0])) {
                 let mut max_val = f32::MIN;

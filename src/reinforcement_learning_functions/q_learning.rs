@@ -1,4 +1,7 @@
 use crate::environement::environment_traits::Environment;
+
+use crate::environement::environment_traits::BaseEnv;
+use crate::environement::environment_traits::ActionEnv;
 use ndarray::Array;
 use ndarray_rand::rand::SeedableRng;
 use ndarray_stats::QuantileExt;
@@ -72,11 +75,12 @@ pub fn q_learning<
 
     for _ in 0..nb_iter {
         let mut env = Env::default();
-        let step = 0;
+        let mut step = 0;
 
         while !env.is_terminal() && step < nb_step {
+            step += 1;
             let state = env.state_id();
-            let available_action = env.available_actions_ids();
+            let available_action = env.available_actions_ids().collect::<Vec<usize>>();
 
             if !Q.contains_key(&state) {
                 let mut q_s = HashMap::new();
@@ -93,7 +97,7 @@ pub fn q_learning<
 
             if rng.gen::<f32>() < epsilon {
                 //insert dans action l'action
-                let _ = action.insert(*env.available_actions_ids().iter().choose(&mut rng).unwrap());
+                let _ = action.insert(env.available_actions_ids().choose(&mut rng).unwrap());
             } else {
                 let q_s: Vec<f32> = available_action
                     .iter()
@@ -122,7 +126,7 @@ pub fn q_learning<
             let r = env.score() - prev_score;
 
             let state_p = env.state_id();
-            let available_action_p = env.available_actions_ids();
+            let available_action_p = env.available_actions_ids().collect::<Vec<usize>>();
 
             let target: f32;
 
@@ -190,8 +194,6 @@ mod tests {
     use crate::environement::grid_world::grid_world::GridWorld;
     use crate::environement::line_world::{line_world};
     use crate::environement::line_world::line_world::LineWorld;
-    use crate::environement::secret_env_0::SecretEnv0;
-    use crate::environement::secret_env_1::SecretEnv1;
     use crate::environement::two_round_rps::two_round_rps;
     use crate::environement::two_round_rps::two_round_rps::TwoRoundRPS;
     use super::*;

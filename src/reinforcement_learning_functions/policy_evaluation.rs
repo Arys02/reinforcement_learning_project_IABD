@@ -2,6 +2,9 @@ use ndarray::{Array1, Array2};
 
 use crate::environement::environment_traits::Environment;
 
+
+use crate::environement::environment_traits::BaseEnv;
+use crate::environement::environment_traits::ActionEnv;
 pub fn policy_evaluation<
     const NUM_STATES: usize,
     const NUM_ACTIONS: usize,

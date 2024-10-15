@@ -1,3 +1,4 @@
+/*
 use std::ffi::c_void;
 
 use ndarray::Array1;
@@ -257,3 +258,6 @@ mod tests {
         assert_eq!(env.is_terminal(), false);
     }
 }
+
+
+ */
