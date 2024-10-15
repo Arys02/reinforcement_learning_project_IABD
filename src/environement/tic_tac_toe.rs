@@ -1,5 +1,5 @@
 pub mod tic_tac_toe {
-    use crate::environement::environment_traits::DeepDiscreteActionsEnv;
+    use crate::environement::environment_traits::{ActionEnv, BaseEnv, DeepDiscreteActionsEnv};
     use rand::prelude::IteratorRandom;
     use std::fmt::Display;
 
@@ -25,19 +25,7 @@ pub mod tic_tac_toe {
         }
     }
 
-    impl DeepDiscreteActionsEnv<NUM_STATE_FEATURES, NUM_ACTIONS> for TicTacToeVersusRandom {
-        fn state_description(&self) -> [f32; NUM_STATE_FEATURES] {
-            std::array::from_fn(|idx| {
-                let cell = idx / 3;
-                let feature = idx % 3;
-                if self.board[cell] == feature as f32 {
-                    1.0
-                } else {
-                    0.0
-                }
-            })
-        }
-
+    impl ActionEnv<NUM_ACTIONS> for TicTacToeVersusRandom {
         fn available_actions_ids(&self) -> impl Iterator<Item = usize> {
             self.board.iter().enumerate().filter_map(
                 |(idx, &val)| {
@@ -49,11 +37,6 @@ pub mod tic_tac_toe {
                 },
             )
         }
-
-        fn action_mask(&self) -> [f32; 9] {
-            std::array::from_fn(|idx| if self.board[idx] == 0.0 { 1.0 } else { 0.0 })
-        }
-
         fn step(&mut self, action: usize) {
             if self.is_game_over {
                 panic!("Trying to play while Game is Over");
@@ -76,13 +59,13 @@ pub mod tic_tac_toe {
             if self.board[row * 3] == self.board[row * 3 + 1]
                 && self.board[row * 3 + 1] == self.board[row * 3 + 2]
                 || self.board[col] == self.board[col + 3]
-                    && self.board[col + 3] == self.board[col + 6]
+                && self.board[col + 3] == self.board[col + 6]
                 || self.board[0] == self.board[4]
-                    && self.board[4] == self.board[8]
-                    && self.board[0] == self.board[action]
+                && self.board[4] == self.board[8]
+                && self.board[0] == self.board[action]
                 || self.board[2] == self.board[4]
-                    && self.board[4] == self.board[6]
-                    && self.board[2] == self.board[action]
+                && self.board[4] == self.board[6]
+                && self.board[2] == self.board[action]
             {
                 self.is_game_over = true;
                 self.score = if self.player == 0 { 1.0 } else { -1.0 };
@@ -108,6 +91,12 @@ pub mod tic_tac_toe {
             }
         }
 
+
+
+
+    }
+
+    impl BaseEnv for TicTacToeVersusRandom {
         fn is_game_over(&self) -> bool {
             self.is_game_over
         }
@@ -122,6 +111,29 @@ pub mod tic_tac_toe {
             self.score = 0.0;
             self.is_game_over = false;
         }
+
+    }
+
+    impl DeepDiscreteActionsEnv<NUM_STATE_FEATURES, NUM_ACTIONS> for TicTacToeVersusRandom {
+        fn state_description(&self) -> [f32; NUM_STATE_FEATURES] {
+            std::array::from_fn(|idx| {
+                let cell = idx / 3;
+                let feature = idx % 3;
+                if self.board[cell] == feature as f32 {
+                    1.0
+                } else {
+                    0.0
+                }
+            })
+        }
+
+
+        fn action_mask(&self) -> [f32; 9] {
+            std::array::from_fn(|idx| if self.board[idx] == 0.0 { 1.0 } else { 0.0 })
+        }
+
+
+
     }
 
     impl Display for TicTacToeVersusRandom {

@@ -5,10 +5,10 @@ use ndarray::Array1;
 
 /// The `Environment` trait defines the common interface for environments used in reinforcement learning.
 /// It includes methods for managing the environment's state, executing actions, and retrieving rewards and transition probabilities.
-pub trait Environment {
+pub trait Environment<const NUM_STATES: usize, const NUM_ACTIONS: usize, const NUM_REWARDS:
+usize> : Default + Clone {
     /// Creates a new instance of the environment.
-    fn new() -> Self;
-    /// Returns the current state identifier of the environment.
+
     fn state_id(&self) -> usize;
     /// Creates a new instance of the environment from a random state.
     fn from_random_state() -> Self;
@@ -41,17 +41,6 @@ pub trait Environment {
     /// The transition probability as a `f32`.
     fn build_transition_probability(s: usize, a: usize, s_p: usize, r: usize) -> f32;
 
-    /// Retrieves the transition probability for a given state-action-next state-reward tuple.
-    ///
-    /// # Parameters
-    /// - `s`: The current state.
-    /// - `a`: The action taken.
-    /// - `s_p`: The next state.
-    /// - `r`: The reward received.
-    ///
-    /// # Returns
-    /// The transition probability as a `f32`.
-    fn get_transition_probability(&mut self, s: usize, a: usize, s_p: usize, r: usize) -> f32;
 
     /// Resets the environment to a random state using a specified seed.
     ///
@@ -63,7 +52,7 @@ pub trait Environment {
     ///
     /// # Returns
     /// An `Array1` containing the available actions.
-    fn available_action(&self) -> Array1<usize>;
+    fn available_actions_ids(&self) -> Array1<usize>;
 
     /// Deletes available actions (presumably from some internal state or structure).
     fn available_action_delete(&self);
@@ -73,15 +62,7 @@ pub trait Environment {
     /// # Returns
     /// `true` if the current state is terminal, `false` otherwise.
     fn is_terminal(&self) -> bool;
-
-    /// Checks if a given state is forbidden.
-    ///
-    /// # Parameters
-    /// - `state`: The state to check.
-    ///
-    /// # Returns
-    /// `true` if the state is forbidden, `false` otherwise.
-    fn is_forbidden(&self, state: usize) -> bool;
+    //remove
 
     /// Executes a step in the environment with the given action.
     ///

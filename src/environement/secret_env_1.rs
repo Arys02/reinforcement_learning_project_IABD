@@ -4,26 +4,35 @@ use ndarray::Array1;
 
 use crate::environement::environment_traits::Environment;
 use crate::utils::lib_utils::LIB;
+
+pub const NUM_ACTIONS: usize = 4;
+pub const NUM_STATES: usize = 49;
+pub const NUM_REWARDS: usize = 4;
 /// The `SecretEnv1` struct represents an environment that interacts with an external library to perform various operations.
 /// This struct implements the `Environment` trait, allowing it to be used in reinforcement learning algorithms.
 ///
 /// # Fields
 ///
 /// - `env`: A pointer to the environment object managed by the external library.
+///
+#[derive(Clone, Debug)]
 pub struct SecretEnv1 {
     pub env: *mut c_void,
 }
 
-impl Environment for SecretEnv1 {
-    fn new() -> Self {
+impl Default for SecretEnv1 {
+    fn default() -> Self {
         let secret_env_1_new: libloading::Symbol<unsafe extern "C" fn() -> *mut c_void> =
             unsafe { LIB.get(b"secret_env_1_new") }
                 .expect("Failed to load function `secret_env_1_new`");
         unsafe {
             let env = secret_env_1_new();
-            return SecretEnv1 { env };
+            SecretEnv1 { env }
         }
     }
+}
+
+impl Environment<NUM_STATES, NUM_ACTIONS, NUM_REWARDS> for SecretEnv1 {
     fn state_id(&self) -> usize {
         let secret_env_1_state_id: libloading::Symbol<
             unsafe extern "C" fn(*const c_void) -> usize,
@@ -60,13 +69,7 @@ impl Environment for SecretEnv1 {
         return unsafe { secret_env_1_reward(i) };
     }
 
-    fn get_transition_probability(&mut self, s: usize, a: usize, s_p: usize, r: usize) -> f32 {
-        let secret_env_1_transition_probability: libloading::Symbol<
-            unsafe extern "C" fn(usize, usize, usize, usize) -> f32,
-        > = unsafe { LIB.get(b"secret_env_1_transition_probability") }
-            .expect("Failed to load function `secret_env_1_transition_probability`");
-        return unsafe { secret_env_1_transition_probability(s, a, s_p, r) };
-    }
+
 
     fn reset_random_state(&mut self, _seed: u64) {
         unsafe {
@@ -92,7 +95,7 @@ impl Environment for SecretEnv1 {
         }
     }
 
-    fn available_action(&self) -> Array1<usize> {
+    fn available_actions_ids(&self) -> Array1<usize> {
         unsafe {
             let mut aa = Vec::new();
             let secret_env_1_available_actions: libloading::Symbol<
@@ -128,6 +131,7 @@ impl Environment for SecretEnv1 {
         return unsafe { secret_env_1_is_game_over(self.env) };
     }
 
+    /*
     fn is_forbidden(&self, action: usize) -> bool {
         let secret_env_1_is_forbidden: libloading::Symbol<
             unsafe extern "C" fn(*const c_void, usize) -> bool,
@@ -135,6 +139,7 @@ impl Environment for SecretEnv1 {
             .expect("Failed to load function `secret_env_1_is_forbidden`");
         return unsafe { secret_env_1_is_forbidden(self.env, action) };
     }
+     */
 
     fn step(&mut self, action: usize) {
         unsafe {
@@ -194,7 +199,7 @@ mod tests {
 
     #[test]
     fn test_init() {
-        let secret0 = SecretEnv1::new();
+        let secret0 = SecretEnv1::default();
         dbg!(secret0.env);
         dbg!(SecretEnv1::num_states());
         assert_eq!(SecretEnv1::num_states(), 8192);
@@ -209,11 +214,11 @@ mod tests {
         assert_eq!(SecretEnv1::get_reward(1), 0.0);
         assert_eq!(SecretEnv1::get_reward(2), 1.0);
 
-        let mut env = SecretEnv1::new();
+        let mut env = SecretEnv1::default();
         dbg!(env.state_id());
 
         assert_eq!(
-            SecretEnv1::get_transition_probability(&mut env, 0, 0, 0, 0),
+            SecretEnv1::build_transition_probability( 0, 0, 0, 0),
             0.0
         );
 
@@ -231,7 +236,7 @@ mod tests {
                 .expect("Failed to load function `secret_env_1_new`");
             let env2_p = secret_env_1_new();
 
-            let env3 = SecretEnv1::new();
+            let env3 = SecretEnv1::default();
             dbg!(env3.env);
             dbg!(env3.state_id());
             dbg!(secret_env_1_state_id(env3.env));
@@ -247,7 +252,6 @@ mod tests {
         }
 
         assert_eq!(env.state_id(), 0);
-        assert_eq!(env.is_forbidden(0), true);
         assert_eq!(env.is_terminal(), false);
     }
 }

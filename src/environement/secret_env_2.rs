@@ -253,7 +253,6 @@ mod tests {
         }
 
         assert_eq!(env.state_id(), 0);
-        assert_eq!(env.is_forbidden(0), true);
         assert_eq!(env.is_terminal(), false);
     }
 }

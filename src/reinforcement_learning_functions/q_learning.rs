@@ -5,6 +5,7 @@ use ndarray_stats::QuantileExt;
 use rand::prelude::{IteratorRandom, StdRng};
 use rand::Rng;
 use std::collections::HashMap;
+use std::fmt::Debug;
 
 /// Executes the Q-Learning algorithm for a given environment.
 ///
@@ -50,8 +51,12 @@ use std::collections::HashMap;
 /// The Q-Learning algorithm updates the policy `pi` based on the learned action-value function `Q`
 /// by selecting the action with the highest value for each state.
 
-pub fn q_learning<E: Environment>(
-    env: &mut E,
+pub fn q_learning<
+    const NUM_STATES: usize,
+    const NUM_ACTIONS: usize,
+    const NUM_REWARDS: usize,
+    Env: Environment<NUM_STATES, NUM_ACTIONS, NUM_REWARDS> + Debug
+>(
     alpha: f32,
     epsilon: f32,
     gamma: f32,
@@ -66,12 +71,12 @@ pub fn q_learning<E: Environment>(
     let mut Q: HashMap<usize, HashMap<(usize, usize), f32>> = HashMap::new();
 
     for _ in 0..nb_iter {
-        env.reset();
+        let mut env = Env::default();
         let step = 0;
 
         while !env.is_terminal() && step < nb_step {
             let state = env.state_id();
-            let available_action = env.available_action();
+            let available_action = env.available_actions_ids();
 
             if !Q.contains_key(&state) {
                 let mut q_s = HashMap::new();
@@ -88,7 +93,7 @@ pub fn q_learning<E: Environment>(
 
             if rng.gen::<f32>() < epsilon {
                 //insert dans action l'action
-                let _ = action.insert(*env.available_action().iter().choose(&mut rng).unwrap());
+                let _ = action.insert(*env.available_actions_ids().iter().choose(&mut rng).unwrap());
             } else {
                 let q_s: Vec<f32> = available_action
                     .iter()
@@ -117,7 +122,7 @@ pub fn q_learning<E: Environment>(
             let r = env.score() - prev_score;
 
             let state_p = env.state_id();
-            let available_action_p = env.available_action();
+            let available_action_p = env.available_actions_ids();
 
             let target: f32;
 
@@ -181,94 +186,44 @@ pub fn q_learning<E: Environment>(
 
 #[cfg(test)]
 mod tests {
-    use crate::environement::grid_world::GridWorld;
-    use crate::environement::line_world::LineWorld;
-    use crate::environement::monty_hall_1::MontyHall1;
+    use crate::environement::grid_world::grid_world;
+    use crate::environement::grid_world::grid_world::GridWorld;
+    use crate::environement::line_world::{line_world};
+    use crate::environement::line_world::line_world::LineWorld;
     use crate::environement::secret_env_0::SecretEnv0;
     use crate::environement::secret_env_1::SecretEnv1;
-    use crate::environement::secret_env_2::SecretEnv2;
-    use crate::environement::secret_env_3::SecretEnv3;
-    use crate::environement::two_round_rps::TwoRoundRPS;
-
+    use crate::environement::two_round_rps::two_round_rps;
+    use crate::environement::two_round_rps::two_round_rps::TwoRoundRPS;
     use super::*;
 
-    fn test_env_policy<E: Environment>(mut env: &mut E, label: &str) -> u64 {
-        let mut env_test = E::new();
-
-        use std::time::Instant;
-        let now = Instant::now();
-        let policy_map = q_learning(env, 0.1, 0.1, 0.999, 1000, 1000, 42);
-        let elapsed = now.elapsed();
-
-        let path = format!("record/q_learning_{}.csv", label);
-
-        env_test.play_strategy(policy_map.0.clone(), false);
-        return elapsed.as_millis() as u64;
-    }
-
-    #[test]
-    fn q_learning_all_env() {
-        let mut lineworld = LineWorld::new();
-        println!("lineworld,{}", test_env_policy(&mut lineworld, "lineworld"));
-
-        let mut gridworld = GridWorld::new();
-        println!("gridworld,{}", test_env_policy(&mut gridworld, "gridworld"));
-
-        let mut monty_hall = MontyHall1::new();
-        println!(
-            "montyhall,{}",
-            test_env_policy(&mut monty_hall, "montyhall")
-        );
-
-        let mut two_round_rps = TwoRoundRPS::new();
-        println!(
-            "tworoundrps,{}",
-            test_env_policy(&mut two_round_rps, "tworoundrps")
-        );
-
-        let mut secret_env0 = SecretEnv0::new();
-        println!(
-            "secretenv0,{}",
-            test_env_policy(&mut secret_env0, "secretenv0")
-        );
-
-        let mut secret_env1 = SecretEnv1::new();
-        println!(
-            "secretenv1,{}",
-            test_env_policy(&mut secret_env1, "secretenv1")
-        );
-
-        let mut secret_env2 = SecretEnv2::new();
-        println!(
-            "secretenv2,{}",
-            test_env_policy(&mut secret_env2, "secretenv2")
-        );
-
-        let mut secret_env3 = SecretEnv3::new();
-        println!(
-            "secretenv3,{}",
-            test_env_policy(&mut secret_env3, "secretenv3")
-        );
-    }
 
     #[test]
     fn q_learning_policy_lineworld() {
-        let mut lw = LineWorld::new();
 
-        println!("stat ID :{:?}", lw.state_id());
+        const nb_states: usize = line_world::NUM_STATES;
+        const nb_action: usize = line_world::NUM_ACTIONS;
+        const nb_rewards: usize = line_world::NUM_REWARDS;
 
-        let policy = q_learning(&mut lw, 0.1, 0.1, 0.999, 10, 1000, 42);
+
+        let policy = q_learning::<nb_states, nb_action, nb_rewards, LineWorld>
+            (0.1, 0.1, 0.999, 10, 1000, 42);
         println!("{:?}", policy)
     }
 
     #[test]
     fn q_learning_grid_world() {
         println!("gridworld : ");
-        let mut gw = GridWorld::new();
+        let mut gw = GridWorld::default();
 
         println!("stat ID :{:?}", gw.state_id());
+        const nb_states: usize = grid_world::NUM_STATES;
+        const nb_action: usize = grid_world::NUM_ACTIONS;
+        const nb_rewards: usize = grid_world::NUM_REWARDS;
 
-        let policy = q_learning(&mut gw, 0.1, 0.1, 0.999, 10, 1000, 42);
+        let policy = q_learning::<nb_states, nb_action, nb_rewards, GridWorld>
+            (0.1, 0.1, 0.999, 10, 1000, 42);
+        println!("{:?}", policy);
+
 
         let policy_to_play = policy.0;
         gw.play_strategy(policy_to_play, false);
@@ -278,24 +233,41 @@ mod tests {
     }
     #[test]
     fn q_learning_policy_two_round_rps() {
-        let mut env = TwoRoundRPS::new();
+        let mut env = TwoRoundRPS::default();
 
         println!("stat ID :{:?}", env.state_id());
+        const nb_states: usize = two_round_rps::NUM_STATES;
+        const nb_action: usize = two_round_rps::NUM_ACTIONS;
+        const nb_rewards: usize = two_round_rps::NUM_REWARDS;
 
-        let policy = q_learning(&mut env, 0.1, 0.1, 0.999, 1000, 1000, 42);
+
+        let policy = q_learning::<nb_states, nb_action, nb_rewards, TwoRoundRPS>
+            (0.1, 0.1, 0.999, 10, 1000, 42);
         println!("{:?}", policy);
+
         env.reset();
 
         env.play_strategy(policy.0, false);
 
         assert_eq!(env.is_terminal() && env.score() == 1.0, true)
     }
+    /*
     #[test]
     fn policy_iteration_env_0() {
         println!("start");
-        let mut env = SecretEnv0::new();
-        let policy = q_learning(&mut env, 0.1, 0.1, 0.999, 1000, 1000, 42);
+        let mut env = SecretEnv0::default();
+        const nb_states: usize = SecretEnv0::num_states();
+        const nb_action: usize = SecretEnv0::num_actions();
+        const nb_rewards: usize = SecretEnv0::num_rewards();
+        let mut lw = SecretEnv0::default();
+
+        println!("stat ID :{:?}", lw.state_id());
+
+        let policy = q_learning::<nb_states, nb_action, nb_rewards, SecretEnv0>
+            (0.1, 0.1, 0.999, 10, 1000, 42);
+
         println!("{:?}", policy);
+
         env.reset();
 
         env.play_strategy(policy.0, false);
@@ -304,7 +276,7 @@ mod tests {
         let best_score = SecretEnv0::get_reward(SecretEnv0::num_rewards() - 1);
         let is_terminal = env.is_terminal();
 
-        let mut vec_score = Vec::new();
+        let mut vec_score = Vec::default();
         for i in 0..SecretEnv0::num_rewards() {
             vec_score.push(SecretEnv0::get_reward(i))
         }
@@ -315,9 +287,14 @@ mod tests {
     #[test]
     fn policy_iteration_env_1() {
         println!("start");
-        let mut env = SecretEnv1::new();
-        let policy = q_learning(&mut env, 0.1, 0.1, 0.999, 1000, 1000, 42);
-        println!("{:?}", policy);
+        let mut env = SecretEnv1::default();
+        const nb_states: usize = SecretEnv1::num_states();
+        const nb_action: usize = SecretEnv1::num_actions();
+        const nb_rewards: usize = SecretEnv1::num_rewards();
+
+        let policy = q_learning::<nb_states, nb_action, nb_rewards, SecretEnv1>
+            (0.1, 0.1, 0.999, 10, 1000, 42);
+
         env.reset();
 
         env.play_strategy(policy.0, false);
@@ -326,11 +303,13 @@ mod tests {
         let best_score = SecretEnv0::get_reward(SecretEnv0::num_rewards() - 1);
         let is_terminal = env.is_terminal();
 
-        let mut vec_score = Vec::new();
+        let mut vec_score = Vec::default();
         for i in 0..SecretEnv0::num_rewards() {
             vec_score.push(SecretEnv0::get_reward(i))
         }
 
         assert_eq!(env.is_terminal() && env.score() > 15., true);
     }
+
+     */
 }

@@ -3,6 +3,7 @@ use ndarray_rand::rand::SeedableRng;
 use rand::prelude::StdRng;
 use rand::Rng;
 use std::collections::HashMap;
+use std::fmt::Debug;
 
 /// Executes the SARSA (State-Action-Reward-State-Action) algorithm for a given environment.
 ///
@@ -47,8 +48,12 @@ use std::collections::HashMap;
 ///
 /// The SARSA algorithm updates the policy `pi` based on the learned action-value function `Q`
 /// by selecting the action with the highest value for each state.
-pub fn sarsa<E: Environment>(
-    env: &mut E,
+pub fn sarsa<
+    const NUM_STATES: usize,
+    const NUM_ACTIONS: usize,
+    const NUM_REWARDS: usize,
+    Env: Environment<NUM_STATES, NUM_ACTIONS, NUM_REWARDS> + Debug
+>(
     alpha: f32,
     epsilon: f32,
     gamma: f32,
@@ -58,16 +63,15 @@ pub fn sarsa<E: Environment>(
 ) -> (HashMap<usize, usize>, HashMap<(usize, usize), (f32, usize)>) {
     let mut rng = StdRng::seed_from_u64(seed);
     let mut Q = HashMap::new();
-
     let mut pi = HashMap::new();
 
     for _ in 0..nb_iter {
-        env.reset();
+        let mut env = Env::default();
         let mut step = 0;
 
         while !env.is_terminal() && step < nb_step {
             step += 1;
-            let aa = env.available_action();
+            let aa = env.available_actions_ids();
             let state = env.state_id();
 
             if !Q.contains_key(&(state, aa[0])) {
@@ -105,7 +109,7 @@ pub fn sarsa<E: Environment>(
             let r = env.score() - prev_score;
 
             let state_p = env.state_id();
-            let available_action_p = env.available_action();
+            let available_action_p = env.available_actions_ids();
 
             let target: f32;
 
@@ -154,10 +158,10 @@ pub fn sarsa<E: Environment>(
             Q.insert((state, action_i.unwrap()), (target, action));
         }
     }
-    for s in 0..E::num_states() {
+    for s in 0..Env::num_states() {
         let mut best_a: Option<usize> = None;
         let mut best_a_score = f32::MIN;
-        for action in 0..E::num_actions() {
+        for action in 0..Env::num_actions() {
             if Q.contains_key(&(s, action)) {
                 let a_score = Q[&(s, action)];
                 if best_a.is_none() || best_a_score <= a_score.0 {
@@ -176,82 +180,28 @@ pub fn sarsa<E: Environment>(
 
 #[cfg(test)]
 mod tests {
-    use crate::environement::grid_world::GridWorld;
-    use crate::environement::line_world::LineWorld;
-    use crate::environement::monty_hall_1::MontyHall1;
-    use crate::environement::secret_env_0::SecretEnv0;
-    use crate::environement::secret_env_1::SecretEnv1;
-    use crate::environement::secret_env_2::SecretEnv2;
-    use crate::environement::secret_env_3::SecretEnv3;
-    use crate::environement::two_round_rps::TwoRoundRPS;
+    use crate::environement::grid_world::grid_world;
+    use crate::environement::grid_world::grid_world::GridWorld;
+    use crate::environement::line_world::line_world;
 
+    use crate::environement::line_world::line_world::LineWorld;
+    use crate::environement::monty_hall_1::monty_hall;
+    use crate::environement::monty_hall_1::monty_hall::MontyHall1;
+    use crate::environement::two_round_rps::two_round_rps;
+    use crate::environement::two_round_rps::two_round_rps::TwoRoundRPS;
     use super::*;
-
-    fn test_env_policy<E: Environment>(mut env: &mut E, label: &str) -> u64 {
-        let mut env_test = E::new();
-
-        use std::time::Instant;
-        let now = Instant::now();
-        let policy_map = sarsa(env, 0.1, 0.1, 0.999, 1000, 1000, 42);
-        let elapsed = now.elapsed();
-
-        let path = format!("record/sarsa_{}.csv", label);
-
-        env_test.play_strategy(policy_map.0.clone(), false);
-        return elapsed.as_millis() as u64;
-    }
-    #[test]
-    fn sarsa_all_env() {
-        let mut lineworld = LineWorld::new();
-        println!("lineworld,{}", test_env_policy(&mut lineworld, "lineworld"));
-
-        let mut gridworld = GridWorld::new();
-        println!("gridworld,{}", test_env_policy(&mut gridworld, "gridworld"));
-
-        let mut monty_hall = MontyHall1::new();
-        println!(
-            "montyhall,{}",
-            test_env_policy(&mut monty_hall, "montyhall")
-        );
-
-        let mut two_round_rps = TwoRoundRPS::new();
-        println!(
-            "tworoundrps,{}",
-            test_env_policy(&mut two_round_rps, "tworoundrps")
-        );
-
-        let mut secret_env0 = SecretEnv0::new();
-        println!(
-            "secretenv0,{}",
-            test_env_policy(&mut secret_env0, "secretenv0")
-        );
-
-        let mut secret_env1 = SecretEnv1::new();
-        println!(
-            "secretenv1,{}",
-            test_env_policy(&mut secret_env1, "secretenv1")
-        );
-
-        let mut secret_env2 = SecretEnv2::new();
-        println!(
-            "secretenv2,{}",
-            test_env_policy(&mut secret_env2, "secretenv2")
-        );
-
-        let mut secret_env3 = SecretEnv3::new();
-        println!(
-            "secretenv3,{}",
-            test_env_policy(&mut secret_env3, "secretenv3")
-        );
-    }
 
     #[test]
     fn sarsa_policy_lineworld() {
-        let mut lw = LineWorld::new();
+        let mut lw = LineWorld::default();
 
         println!("stat ID :{:?}", lw.state_id());
+        const nb_states: usize = line_world::NUM_STATES;
+        const nb_action: usize = line_world::NUM_ACTIONS;
+        const nb_rewards: usize = line_world::NUM_REWARDS;
 
-        let policy = sarsa(&mut lw, 0.1, 0.1, 0.999, 1000, 1000, 42);
+        let policy = sarsa::<nb_states, nb_action, nb_rewards, LineWorld>
+            (0.1, 0.1, 0.999, 1000, 1000, 42);
         println!("{:?}", policy);
         lw.play_strategy(policy.0, false);
         assert_eq!(lw.is_terminal() && lw.score() == 1.0, true);
@@ -259,11 +209,17 @@ mod tests {
 
     #[test]
     fn sarsa_policy_gridworld() {
-        let mut env = GridWorld::new();
+        const nb_states: usize = grid_world::NUM_STATES;
+        const nb_action: usize = grid_world::NUM_ACTIONS;
+        const nb_rewards: usize = grid_world::NUM_REWARDS;
 
+        let mut env = GridWorld::default();
         println!("stat ID :{:?}", env.state_id());
 
-        let policy = sarsa(&mut env, 0.1, 0.1, 0.999, 10000, 10000, 42);
+
+        let policy = sarsa::<nb_states, nb_action, nb_rewards, GridWorld>
+            (0.1, 0.1, 0.999, 1000, 1000, 42);
+
         println!("{:?}", policy);
         env.reset();
 
@@ -274,12 +230,17 @@ mod tests {
 
     #[test]
     fn sarsa_policy_two_round_rps() {
-        let mut env = TwoRoundRPS::new();
+        let mut env = TwoRoundRPS::default();
 
         println!("stat ID :{:?}", env.state_id());
 
-        let policy = sarsa(&mut env, 0.1, 0.1, 0.999, 100, 1000, 42);
-        println!("{:?}", policy);
+        const nb_states: usize = two_round_rps::NUM_STATES;
+        const nb_action: usize = two_round_rps::NUM_ACTIONS;
+        const nb_rewards: usize = two_round_rps::NUM_REWARDS;
+
+        let policy = sarsa::<nb_states, nb_action, nb_rewards, TwoRoundRPS>
+            (0.1, 0.1, 0.999, 1000, 1000, 42);
+
         env.reset();
 
         env.play_strategy(policy.0, false);
@@ -290,11 +251,15 @@ mod tests {
     #[test]
     fn sarsa_monty_hall_1() {
         println!("Monty Hall 1: ");
-        let mut env = MontyHall1::new();
+        let mut env = MontyHall1::default();
+        const nb_states: usize = monty_hall::NUM_STATES;
+        const nb_action: usize = monty_hall::NUM_ACTIONS;
+        const nb_rewards: usize = monty_hall::NUM_REWARDS;
 
-        println!("stat ID :{:?}", env.state_id());
 
-        let policy = sarsa(&mut env, 0.1, 0.1, 0.999, 1000, 1000, 42);
+        let policy = sarsa::<nb_states, nb_action, nb_rewards, MontyHall1>
+            (0.1, 0.1, 0.999, 1000, 1000, 42);
+
 
         println!("{:?}", policy);
         let nb_run: usize = 1000;
