@@ -13,8 +13,6 @@ https://arxiv.org/abs/1511.05952
 Deep Reinforcement Learning with Double Q-learning \
 https://arxiv.org/abs/1509.06461
 
-http://www.aaai.org/ocs/index.php/AAAI/AAAI16/paper/download/12389/11847 
-(slide 34 DQN pdf marche pas)
 
 ## REINFORCE
 Simple Statistical Gradient Folloming Algorithms for Connectionist 
@@ -30,7 +28,8 @@ Proximal Policy Optimization Algorithms \
 https://arxiv.org/abs/1707.06347
 
 ## MonteCarlo Tree Search (mcts)
-http://mcts.ai/edpowley/papers/tciaig_survey.pdf (fonctionne pas ?)
+A Survey of Monte Carlo Tree Search Methods \
+https://www.lamsade.dauphine.fr/~cazenave/A+Survey+of+Monte+Carlo+Tree+Search+Methods.pdf
 
 ### UTC
 Bandit based Monte-Carlo Planning \
