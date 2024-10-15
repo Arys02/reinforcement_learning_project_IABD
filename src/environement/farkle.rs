@@ -1,5 +1,5 @@
 pub mod farkle {
-    use crate::environement::environment_traits::{DeepDiscreteActionsEnv, Playable};
+    use crate::environement::environment_traits::{ActionEnv, BaseEnv, DeepDiscreteActionsEnv, Playable};
     use colored::*;
     use rand::prelude::IteratorRandom;
     use rand::Rng;
@@ -23,7 +23,6 @@ pub mod farkle {
         pub board: [u8; 6],
         pub player: u8,
         pub remaining_dice: u8,
-        pub action_stored: [usize; NUM_ACTIONS],
         pub action_counts: [[usize; 6]; NUM_ACTIONS],
         pub total_score: [usize; 2],
         pub round: u8,
@@ -48,6 +47,7 @@ pub mod farkle {
         }
 
 
+        //function used to generate all action possible
         #[warn(dead_code)]
         fn getAllAction() -> HashSet<(String, i32)> {
             let mut hset: HashSet<(String, i32)> = HashSet::new();
@@ -136,7 +136,6 @@ pub mod farkle {
             self.total_score[self.player as usize] += self.score as usize;
             self.score = 0.;
             self.remaining_dice = 6;
-            self.action_stored = [0usize; NUM_ACTIONS];
 
             self.bank_allowed = false;
             self.pick_dice_allowed = true;
@@ -228,7 +227,6 @@ pub mod farkle {
                 board: [0u8; 6],
                 player: 0,
                 remaining_dice: 6,
-                action_stored: [0usize; NUM_ACTIONS],
                 action_counts: actions_count,
                 total_score: [0; 2],
                 round: 0,
@@ -247,23 +245,7 @@ pub mod farkle {
         }
     }
 
-    impl DeepDiscreteActionsEnv<NUM_STATE_FEATURES, NUM_ACTIONS> for Farkle {
-        fn state_description(&self) -> [f32; NUM_STATE_FEATURES] {
-            let mut output = [0f32; NUM_STATE_FEATURES];
-            let mut v: Vec<f32> = Vec::with_capacity(36);
-            v.append(&mut vec![1., 2., 3.]);
-            let mut j = 0;
-            for i in 0..6 {
-                if self.board[i] != 0 {
-                    for _ in 0..self.board[i] {
-                        output[j * 6 + i] = 1.0;
-                        j += 1
-                    }
-                }
-            }
-            output
-        }
-
+    impl ActionEnv<NUM_ACTIONS> for Farkle {
         fn available_actions_ids(&self) -> impl Iterator<Item=usize> {
             let mut v = vec![None; NUM_ACTIONS];
             if self.pick_dice_allowed {
@@ -282,7 +264,6 @@ pub mod farkle {
             }
 
 
-
             if self.reroll_allowed {
                 v.insert(134, Some(134));
             }
@@ -293,15 +274,6 @@ pub mod farkle {
 
             v.into_iter().filter_map(|x| x)
         }
-
-        fn action_mask(&self) -> [f32; NUM_ACTIONS] {
-            let mut mask = [0.0; NUM_ACTIONS];
-            for idx in self.available_actions_ids() {
-                mask[idx] = 1.0;
-            }
-            mask
-        }
-
         fn step(&mut self, action: usize) {
             #[cfg(feature = "print")]
             println!("{}\n IA selected : {action}", self);
@@ -379,16 +351,16 @@ pub mod farkle {
                     while self.available_actions_ids().count() == 0 {
                         self.roll();
                     }
-                }
-                else {
+                } else {
                     self.pick_dice_allowed = false;
                     self.bank_allowed = true;
                     self.reroll_allowed = true;
                 }
-
             }
         }
+    }
 
+    impl BaseEnv for Farkle {
         fn is_game_over(&self) -> bool {
             self.is_game_over
         }
@@ -402,7 +374,6 @@ pub mod farkle {
             self.player = 0;
             self.remaining_dice = 6;
             self.total_score = [0; 2];
-            self.action_stored = [0usize; NUM_ACTIONS];
             self.round = 0;
             self.score = 0.0;
             self.is_game_over = false;
@@ -416,8 +387,32 @@ pub mod farkle {
         }
     }
 
+    impl DeepDiscreteActionsEnv<NUM_STATE_FEATURES, NUM_ACTIONS> for Farkle {
+        fn state_description(&self) -> [f32; NUM_STATE_FEATURES] {
+            let mut output = [0f32; NUM_STATE_FEATURES];
+            let mut v: Vec<f32> = Vec::with_capacity(36);
+            v.append(&mut vec![1., 2., 3.]);
+            let mut j = 0;
+            for i in 0..6 {
+                if self.board[i] != 0 {
+                    for _ in 0..self.board[i] {
+                        output[j * 6 + i] = 1.0;
+                        j += 1
+                    }
+                }
+            }
+            output
+        }
+        fn action_mask(&self) -> [f32; NUM_ACTIONS] {
+            let mut mask = [0.0; NUM_ACTIONS];
+            for idx in self.available_actions_ids() {
+                mask[idx] = 1.0;
+            }
+            mask
+        }
+    }
+
     impl Display for Farkle {
-        //use std::fmt;
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             writeln!(
                 f,
@@ -526,27 +521,6 @@ pub mod farkle {
         }
     }
 
-    const ACTION_DESCRIPTIONS: [&str; 12] = [
-        "Take 1 die of 1",
-        "Take 2 dice of 1",
-        "Take 3 dice of 1",
-        "Take 3 dice of 2",
-        "Take 3 dice of 3",
-        "Take 3 dice of 4",
-        "Take 1 die of 5",
-        "Take 2 dice of 5",
-        "Take 3 dice of 5",
-        "Take 3 die of 6",
-        "Roll again",
-        "Stop and bank score",
-    ];
-
-    fn clear_screen() {
-        print!("{}[2J{}[1;1H", 27 as char, 27 as char);
-        use std::io::{self, Write};
-        io::stdout().flush().unwrap();
-    }
-
 
     /// Trait that defines the capability for a game to be played interactively with a human player.
     /// Implementing this trait allows a game to be run in an interactive mode,
@@ -554,6 +528,27 @@ pub mod farkle {
     ///
 
     impl Playable for Farkle {
+        /*
+        const ACTION_DESCRIPTIONS: [&str; 12] = [
+            "Take 1 die of 1",
+            "Take 2 dice of 1",
+            "Take 3 dice of 1",
+            "Take 3 dice of 2",
+            "Take 3 dice of 3",
+            "Take 3 dice of 4",
+            "Take 1 die of 5",
+            "Take 2 dice of 5",
+            "Take 3 dice of 5",
+            "Take 3 die of 6",
+            "Roll again",
+            "Stop and bank score",
+        ];
+
+         */
+
+
+
+
         /// Initiates a full game of Farkle to be played with a human player.
         ///
         /// The objective is to utilize all existing methods to manage the game state and interactions.
@@ -571,6 +566,11 @@ pub mod farkle {
         ///
         ///
         fn play_as_human() {
+            fn clear_screen() {
+                print!("{}[2J{}[1;1H", 27 as char, 27 as char);
+                use std::io::{self, Write};
+                io::stdout().flush().unwrap();
+            }
             let mut env: Farkle = Farkle::default();
 
             writeln!(std::io::stdout(), "Welcome to the Land of Farkle\nYour adventure begins now")
@@ -615,84 +615,84 @@ pub mod farkle {
             assert!(!game.is_game_over);
             assert!(!game.reroll_allowed);
         }
-    }
 
-    #[test]
-    fn play_with_human_test() {
-        Farkle::play_as_human();
-    }
-    #[test]
-    fn test_available_actions_ids() {
-        let mut game = Farkle::default();
-        game.board = [1, 0, 3, 0, 0, 1]; // Trois '1'
+        #[test]
+        fn play_with_human_test() {
+            Farkle::play_as_human();
+        }
+        #[test]
+        fn test_available_actions_ids() {
+            let mut game = Farkle::default();
+            game.board = [1, 0, 3, 0, 0, 1]; // Trois '1'
 
-        let actions: Vec<usize> = game.available_actions_ids().collect();
-        println!("Available Actions:{:?} which is : {:?}", actions, actions.iter().map(|x|
-            { if *x < 135 { DICE_ACTION_VALUE[*x].0 } else { "" } }).collect::<Vec<&str>>());
+            let actions: Vec<usize> = game.available_actions_ids().collect();
+            println!("Available Actions:{:?} which is : {:?}", actions, actions.iter().map(|x|
+                { if *x < 135 { DICE_ACTION_VALUE[*x].0 } else { "" } }).collect::<Vec<&str>>());
 
-        //assert_eq!(actions, vec![ 11]); // Actions pour 1, 11, 111, stop
+            //assert_eq!(actions, vec![ 11]); // Actions pour 1, 11, 111, stop
 
-        /*
+            /*
 
-        game.reroll_allowed = true;
-        let actions: Vec<usize> = game.available_actions_ids().collect();
-        //assert_eq!(actions, vec![0, 1, 2, 6, 10, 11]); // 'roll' n'est pas disponible
+            game.reroll_allowed = true;
+            let actions: Vec<usize> = game.available_actions_ids().collect();
+            //assert_eq!(actions, vec![0, 1, 2, 6, 10, 11]); // 'roll' n'est pas disponible
 
-        game.reroll_allowed = false;
-        game.board = [0, 0, 0, 0, 0, 0];
-        let actions: Vec<usize> = game.available_actions_ids().collect();
-        //assert!(actions.is_empty()); // Aucune action disponible
-         */
-    }
+            game.reroll_allowed = false;
+            game.board = [0, 0, 0, 0, 0, 0];
+            let actions: Vec<usize> = game.available_actions_ids().collect();
+            //assert!(actions.is_empty()); // Aucune action disponible
+             */
+        }
 
 
-    #[test]
-    fn test_step_action_scoring() {
-        let mut game = Farkle::default();
-        game.board = [1, 0, 0, 0, 0, 0];
-        game.remaining_dice = 1;
+        #[test]
+        fn test_step_action_scoring() {
+            let mut game = Farkle::default();
+            game.board = [1, 0, 0, 0, 0, 0];
+            game.remaining_dice = 1;
 
-        // Action pour '1' (index 0)
-        game.step(0);
-        assert_eq!(game.score, 100.0);
-        assert_eq!(game.remaining_dice, 0);
-        assert_eq!(game.board, [0, 0, 0, 0, 0, 0]);
-        assert!(game.reroll_allowed);
-        println!("{:?}", game);
+            // Action pour '1' (index 0)
+            game.step(0);
+            assert_eq!(game.score, 100.0);
+            assert_eq!(game.remaining_dice, 0);
+            assert_eq!(game.board, [0, 0, 0, 0, 0, 0]);
+            assert!(game.reroll_allowed);
+            println!("{:?}", game);
 
-        game.reroll_allowed = false;
+            game.reroll_allowed = false;
 
-        // Comme 'reroll_allowed' est vrai, 'roll' n'est pas disponible
-        let actions: Vec<usize> = game.available_actions_ids().collect();
-        //assert_eq!(actions, vec![]); // Seulement 'stop' est disponible
+            // Comme 'reroll_allowed' est vrai, 'roll' n'est pas disponible
+            let actions: Vec<usize> = game.available_actions_ids().collect();
+            //assert_eq!(actions, vec![]); // Seulement 'stop' est disponible
 
-        // Action 'stop' (index 11)
-        game.step(11);
-        assert_eq!(game.total_score[0], 100);
-        assert_eq!(game.score, 0.0);
-        assert_eq!(game.player, 1); // Changement de joueur
-    }
+            // Action 'stop' (index 11)
+            game.step(11);
+            assert_eq!(game.total_score[0], 100);
+            assert_eq!(game.score, 0.0);
+            assert_eq!(game.player, 1); // Changement de joueur
+        }
 
-    #[test]
-    fn test_actions() {
-        let x = Farkle::getAllAction();
-        println!("{:?}\n{:?}", x, x.len())
-    }
+        #[test]
+        fn test_actions() {
+            let x = Farkle::getAllAction();
+            println!("{:?}\n{:?}", x, x.len())
+        }
 
-    #[test]
-    fn test_roll() {
-        /*
-        let mut game = Farkle::default();
-        println!("{:?}", game);
-        game.step(game.available_actions_ids().nth(0).unwrap());
-        println!("{:?}", game);
-        game.roll();
-        println!("{:?}", game);
+        #[test]
+        fn test_roll() {
+            /*
+            let mut game = Farkle::default();
+            println!("{:?}", game);
+            game.step(game.available_actions_ids().nth(0).unwrap());
+            println!("{:?}", game);
+            game.roll();
+            println!("{:?}", game);
 
-         */
+             */
 
-        // Utiliser un RNG avec une graine fixe pour des résultats reproductibles
+            // Utiliser un RNG avec une graine fixe pour des résultats reproductibles
 
+        }
     }
 }
 

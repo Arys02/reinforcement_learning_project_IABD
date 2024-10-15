@@ -6,6 +6,8 @@ use burn::module::AutodiffModule;
 use burn::prelude::*;
 use rand_xoshiro::rand_core::SeedableRng;
 use rand_xoshiro::Xoshiro256PlusPlus;
+use IABD4_reinforcement_learning::environement::environment_traits::ActionEnv;
+use IABD4_reinforcement_learning::environement::environment_traits::BaseEnv;
 use IABD4_reinforcement_learning::environement::environment_traits::DeepDiscreteActionsEnv;
 use IABD4_reinforcement_learning::environement::farkle::farkle::Farkle;
 use IABD4_reinforcement_learning::environement::farkle::farkle::{NUM_ACTIONS,

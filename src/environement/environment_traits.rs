@@ -1,5 +1,6 @@
 use std::collections::HashMap;
-
+use std::{io, print};
+use std::io::Write;
 use ndarray::Array1;
 
 /// The `Environment` trait defines the common interface for environments used in reinforcement learning.
@@ -134,22 +135,37 @@ pub trait Environment {
     }
 }
 
-pub trait DeepDiscreteActionsEnv<const NUM_STATES_FEATURES: usize, const NUM_ACTIONS: usize>:
-    Default + Clone
-{
-    fn state_description(&self) -> [f32; NUM_STATES_FEATURES];
-    fn available_actions_ids(&self) -> impl Iterator<Item = usize>;
-    fn action_mask(&self) -> [f32; NUM_ACTIONS];
-    fn step(&mut self, action: usize);
+pub trait TabularEnv<const NUM_STATES: usize, const NUM_ACTIONS: usize, const NUM_REWARDS: usize> :
+Default + Clone + BaseEnv +
+ActionEnv<NUM_ACTIONS>{
+
+}
+
+pub trait BaseEnv : Default + Clone {
     fn is_game_over(&self) -> bool;
     fn score(&self) -> f32;
     fn reset(&mut self);
+
+}
+
+pub trait ActionEnv<const NUM_ACTIONS: usize>: Default + Clone {
+    fn available_actions_ids(&self) -> impl Iterator<Item=usize>;
+
+    fn step(&mut self, action: usize);
+}
+
+pub trait DeepDiscreteActionsEnv<const NUM_STATES_FEATURES: usize, const NUM_ACTIONS: usize>:
+Default + Clone + ActionEnv<NUM_ACTIONS> + BaseEnv
+{
+    fn state_description(&self) -> [f32; NUM_STATES_FEATURES];
+    fn action_mask(&self) -> [f32; NUM_ACTIONS];
+
 }
 
 /// Trait that defines the capability for a game to be played interactively with a human player.
 /// Implementing this trait allows a game to be run in an interactive mode,
 /// utilizing all the provided methods to facilitate a complete game session.
-pub trait Playable : Default + Clone {
+pub trait Playable: Default + Clone {
     /// Starts an interactive game session with a human player.
     ///
     /// This function should orchestrate the game flow, handling user input and game state updates.
