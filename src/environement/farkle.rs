@@ -161,7 +161,8 @@ pub mod farkle {
 
         fn get_user_choice(&self) -> usize {
             loop {
-                println!("Please enter your choice (1-4):");
+                //why is this 1 - 4?
+                println!("Please enter your choice :");
 
                 let mut option_choice = String::new();
 
@@ -273,6 +274,7 @@ pub mod farkle {
             }
 
             v.into_iter().filter_map(|x| x)
+
         }
         fn step(&mut self, action: usize) {
             #[cfg(feature = "print")]
@@ -412,7 +414,11 @@ pub mod farkle {
         }
     }
 
+
+
     impl Display for Farkle {
+
+
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             writeln!(
                 f,
@@ -496,30 +502,62 @@ pub mod farkle {
             writeln!(f, "\nAvailable Actions:")?;
             let available_actions: Vec<usize> = self.available_actions_ids().collect();
 
+            // available_actions.sort_by(|&a, &b| {
+            //     let dice_value_a = DICE_ACTION_VALUE[a].0;
+            //     let dice_value_b = DICE_ACTION_VALUE[b].0;
+            //
+            //     // First compare by length of the dice values
+            //     let len_cmp = dice_value_a.len().cmp(&dice_value_b.len());
+            //
+            //     if len_cmp == std::cmp::Ordering::Equal {
+            //         // If lengths are equal, compare numerically (i.e., lexicographically)
+            //         dice_value_a.cmp(dice_value_b)
+            //     } else {
+            //         len_cmp
+            //     }
+            // });
+
+            // Now enter the loop to process sorted actions
             for (index, &action_id) in available_actions.iter().enumerate() {
                 let display_number = index + 1;
-                /*
-                let description = if *action_id < ACTION_DESCRIPTIONS.len() {
-                    ACTION_DESCRIPTIONS[*action_id]
-                } else {
-                    "Unknown action"
-                };
 
-                 */
                 if action_id < 134 {
-                    writeln!(f, "{}: {} {}", display_number, DICE_ACTION_VALUE[action_id].0, action_id)?;
+                    // Pass the original dice value to the formatting function
+                    writeln!(f, "{}: Take {}", display_number, format_dice_choices_for_print(DICE_ACTION_VALUE[action_id].0))?;
                 }
+
                 if action_id == 134 {
-                    writeln!(f, "{}: {} {}", display_number, "reroll", "134")?;
+                    writeln!(f, "{}: {}", display_number, "reroll")?;
                 }
+
                 if action_id == 135 {
-                    writeln!(f, "{}: {} {}", display_number, "bank", "135")?;
+                    writeln!(f, "{}: {}", display_number, "bank")?;
                 }
             }
 
             Ok(())
         }
     }
+
+    fn format_dice_choices_for_print(dice_value: &str) -> String {
+        let mut chars: Vec<char> = dice_value.chars().collect();
+
+        // Sort characters by their numeric value
+        chars.sort();
+
+        // Format the result based on the length of the string
+        match chars.len() {
+            0 => String::new(),
+            1 => chars[0].to_string(),
+            _ => {
+                let last_char = chars.pop().unwrap().to_string(); // Get the last character
+                let other_chars: Vec<String> = chars.into_iter().map(|c| c.to_string()).collect();
+                format!("{} and {}", other_chars.join(", "), last_char)
+            }
+        }
+    }
+
+
 
 
     /// Trait that defines the capability for a game to be played interactively with a human player.
@@ -578,7 +616,7 @@ pub mod farkle {
             env.reset(); // self is the current instance of Farkle
             while !env.is_terminal()
             {
-                clear_screen();
+                //clear_screen();
                 println!("{}", env);
                 let option_choice = env.get_user_choice();
                 env.step(option_choice);
