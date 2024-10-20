@@ -141,17 +141,19 @@ pub mod farkle {
             self.pick_dice_allowed = true;
 
             self.roll();
-            while self.available_actions_ids().count() <= 1 {
+            while self.available_actions_ids().count() < 1 {
+                //this is where first roll farkle logic will go
                 self.roll();
             }
             if self.player == 0 {
                 self.player = 1;
                 // random move
                 let mut rng = rand::thread_rng();
-                while self.player == 1 && self.is_game_over
+                while self.player == 1 && !self.is_game_over
                 {
                     let random_action = self.available_actions_ids().choose(&mut rng).unwrap();
                     self.step(random_action);
+
                 }
             } else {
                 self.round += 1;
@@ -311,8 +313,7 @@ pub mod farkle {
                     self.endTurn();
                 }
             }
-            //[   1,  11, 111, 222, 333, 444,   5,  55, 555, 666, roll, stop ]
-            //[   0,   1,   2,   3,   4,   5,   6,   7,   8,   9,   10,   11 ]
+
             else if action < 134 {
                 self.score += self.getScore(action);
 
