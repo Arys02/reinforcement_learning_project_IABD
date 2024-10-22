@@ -38,8 +38,9 @@ where
         .init();
 
     //initialize replay memory D to capacity N
-    let mut replay_memory: Vec<(Tensor<B, 1>, usize, f32, Tensor<B, 1>, bool)> = Vec::with_capacity
-        (replay_capacity);
+    let mut replay_memory: Vec<(f32, usize, f32, f32, usize, bool)> =
+        Vec::with_capacity
+            (replay_capacity);
 
     if batch_size > replay_capacity {
         panic!("batch_size should't be bigger than replay capacity")
@@ -92,30 +93,58 @@ where
 
             let mask_p = env.action_mask();
             let mask_p_tensor: Tensor<B, 1> = Tensor::from(mask_p).to_device(device);
+
+
             //phi  Φ t+1
             let q_s_p = Tensor::from_inner(model.valid().forward(s_p_tensor.clone().inner()));
 
+            let mut a_p_max = epsilon_greedy_action::<B, NUM_STATE_FEATURES, NUM_ACTIONS>(
+                &q_s_p,
+                &mask_p_tensor,
+                env.available_actions_ids(),
+                -1.,
+                &mut rng,
+            );
+
             //Store transition (Φt, at, rt, Φt+1)
-            replay_memory.insert(i_replay, (q_s.clone(), a, r, q_s_p.clone(), env.is_terminal()));
+            replay_memory.insert(i_replay, (q_s.clone().slice([a..(a + 1)]).into_scalar(), a, r, (q_s_p.clone()
+                .slice([a_p_max..(a_p_max + 1)]).into_scalar()),
+                                            a_p_max
+                                            , env
+                                                .is_terminal
+                                                ()));
             i_replay = (i_replay + 1) % replay_capacity;
 
             if replay_memory.len() < batch_size {
                 continue;
             }
 
-            let batch: Vec<(Tensor<B, 1>, usize, f32, Tensor<B, 1>, bool)> = replay_memory.clone()
+            let batch: Vec<(f32, usize, f32, f32, usize, bool)> = replay_memory
                 .choose_multiple(&mut rng,
                                  batch_size).cloned().collect();
 
+            let y: Tensor<B, 1> = Tensor::from_floats({
+                let x: Vec<f32> = batch.iter().map(|(q_s, a, r, q_s_p, a_p, is_terminal)|
+                    {
+                        if *is_terminal {
+                            r - q_s
+                        } else {
+                            (q_s_p * gamma + r) - q_s
 
+                        }
+                    }
+                ).collect();
+                x.clone().as_slice()
+            }, device);
+
+            /*
             let y: Tensor<B, 1> = if env.is_terminal() {
                 Tensor::from_floats(
                     {
                         let x: Vec<f32> = batch
-                            .clone()
-                            .into_iter()
-                            .map(|(s, a, r, q_s_p, end)|
-                                { r - s.slice([a..(a + 1)]).into_scalar() }
+                            .iter()
+                            .map(|(_, _, r, q_s_p, a_p, end)|
+                                { r - q_s.clone().slice([a..(a + 1)]).into_scalar() }
                             )
                             .collect();
                         x.clone().as_slice()
@@ -125,45 +154,24 @@ where
                 Tensor::from_floats(
                     {
                         let x: Vec<f32> = batch
-                            .clone()
-                            .into_iter()
-                            .map(|(s, a, r,
-                                      q_s_p, end)| {
-                                let a_p = epsilon_greedy_action::<B, NUM_STATE_FEATURES, NUM_ACTIONS>(
-                                    &q_s_p,
-                                    &mask_p_tensor,
-                                    env.available_actions_ids(),
-                                    decayed_epsilon,
-                                    &mut rng,
-                                );
-
+                            .iter()
+                            .map(|(_, _, r,
+                                      q_s_p, a_p, end)| {
                                 #[allow(clippy::single_range_in_vec_init)]
-                                let q_s_p_a_p = q_s_p.clone().slice([a_p..(a_p + 1)]).into_scalar();
+                                let q_s_p_a_p = q_s_p * gamma + r;
 
-                                (q_s_p_a_p * gamma + r) - s.slice([a..(a + 1)]).into_scalar()
+                                q_s_p_a_p - q_s.clone().slice([a..(a + 1)]).clone()
+                                    .into_scalar()
                             })
                             .collect();
                         x.clone().as_slice()
                     }, device)
             };
 
-            let y = y.detach();
-
-            /*
-            let q_s_a = Tensor::from_floats(
-                {
-                    let x: Vec<f32> = batch
-                        .clone()
-                        .into_iter()
-                        .map(|(q_s, a, r, q_s_p, b)| {
-                            q_s.slice([a..(a + 1)]).into_scalar()
-                        }
-                        ).collect();
-                    x.clone().as_slice()
-                }, device,
-            );
-
              */
+
+
+            let y = y.detach();
 
 
             let loss = y.powf_scalar(2f32);
@@ -171,11 +179,7 @@ where
             let grads = GradientsParams::from_grads(grad_loss, &model);
 
             model = optimizer.step(alpha.into(), model, grads);
-
-            //q_s = model.forward(s_p_tensor);
-
         }
-        //println!("{}", env);
         total_score += env.score();
     }
 
