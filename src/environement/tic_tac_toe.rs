@@ -6,7 +6,7 @@ pub mod tic_tac_toe {
     pub const NUM_STATE_FEATURES: usize = 27;
     pub const NUM_ACTIONS: usize = 9;
 
-    #[derive(Clone)]
+    #[derive(Clone,  Debug)]
     pub struct TicTacToeVersusRandom {
         pub board: [f32; NUM_ACTIONS],
         pub player: u8,
@@ -74,6 +74,8 @@ pub mod tic_tac_toe {
 
             // check if board is full
             if self.board.iter().all(|&val| val != 0.0) {
+                //
+                //println!("FULLBOARD");
                 self.is_game_over = true;
                 self.score = 0.0;
                 return;
