@@ -9,3 +9,4 @@ pub mod secret_env_3;
 pub mod tic_tac_toe;
 pub mod two_round_rps;
 pub mod farkle;
+pub mod farkle_2;
