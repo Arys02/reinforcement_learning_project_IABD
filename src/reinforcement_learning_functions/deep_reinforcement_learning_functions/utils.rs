@@ -25,3 +25,25 @@ pub fn epsilon_greedy_action<
         masked_q_s.clone().argmax(0).into_scalar() as usize
     }
 }
+/*
+pub fn soft_max_with_mask<
+    B: Backend<FloatElem = f32, IntElem = i64>,
+    const NUM_STATES_FEATURES: usize,
+    const NUM_ACTIONS: usize,
+>(
+    q_s: &Tensor<B, 1>,
+    mask_tensor: &Tensor<B, 1>,
+    available_actions: impl Iterator<Item = usize>,
+) -> usize {
+    let positiv_x = q_s - q_s.clone().min();
+    let masked_pos_x = positiv_x * mask_tensor.clone();
+
+    let negativ_x = masked_pos_x - mask_tensor.clone();
+    let exp_x = negativ_x.exp();
+
+
+
+}
+
+
+ */
