@@ -15,14 +15,18 @@ use IABD4_reinforcement_learning::environement::farkle::farkle::{NUM_ACTIONS,
                                                                  NUM_STATE_FEATURES};
 
  */
+
+use IABD4_reinforcement_learning::environement::farkle_2::farkle_2::Farkle2;
 use IABD4_reinforcement_learning::environement::farkle_2::farkle_2::{NUM_ACTIONS,
 NUM_STATE_FEATURES};
-use IABD4_reinforcement_learning::environement::farkle_2::farkle_2::Farkle2;
+
 /*
 use IABD4_reinforcement_learning::environement::tic_tac_toe::tic_tac_toe::{TicTacToeVersusRandom, NUM_ACTIONS, NUM_STATE_FEATURES};
+
  */
 use IABD4_reinforcement_learning::ml_core::mlp::MyQMLP;
 use IABD4_reinforcement_learning::reinforcement_learning_functions::deep_reinforcement_learning_functions::deep_q_learning::deep_q_learning;
+use IABD4_reinforcement_learning::reinforcement_learning_functions::deep_reinforcement_learning_functions::reinforce::reinforce;
 use IABD4_reinforcement_learning::reinforcement_learning_functions::deep_reinforcement_learning_functions::utils::epsilon_greedy_action;
 
 //type GameEnv = TicTacToeVersusRandom;
@@ -62,6 +66,7 @@ fn main() {
         );
 
      */
+    /*
     let model =
         deep_q_learning::<
             NUM_STATE_FEATURES,
@@ -80,6 +85,16 @@ fn main() {
             1e-5f32,
             &device,
         );
+     */
+    let model = reinforce::<NUM_STATE_FEATURES, NUM_ACTIONS, _, MyAutodiffBackend, GameEnv>(
+        model,
+        1_000_000,
+        3e-3,
+        0.999f32,
+        1.0f32,
+        1e-5f32,
+        &device,
+    );
 
     // Let's play some games (press enter to show the next game)
     let device = &Default::default();
