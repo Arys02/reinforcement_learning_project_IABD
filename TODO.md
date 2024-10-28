@@ -15,9 +15,9 @@
 - [ ] Handle farkle from first dice (with score)
 
 # Algo : - [ ]
-- [ ] Random
-- [ ] TabularQLearning (quand possible)
-- [ ] DeepQLearning
+- [X] Random
+- [X] TabularQLearning (quand possible)
+- [X] DeepQLearning
 - [ ] DoubleDeepQLearning
 - [ ] DoubleDeepQLearningWithExperienceReplay
 - [ ] DoubleDeepQLearningWithPrioritizedExperienceReplay

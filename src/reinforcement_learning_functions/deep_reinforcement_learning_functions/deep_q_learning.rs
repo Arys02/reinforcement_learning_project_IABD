@@ -51,8 +51,10 @@ where
     let mut total_score = 0.0;
     let mut i_replay: usize = 0;
 
+    let mut env = Env::default();
+
     for ep_id in tqdm!(0..num_episodes) {
-        let mut env = Env::default();
+        env.reset();
 
         let progress = ep_id as f32 / num_episodes as f32;
         let decayed_epsilon = (1.0 - progress) * start_epsilon + progress * final_epsilon;

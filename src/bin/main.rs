@@ -9,18 +9,24 @@ use rand_xoshiro::Xoshiro256PlusPlus;
 use IABD4_reinforcement_learning::environement::environment_traits::ActionEnv;
 use IABD4_reinforcement_learning::environement::environment_traits::BaseEnv;
 use IABD4_reinforcement_learning::environement::environment_traits::DeepDiscreteActionsEnv;
-/*
 use IABD4_reinforcement_learning::environement::farkle::farkle::Farkle;
+/*
 use IABD4_reinforcement_learning::environement::farkle::farkle::{NUM_ACTIONS,
                                                                  NUM_STATE_FEATURES};
 
  */
+use IABD4_reinforcement_learning::environement::farkle_2::farkle_2::{NUM_ACTIONS,
+NUM_STATE_FEATURES};
+use IABD4_reinforcement_learning::environement::farkle_2::farkle_2::Farkle2;
+/*
 use IABD4_reinforcement_learning::environement::tic_tac_toe::tic_tac_toe::{TicTacToeVersusRandom, NUM_ACTIONS, NUM_STATE_FEATURES};
+ */
 use IABD4_reinforcement_learning::ml_core::mlp::MyQMLP;
 use IABD4_reinforcement_learning::reinforcement_learning_functions::deep_reinforcement_learning_functions::deep_q_learning::deep_q_learning;
 use IABD4_reinforcement_learning::reinforcement_learning_functions::deep_reinforcement_learning_functions::utils::epsilon_greedy_action;
 
-type GameEnv = TicTacToeVersusRandom;
+//type GameEnv = TicTacToeVersusRandom;
+type GameEnv = Farkle2;
 
 type MyBackend = burn_tch::LibTorch;
 type MyAutodiffBackend = Autodiff<MyBackend>;
@@ -67,8 +73,8 @@ fn main() {
             model,
             50_000,
             0.999f32,
-            1000,
-            200,
+            10000,
+            50,
             3e-3,
             1.0f32,
             1e-5f32,
@@ -80,9 +86,9 @@ fn main() {
     let mut env = GameEnv::default();
     let mut rng = Xoshiro256PlusPlus::from_entropy();
 
-    let mut win = 0;
-    let mut lose = 0;
-    loop {
+    let mut win = 0.;
+    let mut lose = 0.;
+    for _ in 0..1000{
         env.reset();
         while !env.is_terminal() {
             let s = env.state_description();
@@ -96,15 +102,14 @@ fn main() {
             let a = epsilon_greedy_action::<MyBackend, NUM_STATE_FEATURES, NUM_ACTIONS>(&q_s, &mask_tensor, env.available_actions_ids(), 1e-5f32, &mut rng);
             env.step(a);
         }
-        println!("Score: {}", env.score);
         if env.score > 0. {
-            win += 1;
+            win += 1.;
         } else {
-            lose += 1;
+            lose += 1.;
         }
-        println!("Win: {}, Lose: {}", win, lose);
-        println!("winrate : {}", win / (win + lose));
-        let mut s = String::new();
-        std::io::stdin().read_line(&mut s).unwrap();
+
     }
+
+    println!("Win: {}, Lose: {}", win, lose);
+    println!("winrate : {}", win / (win + lose));
 }

@@ -3,7 +3,7 @@ extern crate IABD4_reinforcement_learning;
 
 use IABD4_reinforcement_learning::environement::environment_traits::Playable;
 use IABD4_reinforcement_learning::environement::farkle::farkle::Farkle;
-
+use IABD4_reinforcement_learning::environement::farkle_2::farkle_2::Farkle2;
 
 fn main() {
     //Farkle::play_as_human();
@@ -13,12 +13,13 @@ fn main() {
     let mut total_score = Vec::new();
     let max = 10_000;
     for i in 0..max{
-        total_score.push(Farkle::play_as_random_ai());
+        total_score.push(Farkle2::play_as_human());
     }
     println!("time for : {max} {:?}", start.elapsed());
 
     //for 10 step, 10 000 parties : 3.07 sec
     //for 50 step, 10 000 parties : 14.14 sec
+    /*
 
     let mut sum = [0usize; 2];
 
@@ -38,5 +39,7 @@ fn main() {
     ];
 
     println!("Les moyennes sont : {:?}", average);
+
+     */
 
 }
