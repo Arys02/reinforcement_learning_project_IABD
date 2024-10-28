@@ -129,7 +129,7 @@ pub mod farkle_2 {
 
 
         fn getScore(&mut self, action_id: usize) -> f32 {
-            if action_id > DICE_ACTION_VALUE.len() {
+            if action_id >= DICE_ACTION_VALUE.len() {
                 DICE_ACTION_VALUE[action_id - DICE_ACTION_VALUE.len()].1
             } else {
                 DICE_ACTION_VALUE[action_id].1

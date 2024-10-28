@@ -10,9 +10,14 @@ use IABD4_reinforcement_learning::environement::environment_traits::ActionEnv;
 use IABD4_reinforcement_learning::environement::environment_traits::BaseEnv;
 use IABD4_reinforcement_learning::environement::environment_traits::DeepDiscreteActionsEnv;
 use IABD4_reinforcement_learning::environement::farkle::farkle::Farkle;
+/*
 use IABD4_reinforcement_learning::environement::farkle::farkle::{NUM_ACTIONS,
                                                                  NUM_STATE_FEATURES};
 
+ */
+use IABD4_reinforcement_learning::environement::farkle_2::farkle_2::{NUM_ACTIONS,
+NUM_STATE_FEATURES};
+use IABD4_reinforcement_learning::environement::farkle_2::farkle_2::Farkle2;
 /*
 use IABD4_reinforcement_learning::environement::tic_tac_toe::tic_tac_toe::{TicTacToeVersusRandom, NUM_ACTIONS, NUM_STATE_FEATURES};
  */
@@ -21,7 +26,7 @@ use IABD4_reinforcement_learning::reinforcement_learning_functions::deep_reinfor
 use IABD4_reinforcement_learning::reinforcement_learning_functions::deep_reinforcement_learning_functions::utils::epsilon_greedy_action;
 
 //type GameEnv = TicTacToeVersusRandom;
-type GameEnv = Farkle;
+type GameEnv = Farkle2;
 
 type MyBackend = burn_tch::LibTorch;
 type MyAutodiffBackend = Autodiff<MyBackend>;
