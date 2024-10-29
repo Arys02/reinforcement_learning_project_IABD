@@ -21,7 +21,7 @@
 - [ ] DoubleDeepQLearning
 - [ ] DoubleDeepQLearningWithExperienceReplay
 - [ ] DoubleDeepQLearningWithPrioritizedExperienceReplay
-- [ ] REINFORCE
+- [X] REINFORCE
 - [ ] REINFORCE with mean baseline
 - [ ] REINFORCE with Baseline Learned by a Critic
 - [ ] PPO A2C style
