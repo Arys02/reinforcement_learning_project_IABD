@@ -38,7 +38,7 @@ where
         .init();
 
     //initialize replay memory D to capacity N
-    let mut replay_memory: Vec<(f32, f32, f32, bool)> =
+    let mut replay_memory: Vec<(Tensor<B, 1>, usize, f32, Tensor<B, 1>, usize, bool)> =
         Vec::with_capacity
             (replay_capacity);
 
@@ -53,14 +53,19 @@ where
 
     let mut env = Env::default();
 
+
+    //let mut bar = tqdm!();
+
     for ep_id in tqdm!(0..num_episodes) {
         env.reset();
+        //bar.update(1).unwrap();
 
         let progress = ep_id as f32 / num_episodes as f32;
         let decayed_epsilon = (1.0 - progress) * start_epsilon + progress * final_epsilon;
 
         if ep_id % 1000 == 0 {
             println!("Mean Score: {}", total_score / 1000.0);
+            //println!("it  {}", bar.fmt_rate());
             total_score = 0.0;
         }
 
@@ -70,7 +75,7 @@ where
 
             let mask = env.action_mask();
             let mask_tensor: Tensor<B, 1> = Tensor::from(mask).to_device(device);
-            let mut q_s = model.forward(s_tensor);
+            let mut q_s = model.forward(s_tensor.clone());
 
             let mut a = epsilon_greedy_action::<B, NUM_STATE_FEATURES, NUM_ACTIONS>(
                 &q_s,
@@ -110,9 +115,13 @@ where
             //Store transition ( greedy_ε_Φt(s, a), rt, arg_max_aΦt+1(s', a'), is_terminal)
             replay_memory.insert(
                 i_replay, (
-                    q_s.clone().slice([a..(a + 1)]).into_scalar(),
+                    s_tensor.clone(),
+                    a,
+                    //q_s.clone().slice([a..(a + 1)]).into_scalar(),
                     r,
-                    q_s_p.clone().slice([a_p_max..(a_p_max + 1)]).into_scalar(),
+                    s_p_tensor.clone(),
+                    a_p_max,
+                    //q_s_p.clone().slice([a_p_max..(a_p_max + 1)]).into_scalar(),
                     env.is_terminal()
                 ));
             i_replay = (i_replay + 1) % replay_capacity;
@@ -121,18 +130,33 @@ where
                 continue;
             }
 
-            let batch: Vec<(f32, f32, f32, bool)> = replay_memory
+            //                Φ_s          a       r   Φ_s_p         a_max  is_terminal
+            let batch: Vec<(Tensor<B, 1>, usize, f32, Tensor<B, 1>, usize, bool)> = replay_memory
                 .choose_multiple(&mut rng, batch_size)
                 .cloned()
                 .collect();
 
+
             let y: Tensor<B, 1> = Tensor::from_floats({
-                                                          let x: Vec<f32> = batch.iter().map(|(q_s, r, q_s_p, is_terminal)|
+                                                          let x: Vec<f32> = batch.iter().map(
+                                                              |(s_tensor, a, r, s_p_tensor,
+                                                                   a_p_max, is_terminal)|
                                                               {
+                                                                  let q_s_a: f32 = model.forward
+                                                                  (s_tensor.clone()).slice([*a..
+                                                                      (*a + 1)])
+                                                                      .into_scalar();
+
                                                                   if *is_terminal {
-                                                                      r - q_s
+                                                                      q_s_a - r
                                                                   } else {
-                                                                      (q_s_p * gamma + r) - q_s
+                                                                      let q_s_p_a_p = model.forward
+                                                                      (s_p_tensor.clone())
+                                                                          .slice([*a_p_max..
+                                                                              (*a_p_max + 1)])
+                                                                          .into_scalar();
+
+                                                                      q_s_p_a_p * gamma * r - q_s_a
                                                                   }
                                                               }
                                                           ).collect();
@@ -142,9 +166,10 @@ where
             let y = y.detach();
 
             let loss = y.powf_scalar(2f32);
+
+
             let grad_loss = loss.backward();
             let grads = GradientsParams::from_grads(grad_loss, &model);
-
             model = optimizer.step(alpha.into(), model, grads);
         }
         total_score += env.score();
