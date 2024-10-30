@@ -48,4 +48,5 @@ burn-tch = "0.14.0"
 
 colored = "2.1.0"
 kdam = "0.5.2"
+itertools = "0.10.5"
 

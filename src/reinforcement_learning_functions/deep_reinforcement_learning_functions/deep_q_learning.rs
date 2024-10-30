@@ -42,6 +42,8 @@ where
         Vec::with_capacity
             (replay_capacity);
 
+    let mut replay_memory_q: Vec<Tensor<B, 1>> = Vec::with_capacity(replay_capacity);
+
     if batch_size > replay_capacity {
         panic!("batch_size should't be bigger than replay capacity")
     }
@@ -124,6 +126,10 @@ where
                     //q_s_p.clone().slice([a_p_max..(a_p_max + 1)]).into_scalar(),
                     env.is_terminal()
                 ));
+            replay_memory_q.insert(
+                i_replay, s_tensor.clone(),
+            );
+
             i_replay = (i_replay + 1) % replay_capacity;
 
             if replay_memory.len() < batch_size {
@@ -136,29 +142,45 @@ where
                 .cloned()
                 .collect();
 
+            let (batch_q, batch_q_p) = batch.iter().map(|(x1, x2, x3, x4, x5, x6), | {
+                (x1
+                     .clone(),
+                 x4.clone())
+            })
+                .collect();
+
+            let batch_q_tensor: Tensor<B, 2> = Tensor::from(Tensor::stack(batch_q, 0));
+            let batch_q_p_tensor: Tensor<B, 2> = Tensor::from(Tensor::stack(batch_q_p, 0));
+
+            let b_q_s_a = model.forward(batch_q_tensor.clone());
+            let b_q_s_p_a_p = model.forward(batch_q_p_tensor.clone());
+
+            //output[i, j, k] = input[indices[i, j, k], j, k]; // dim = 0 output[i, j, k] =
+            // input[i, indices[i, j, k], k]; // dim = 1 output[i, j, k] = input[i, j, indices[i, j, k]]; // dim = 2
+            //let b = q_s_a.squeeze_dims(&[]).into_scalar();
 
             let y: Tensor<B, 1> = Tensor::from_floats({
-                                                          let x: Vec<f32> = batch.iter().map(
-                                                              |(s_tensor, a, r, s_p_tensor,
-                                                                   a_p_max, is_terminal)|
-                                                              {
-                                                                  let q_s_a: f32 = model.forward
-                                                                  (s_tensor.clone()).slice([*a..
-                                                                      (*a + 1)])
-                                                                      .into_scalar();
-
-                                                                  if *is_terminal {
-                                                                      q_s_a - r
-                                                                  } else {
-                                                                      let q_s_p_a_p = model.forward
-                                                                      (s_p_tensor.clone())
-                                                                          .slice([*a_p_max..
-                                                                              (*a_p_max + 1)])
+                                                          let x: Vec<f32> = batch.into_iter()
+                                                              .enumerate().map(
+                                                              |(i, (s_tensor, a, r, s_p_tensor,
+                                                                  a_p_max, is_terminal))|
+                                                                  {
+                                                                      let q_s_a = b_q_s_a.clone()
+                                                                          .slice([i..(i + 1), a..(a + 1)])
                                                                           .into_scalar();
 
-                                                                      q_s_p_a_p * gamma * r - q_s_a
+                                                                      if is_terminal {
+                                                                          q_s_a - r
+                                                                      } else {
+                                                                          let q_s_p_a_p =
+                                                                              b_q_s_p_a_p.clone()
+                                                                                  .slice([i..(i + 1), a_p_max..
+                                                                                      (a_p_max + 1)])
+                                                                                  .into_scalar();
+
+                                                                          q_s_p_a_p * gamma * r - q_s_a
+                                                                      }
                                                                   }
-                                                              }
                                                           ).collect();
                                                           x.clone().as_slice()
                                                       }, device);
