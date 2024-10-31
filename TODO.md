@@ -18,6 +18,7 @@
 - [X] Random
 - [X] TabularQLearning (quand possible)
 - [X] DeepQLearning
+- -- explorer avec adam ? 
 - [ ] DoubleDeepQLearning
 - [ ] DoubleDeepQLearningWithExperienceReplay
 - [ ] DoubleDeepQLearningWithPrioritizedExperienceReplay
