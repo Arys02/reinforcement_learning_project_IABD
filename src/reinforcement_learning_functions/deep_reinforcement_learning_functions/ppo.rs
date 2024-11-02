@@ -4,6 +4,8 @@ use std::fmt::{Debug, Display};
 use crate::ml_core::ml_traits::Forward;
 use crate::reinforcement_learning_functions::deep_reinforcement_learning_functions::utils::epsilon_greedy_action;
 
+use crate::reinforcement_learning_functions::deep_reinforcement_learning_functions::ppo_trajectory::trajectory::Trajectory;
+
 use burn::module::AutodiffModule;
 use burn::optim::decay::WeightDecayConfig;
 use burn::optim::{GradientsParams, SgdConfig};
@@ -35,13 +37,15 @@ pub fn ppo<
 where
     M::InnerModule: Forward<B=B::InnerBackend>,
 {
+    /*
     let mut optimizer = SgdConfig::new()
         .with_weight_decay(Some(WeightDecayConfig::new(1e-7)))
         .init();
+     */
 
     let value_fct = MyQMLP::<B>::new(&device,
                                                  NUM_STATE_FEATURES,
-                                                 NUM_ACTIONS);
+                                                 1);
 
 
     let mut rng = Xoshiro256PlusPlus::from_entropy();
@@ -62,21 +66,19 @@ where
             total_score = 0.0;
         }
 
-        let mut trajectories = Vec::new();
+        let mut trajectory = Trajectory::<B>::new(memory_size);
 
-        for i in 0..100 {
 
+        for i in 0..memory_size{
             env.reset();
-            let mut trajectory = Vec::new();
-
-            let mut reward_to_go : f32 = 0.;
             while !env.is_terminal() {
                 let s = env.state_description();
                 let s_tensor: Tensor<B, 1> = Tensor::from_floats(s.as_slice(), device);
 
                 let mask = env.action_mask();
                 let mask_tensor: Tensor<B, 1> = Tensor::from(mask).to_device(device);
-                let mut pi_s = model.forward(s_tensor);
+                let pi_s = model.forward(s_tensor.clone());
+
 
 
                 //TODO change to get a softmax random action
@@ -91,14 +93,23 @@ where
                 let prev_score = env.score();
                 //execute action a_t in emulator and observe reward r_t
                 env.step(a);
+
                 let r = env.score() - prev_score;
-                reward_to_go += r;
 
-                trajectory.push((s_tensor.clone(), a, r));
+                let v_t = value_fct.forward(s_tensor.clone());
+
+
+
+                trajectory.push(s_tensor.clone(), a, r, pi_s.log().clone(), v_t.clone());
+
+                if env.is_terminal() {
+                    env.reset();
+                    break;
+                }
             }
-            trajectories.push((trajectory, reward_to_go));
-
         }
+
+
 
 
         //generate an episode
@@ -128,15 +139,12 @@ where
 
             let prob = pi_s.clone().slice([a..(a+1)]).log().detach();
 
-            trajectory.push(
-                (
-                    prob,
-                    r,
-                ));
+
         }
 
         total_score += env.score();
 
+        /*
 
         let mut g = 0.;
         //   t          pi(s | a, Φ)
@@ -153,9 +161,10 @@ where
             model = optimizer.step((alpha * gamma.powf(t as f32)).into(), model, grads);
         }
 
-
+         */
 
     }
 
     model
 }
+
