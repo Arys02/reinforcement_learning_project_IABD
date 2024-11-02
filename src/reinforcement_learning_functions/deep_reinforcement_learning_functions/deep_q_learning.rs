@@ -3,6 +3,7 @@ use crate::training_observer::{Hyperparameters, TrainingEvent, TrainingObserver}
 use std::fmt::{Debug, Display};
 
 use crate::ml_core::ml_traits::Forward;
+use crate::reinforcement_learning_functions::deep_reinforcement_learning_functions::dqn_trajectory::trajectory::Trajectory;
 use crate::reinforcement_learning_functions::deep_reinforcement_learning_functions::utils::epsilon_greedy_action;
 use burn::module::AutodiffModule;
 use burn::optim::decay::WeightDecayConfig;
@@ -10,7 +11,6 @@ use burn::optim::{GradientsParams, Optimizer, SgdConfig};
 use burn::prelude::*;
 use burn::tensor::backend::AutodiffBackend;
 use kdam::tqdm;
-use rand::seq::SliceRandom;
 use rand::SeedableRng;
 use rand_xoshiro::Xoshiro256PlusPlus;
 use std::time::{Duration, Instant};
@@ -19,8 +19,8 @@ use crate::logger::Logger;
 pub fn deep_q_learning<
     const NUM_STATE_FEATURES: usize,
     const NUM_ACTIONS: usize,
-    M: Forward<B=B> + AutodiffModule<B>,
-    B: AutodiffBackend<FloatElem=f32, IntElem=i64>,
+    M: Forward<B = B> + AutodiffModule<B>,
+    B: AutodiffBackend<FloatElem = f32, IntElem = i64>,
     Env: DeepDiscreteActionsEnv<NUM_STATE_FEATURES, NUM_ACTIONS> + Debug + Display,
 >(
     mut model: M,
@@ -34,7 +34,7 @@ pub fn deep_q_learning<
     device: &B::Device,
 ) -> M
 where
-    M::InnerModule: Forward<B=B::InnerBackend>,
+    M::InnerModule: Forward<B = B::InnerBackend>,
 {
 
 
@@ -45,11 +45,12 @@ where
         .init();
 
     //initialize replay memory D to capacity N
-    let mut replay_memory: Vec<(Tensor<B, 1>, usize, f32, Tensor<B, 1>, usize, bool)> =
-        Vec::with_capacity
-            (replay_capacity);
+    let mut replay_memory_next: Vec<(Tensor<B, 1>, usize, f32, Tensor<B, 1>, usize, bool)> =
+        Vec::with_capacity(replay_capacity);
 
     let mut replay_memory_q: Vec<Tensor<B, 1>> = Vec::with_capacity(replay_capacity);
+
+    let mut replay_memory: Trajectory<B> = Trajectory::new(replay_capacity);
 
     if batch_size > replay_capacity {
         panic!("batch_size should't be bigger than replay capacity")
@@ -82,7 +83,7 @@ where
     let log_interval = hyperparameters.log_interval;
 
     #[cfg(feature = "logging")]
-    let model_name = "dqn_log_tester_reduced_2";
+    let model_name = "dqn_v3";
 
     #[cfg(feature = "logging")]
     let mut observer = Logger::new(model_name);
@@ -109,8 +110,6 @@ where
 
     #[cfg(feature = "logging")]
     let mut log_total_loss: f32 = 0.0;
-
-
 
     for ep_id in tqdm!(0..num_episodes) {
         env.reset();
@@ -150,10 +149,8 @@ where
             //x+1
             let s_p_tensor: Tensor<B, 1> = Tensor::from_floats(s_p.as_slice(), device);
 
-
             let mask_p = env.action_mask();
             let mask_p_tensor: Tensor<B, 1> = Tensor::from(mask_p).to_device(device);
-
 
             //phi  Φ t+1
             let q_s_p = Tensor::from_inner(model.valid().forward(s_p_tensor.clone().inner()));
@@ -167,81 +164,67 @@ where
                 &mut rng,
             );
 
-            //Store transition ( s, a,  r, s', a_p_max,, is_terminal)
-            replay_memory.insert(
-                i_replay, (
-                    s_tensor.clone(),
-                    a,
-                    r,
-                    s_p_tensor.clone(),
-                    a_p_max,
-                    env.is_terminal()
-                ));
-            replay_memory_q.insert(
-                i_replay, s_tensor.clone(),
+            //t1 += now.elapsed().as_secs_f32();
+            //let now = Instant::now();
+            //Store transition ( greedy_ε_Φt(s, a), rt, arg_max_aΦt+1(s', a'), is_terminal)
+            replay_memory.push(
+                s_tensor,
+                a as f32,
+                r,
+                s_p_tensor,
+                a_p_max as f32,
+                if env.is_terminal() { 1.0 } else { 0. },
             );
+            //t2_1 += now.elapsed().as_secs_f32();
+            //let now = Instant::now();
 
-            i_replay = (i_replay + 1) % replay_capacity;
-
-            if replay_memory.len() < batch_size {
+            if replay_memory.len < replay_memory.max_size {
                 continue;
             }
 
             //                Φ_s          a       r   Φ_s_p         a_max  is_terminal
-            let batch: Vec<(Tensor<B, 1>, usize, f32, Tensor<B, 1>, usize, bool)> = replay_memory
-                .choose_multiple(&mut rng, batch_size)
-                .cloned()
-                .collect();
+            let mut batch = replay_memory.get_batch(batch_size);
+            //t2_2 += now.elapsed().as_secs_f32();
+            //let now = Instant::now();
 
-            let (batch_q, batch_q_p) = batch.iter().map(|(x1, x2, x3, x4, x5, x6), | {
-                (x1
-                     .clone(),
-                 x4.clone())
-            })
-                .collect();
+            let (t_a, s_tensor, a_p_tensor, s_p_tensor, r_tensor, is_terminal_tensor) =
+                batch.get_as_tensor(device);
+            //t2_3 += now.elapsed().as_secs_f32();
+            //let now = Instant::now();
 
-            let batch_q_tensor: Tensor<B, 2> = Tensor::from(Tensor::stack(batch_q, 0));
-            let batch_q_p_tensor: Tensor<B, 2> = Tensor::from(Tensor::stack(batch_q_p, 0));
+            let a: Tensor<B, 2, Int> = t_a.unsqueeze_dim(1);
 
-            let b_q_s_a = model.forward(batch_q_tensor.clone());
-            let b_q_s_p_a_p = model.forward(batch_q_p_tensor.clone());
+            let q_s_a = model.forward(s_tensor.clone()).detach();
+            let b_q_s_a_scalar: Tensor<B, 1> = q_s_a.clone().gather(1, a).squeeze(1);
 
+            let t_a_p: Tensor<B, 2, Int> = a_p_tensor.unsqueeze_dim(1);
+            let q_s_p_a_p = model.forward(s_p_tensor.clone());
+            let b_q_s_p_a_p_scalar: Tensor<B, 1> = q_s_p_a_p.clone().gather(1, t_a_p).squeeze(1);
 
-            let y: Tensor<B, 1> = Tensor::from_floats({
-                                                          let x: Vec<f32> = batch.into_iter()
-                                                              .enumerate().map(
-                                                              |(i, (s_tensor, a, r, s_p_tensor,
-                                                                  a_p_max, is_terminal))|
-                                                                  {
-                                                                      let q_s_a = b_q_s_a.clone()
-                                                                          .slice([i..(i + 1), a..(a + 1)])
-                                                                          .into_scalar();
+            let y_is_t = b_q_s_a_scalar
+                .clone()
+                .sub(r_tensor.clone())
+                .mul(is_terminal_tensor.clone())
+                .detach();
 
-                                                                      if is_terminal {
-                                                                          q_s_a - r
-                                                                      } else {
-                                                                          let q_s_p_a_p =
-                                                                              b_q_s_p_a_p.clone()
-                                                                                  .slice([i..(i + 1), a_p_max..
-                                                                                      (a_p_max + 1)])
-                                                                                  .into_scalar();
+            let y_no_t = b_q_s_p_a_p_scalar
+                .mul_scalar(gamma)
+                .add(r_tensor)
+                .sub(b_q_s_a_scalar)
+                .mul(is_terminal_tensor.sub_scalar(1.))
+                .detach();
 
-                                                                          q_s_p_a_p * gamma * r - q_s_a
-                                                                      }
-                                                                  }
-                                                          ).collect();
-                                                          x.clone().as_slice()
-                                                      }, device);
-
-            let y = y.detach();
+            let y = y_is_t.add(y_no_t).detach();
 
             let loss = y.powf_scalar(2f32);
 
+            //t3 += now.elapsed().as_secs_f32();
+
+            //let now = Instant::now();
 
             let grad_loss = loss.backward();
             let grads = GradientsParams::from_grads(grad_loss, &model);
             model = optimizer.step(alpha.into(), model, grads);
-
 
 
             episode_reward += r;
@@ -339,6 +322,7 @@ where
                 win_count = 0;
                 log_total_loss = 0.0;
             }
+
         }
     }
 

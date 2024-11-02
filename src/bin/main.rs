@@ -3,7 +3,6 @@ extern crate IABD4_reinforcement_learning;
 use burn::backend::Autodiff;
 use burn::module::AutodiffModule;
 use burn::prelude::*;
-use burn_tch::LibTorchDevice;
 use rand_xoshiro::rand_core::SeedableRng;
 use rand_xoshiro::Xoshiro256PlusPlus;
 use IABD4_reinforcement_learning::environement::environment_traits::ActionEnv;
@@ -14,12 +13,12 @@ use IABD4_reinforcement_learning::environement::environment_traits::DeepDiscrete
 
 //use IABD4_reinforcement_learning::environement::farkle_2::farkle_2::{Farkle2, NUM_ACTIONS, NUM_STATE_FEATURES};
 
-
-use IABD4_reinforcement_learning::environement::tic_tac_toe::tic_tac_toe::{TicTacToeVersusRandom, NUM_ACTIONS, NUM_STATE_FEATURES};
+use IABD4_reinforcement_learning::environement::tic_tac_toe::tic_tac_toe::{
+    TicTacToeVersusRandom, NUM_ACTIONS, NUM_STATE_FEATURES,
+};
 
 use IABD4_reinforcement_learning::ml_core::mlp::MyQMLP;
 use IABD4_reinforcement_learning::reinforcement_learning_functions::deep_reinforcement_learning_functions::deep_q_learning::deep_q_learning;
-use IABD4_reinforcement_learning::reinforcement_learning_functions::deep_reinforcement_learning_functions::reinforce::reinforce;
 use IABD4_reinforcement_learning::reinforcement_learning_functions::deep_reinforcement_learning_functions::utils::epsilon_greedy_action;
 
 //type GameEnv = TicTacToeVersusRandom;
@@ -29,14 +28,11 @@ type MyBackend = burn_tch::LibTorch;
 type MyAutodiffBackend = Autodiff<MyBackend>;
 
 fn main() {
-
     //let device = &LibTorchDevice::Cuda(0);
     let device = &Default::default();
 
     // Create the model
-    let model = MyQMLP::<MyAutodiffBackend>::new(&device,
-                                                 NUM_STATE_FEATURES,
-                                                 NUM_ACTIONS);
+    let model = MyQMLP::<MyAutodiffBackend>::new(&device, NUM_STATE_FEATURES, NUM_ACTIONS);
 
     // Train the model
     /* SARSA
@@ -81,6 +77,7 @@ fn main() {
     );
 
 
+
     /*
     let model = reinforce::<NUM_STATE_FEATURES, NUM_ACTIONS, _, MyAutodiffBackend, GameEnv>(
         model,
@@ -99,7 +96,7 @@ fn main() {
 
     let mut win = 0.;
     let mut lose = 0.;
-    for _ in 0..1000{
+    for _ in 0..1000 {
         env.reset();
         while !env.is_terminal() {
             let s = env.state_description();
@@ -124,7 +121,6 @@ fn main() {
         } else {
             lose += 1.;
         }
-
     }
 
     println!("Win: {}, Lose: {}", win, lose);
