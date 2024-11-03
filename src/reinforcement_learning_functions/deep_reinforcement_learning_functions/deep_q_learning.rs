@@ -8,6 +8,7 @@ use crate::reinforcement_learning_functions::deep_reinforcement_learning_functio
 use burn::module::AutodiffModule;
 use burn::optim::decay::WeightDecayConfig;
 use burn::optim::{GradientsParams, Optimizer, SgdConfig};
+
 use burn::prelude::*;
 use burn::tensor::backend::AutodiffBackend;
 use kdam::tqdm;
@@ -44,12 +45,6 @@ where
         .with_weight_decay(Some(WeightDecayConfig::new(1e-7)))
         .init();
 
-    //initialize replay memory D to capacity N
-    let mut replay_memory_next: Vec<(Tensor<B, 1>, usize, f32, Tensor<B, 1>, usize, bool)> =
-        Vec::with_capacity(replay_capacity);
-
-    let mut replay_memory_q: Vec<Tensor<B, 1>> = Vec::with_capacity(replay_capacity);
-
     let mut replay_memory: Trajectory<B> = Trajectory::new(replay_capacity);
 
     if batch_size > replay_capacity {
@@ -58,9 +53,6 @@ where
 
     let mut rng = Xoshiro256PlusPlus::from_entropy();
 
-
-
-    let mut i_replay: usize = 0;
 
     let mut env = Env::default();
 
