@@ -1,4 +1,5 @@
 use crate::environement::environment_traits::DeepDiscreteActionsEnv;
+use crate::training_observer::{Hyperparameters, TrainingEvent, TrainingObserver};
 use std::fmt::{Debug, Display};
 
 use crate::ml_core::ml_traits::Forward;
@@ -12,6 +13,7 @@ use kdam::tqdm;
 use rand::seq::SliceRandom;
 use rand::SeedableRng;
 use rand_xoshiro::Xoshiro256PlusPlus;
+use std::time::{Duration, Instant};
 
 pub fn deep_q_learning<
     const NUM_STATE_FEATURES: usize,
@@ -19,20 +21,27 @@ pub fn deep_q_learning<
     M: Forward<B=B> + AutodiffModule<B>,
     B: AutodiffBackend<FloatElem=f32, IntElem=i64>,
     Env: DeepDiscreteActionsEnv<NUM_STATE_FEATURES, NUM_ACTIONS> + Debug + Display,
+    Obs: TrainingObserver,
+
 >(
     mut model: M,
-    num_episodes: usize,
-    gamma: f32,
-    replay_capacity: usize,
-    batch_size: usize,
-    alpha: f32,
-    start_epsilon: f32,
-    final_epsilon: f32,
+    hyperparameters: &Hyperparameters,
     device: &B::Device,
+    observer: &mut Obs,
 ) -> M
 where
     M::InnerModule: Forward<B=B::InnerBackend>,
 {
+    let num_episodes = hyperparameters.num_episodes;
+    let replay_capacity = hyperparameters.replay_capacity;
+    let gamma = hyperparameters.gamma;
+    let alpha = hyperparameters.alpha;
+    let batch_size = hyperparameters.batch_size;
+    let start_epsilon = hyperparameters.start_epsilon;
+    let final_epsilon = hyperparameters.final_epsilon;
+    let log_interval = hyperparameters.log_interval;
+
+
     let mut optimizer = SgdConfig::new()
         .with_weight_decay(Some(WeightDecayConfig::new(1e-7)))
         .init();
@@ -50,11 +59,22 @@ where
 
     let mut rng = Xoshiro256PlusPlus::from_entropy();
 
-    let mut total_score = 0.0;
+    let mut log_total_score: f32 = 0.0;
+    let mut log_total_steps: usize = 0;
+    let mut win_count: usize = 0;
+    let mut best_score: f32 = f32::MIN;
+    let mut log_total_time: Duration = Duration::new(0, 0);
+    let mut log_total_loss: f32 = 0.0;
+    let mut log_total_td_error: f32 = 0.0;
+    let mut log_total_reward: f32 = 0.0;
+
     let mut i_replay: usize = 0;
 
     let mut env = Env::default();
 
+    observer.on_event(&TrainingEvent::HyperparametersLogged {
+        hyperparameters: hyperparameters.clone(),
+    });
 
     //let mut bar = tqdm!();
 
@@ -62,16 +82,16 @@ where
         env.reset();
         //bar.update(1).unwrap();
 
+        let mut episode_reward = 0.0;
+        let mut episode_steps = 0;
+
         let progress = ep_id as f32 / num_episodes as f32;
         let decayed_epsilon = (1.0 - progress) * start_epsilon + progress * final_epsilon;
 
-        if ep_id % 1000 == 0 {
-            println!("Mean Score: {}", total_score / 1000.0);
-            //println!("it  {}", bar.fmt_rate());
-            total_score = 0.0;
-        }
+        let episode_start_time = Instant::now();
 
         while !env.is_terminal() {
+
             let s = env.state_description();
             let s_tensor: Tensor<B, 1> = Tensor::from_floats(s.as_slice(), device);
 
@@ -185,6 +205,8 @@ where
                                                           x.clone().as_slice()
                                                       }, device);
 
+            let y_clone_for_error = y.clone();
+            let y_clone_for_error = y_clone_for_error.detach();
             let y = y.detach();
 
             let loss = y.powf_scalar(2f32);
@@ -193,8 +215,79 @@ where
             let grad_loss = loss.backward();
             let grads = GradientsParams::from_grads(grad_loss, &model);
             model = optimizer.step(alpha.into(), model, grads);
+
+            episode_reward += r;
+            episode_steps += 1;
+
+            log_total_loss += loss.clone().mean().into_scalar();
+            log_total_td_error += y_clone_for_error.mean().into_scalar();
         }
-        total_score += env.score();
+        let episode_duration = episode_start_time.elapsed();
+
+        log_total_score += episode_reward;
+        log_total_steps += episode_steps;
+        log_total_time += episode_duration;
+
+        let win = episode_reward > 0.0;
+        if win {
+            win_count += 1;
+        }
+
+        if episode_reward > best_score {
+            best_score = episode_reward;
+        }
+
+        if (ep_id + 1) % log_interval == 0 && ep_id != 0 {
+            let average_score_per_episode = log_total_score / log_interval as f32;
+            let average_steps_per_episode = log_total_steps as f32 / log_interval as f32;
+            let average_time = log_total_time.as_secs_f32() / log_interval as f32;
+            let average_loss = log_total_loss / log_interval as f32;
+            let mean_td_error = log_total_td_error / log_interval as f32;
+            let current_epsilon = decayed_epsilon;
+
+            observer.on_event(&TrainingEvent::LoggingSummary {
+                episodes: ep_id + 1,
+                total_score: log_total_score,
+                average_score_per_episode,
+                average_steps_per_episode,
+                average_loss,
+                mean_td_error,
+                epsilon: current_epsilon,
+                win_count,
+                best_score,
+                average_time,
+            });
+
+            println!(
+                "Summary after {} episodes:
+                - Total Score: {:.2}
+                - Avg Score per Episode: {:.2}
+                - Avg Steps per Episode: {:.2}
+                - Avg Time per Episode: {:.2}s
+                - Avg Loss: {:.4}
+                - Mean TD Error: {:.4}
+                - Epsilon: {:.4}
+                - Wins: {}
+                - Best Score: {:.2}",
+                ep_id + 1,
+                log_total_score,
+                average_score_per_episode,
+                average_steps_per_episode,
+                average_time,
+                average_loss,
+                mean_td_error,
+                current_epsilon,
+                win_count,
+                best_score
+            );
+
+            log_total_score = 0.0;
+            log_total_steps = 0;
+            log_total_time = Duration::new(0, 0);
+            win_count = 0;
+            log_total_loss = 0.0;
+            log_total_td_error = 0.0;
+        }
     }
 
     model
