@@ -66,7 +66,7 @@ pub mod trajectory {
         pub fn get_batch(&mut self, batch_size: usize) -> Self {
             //let indexes : Vec<usize> = [0..self.size].choose_multiple(&mut rand::thread_rng(), batch_size).collect();
             let indexes: Vec<usize> =
-                sample(&mut rand::thread_rng(), self.max_size, batch_size).into_vec();
+                sample(&mut rand::thread_rng(), self.len, batch_size).into_vec();
 
 
             let mut batch = Trajectory::new(batch_size);

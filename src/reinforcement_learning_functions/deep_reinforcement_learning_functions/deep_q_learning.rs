@@ -170,7 +170,7 @@ where
             //t2_1 += now.elapsed().as_secs_f32();
             //let now = Instant::now();
 
-            if replay_memory.len < replay_memory.max_size {
+            if replay_memory.len < batch_size{
                 continue;
             }
 
@@ -187,7 +187,7 @@ where
             let a: Tensor<B, 2, Int> = t_a.unsqueeze_dim(1);
 
             let q_s_a = model.forward(s_tensor.clone()).detach();
-            let b_q_s_a_scalar: Tensor<B, 1> = q_s_a.clone().gather(1, a).squeeze(1);
+            let b_q_s_a_scalar: Tensor<B, 1> =q_s_a.clone().gather(1, a).squeeze(1);
 
             let t_a_p: Tensor<B, 2, Int> = a_p_tensor.unsqueeze_dim(1);
             let q_s_p_a_p = model.forward(s_p_tensor.clone());

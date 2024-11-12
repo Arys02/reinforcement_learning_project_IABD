@@ -12,7 +12,9 @@ pub mod trajectory {
         pub r_t: Vec<f32>,
         pub r_cul: Vec<f32>,
         pub log_prob_t: Vec<Tensor<B, 1>>,
-        pub s_p_t: Vec<Tensor<B, 1>>,
+        pub v_s: Vec<Tensor<B, 1>>,
+        pub advantage: Vec<Tensor<B, 1>>,
+        pub g: Vec<f32>
         //index: usize,
     }
 
@@ -26,8 +28,10 @@ pub mod trajectory {
                 r_t: Vec::with_capacity(max_size),
                 r_cul: Vec::with_capacity(max_size),
                 log_prob_t: Vec::with_capacity(max_size),
-                s_p_t: Vec::with_capacity(max_size),
+                v_s: Vec::with_capacity(max_size),
                 //index : 0,
+                advantage: vec![],
+                g: vec![],
             }
         }
 
@@ -49,7 +53,7 @@ pub mod trajectory {
             self.r_t.push(r_t);
             self.r_cul.push(r_t);
             self.log_prob_t.push(log_prob_t);
-            self.s_p_t.push(v_t);
+            self.v_s.push(v_t);
         }
 
         pub fn get_batch(&mut self, batch_size: usize) -> Self {
@@ -69,7 +73,7 @@ pub mod trajectory {
                     self.r_t[i],
                     self.r_cul[i],
                     self.log_prob_t[i].clone(),
-                    self.s_p_t[i].clone(),
+                    self.v_s[i].clone(),
                 );
             }
             batch
@@ -115,7 +119,7 @@ pub mod trajectory {
             assert_eq!(trajectory.a_t.capacity(), max_size);
             assert_eq!(trajectory.r_t.capacity(), max_size);
             assert_eq!(trajectory.log_prob_t.capacity(), max_size);
-            assert_eq!(trajectory.s_p_t.capacity(), max_size);
+            assert_eq!(trajectory.v_s.capacity(), max_size);
         }
 
         #[test]
@@ -139,7 +143,7 @@ pub mod trajectory {
                 assert_eq!(trajectory.a_t.len(), i + 1);
                 assert_eq!(trajectory.r_t.len(), i + 1);
                 assert_eq!(trajectory.log_prob_t.len(), i + 1);
-                assert_eq!(trajectory.s_p_t.len(), i + 1);
+                assert_eq!(trajectory.v_s.len(), i + 1);
             }
         }
 
@@ -171,7 +175,7 @@ pub mod trajectory {
             assert_eq!(batch.a_t.len(), batch_size);
             assert_eq!(batch.r_t.len(), batch_size);
             assert_eq!(batch.log_prob_t.len(), batch_size);
-            assert_eq!(batch.s_p_t.len(), batch_size);
+            assert_eq!(batch.v_s.len(), batch_size);
         }
     }
 }

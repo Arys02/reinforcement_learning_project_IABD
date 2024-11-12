@@ -19,10 +19,11 @@ use IABD4_reinforcement_learning::environement::tic_tac_toe::tic_tac_toe::{
 
 use IABD4_reinforcement_learning::ml_core::mlp::MyQMLP;
 use IABD4_reinforcement_learning::reinforcement_learning_functions::deep_reinforcement_learning_functions::deep_q_learning::deep_q_learning;
+use IABD4_reinforcement_learning::reinforcement_learning_functions::deep_reinforcement_learning_functions::ppo::ppo;
 use IABD4_reinforcement_learning::reinforcement_learning_functions::deep_reinforcement_learning_functions::utils::epsilon_greedy_action;
 
-//type GameEnv = TicTacToeVersusRandom;
 type GameEnv = TicTacToeVersusRandom;
+//type GameEnv = Farkle2;
 
 type MyBackend = burn_tch::LibTorch;
 type MyAutodiffBackend = Autodiff<MyBackend>;
@@ -33,6 +34,7 @@ fn main() {
 
     // Create the model
     let model = MyQMLP::<MyAutodiffBackend>::new(&device, NUM_STATE_FEATURES, NUM_ACTIONS);
+    let mut value_model = MyQMLP::<MyAutodiffBackend>::new(&device, NUM_STATE_FEATURES, 1);
 
     // Train the model
     /* SARSA
