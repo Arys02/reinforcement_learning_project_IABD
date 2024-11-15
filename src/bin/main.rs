@@ -3,6 +3,7 @@ extern crate IABD4_reinforcement_learning;
 use burn::backend::Autodiff;
 use burn::module::AutodiffModule;
 use burn::prelude::*;
+use kdam::tqdm;
 use rand_xoshiro::rand_core::SeedableRng;
 use rand_xoshiro::Xoshiro256PlusPlus;
 use IABD4_reinforcement_learning::environement::environment_traits::ActionEnv;
@@ -33,8 +34,6 @@ fn main() {
     let device = &Default::default();
 
     // Create the model
-    let model = MyQMLP::<MyAutodiffBackend>::new(&device, NUM_STATE_FEATURES, NUM_ACTIONS);
-    let mut value_model = MyQMLP::<MyAutodiffBackend>::new(&device, NUM_STATE_FEATURES, 1);
 
     // Train the model
     /* SARSA
@@ -57,8 +56,7 @@ fn main() {
 
      */
 
-
-
+    /*
 
     let trained_model = deep_q_learning::<
         NUM_STATE_FEATURES,
@@ -78,53 +76,111 @@ fn main() {
         &device,
     );
 
-
-
-    /*
-    let model = reinforce::<NUM_STATE_FEATURES, NUM_ACTIONS, _, MyAutodiffBackend, GameEnv>(
-        model,
-        1_000_000,
-        3e-3,
-        0.999f32,
-        1.0f32,
-        1e-5f32,
-        &device,
-    );
      */
+    let mut wr = 0.;
 
-    // Let's play some games (press enter to show the next game)
-    let mut env = GameEnv::default();
-    let mut rng = Xoshiro256PlusPlus::from_entropy();
+    for _ in tqdm!(0..100) {
+        let model = MyQMLP::<MyAutodiffBackend>::new(&device, NUM_STATE_FEATURES, NUM_ACTIONS);
+        let mut value_model = MyQMLP::<MyAutodiffBackend>::new(&device, NUM_STATE_FEATURES, 1);
 
-    let mut win = 0.;
-    let mut lose = 0.;
-    for _ in 0..1000 {
-        env.reset();
-        while !env.is_terminal() {
-            let s = env.state_description();
-            let s_tensor: Tensor<MyBackend, 1> = Tensor::from_floats(s.as_slice(), device);
+        /*
+        let model = reinforce::<NUM_STATE_FEATURES, NUM_ACTIONS, _, MyAutodiffBackend, GameEnv>(
+            model,
+            1_000_000,
+            3e-3,
+            0.999f32,
+            1.0f32,
+            1e-5f32,
+            &device,
+        );
+         */
 
-            let mask = env.action_mask();
-            let mask_tensor: Tensor<MyBackend, 1> = Tensor::from(mask).to_device(device);
-            let q_s = trained_model.valid().forward(s_tensor);
+        // Let's play some games (press enter to show the next game)
+        /*
+        let model = ppo::<NUM_STATE_FEATURES, NUM_ACTIONS, _, MyAutodiffBackend, GameEnv>(
+            model.clone(),
+            value_model.clone(),
+            100,
+            3e-4,
+            0.999f32,
+            0.95,
+            2048,
+            2,
+            64,
+            10,
+            1.0f32,
+            1e-5f32,
+            &device,
+        );
+
+         */
+
+        /*
+        let model = reinforce::<NUM_STATE_FEATURES, NUM_ACTIONS, _, MyAutodiffBackend, GameEnv>(
+            model,
+            1_000_000,
+            3e-3,
+            0.999f32,
+            1.0f32,
+            1e-5f32,
+            &device,
+        );
+         */
+        let model = deep_q_learning::<
+            NUM_STATE_FEATURES,
+            NUM_ACTIONS,
+            _,
+            MyAutodiffBackend,
+            GameEnv,
+        >(
+            model,
+            10_000,
+            100,
+            0.999f32,
+            3e-3f32,
+            1.0f32,
+            1e-5f32,
+            40,
+            &device,
+        );
 
 
-            let a = epsilon_greedy_action::<MyBackend, NUM_STATE_FEATURES, NUM_ACTIONS>(
-                &q_s,
-                &mask_tensor,
-                env.available_actions_ids(),
-                -1.,
-                &mut rng);
+        // Let's play some games (press enter to show the next game)
+        let device = &Default::default();
+        let mut env = GameEnv::default();
+        let mut rng = Xoshiro256PlusPlus::from_entropy();
 
-            env.step(a);
+        let mut win = 0.;
+        let mut lose = 0.;
+        for _ in 0..1000 {
+            env.reset();
+            while !env.is_terminal() {
+                let s = env.state_description();
+                let s_tensor: Tensor<MyBackend, 1> = Tensor::from_floats(s.as_slice(), device);
+
+                let mask = env.action_mask();
+                let mask_tensor: Tensor<MyBackend, 1> = Tensor::from(mask).to_device(device);
+                let q_s = model.valid().forward(s_tensor);
+
+                let a = epsilon_greedy_action::<MyBackend, NUM_STATE_FEATURES, NUM_ACTIONS>(
+                    &q_s,
+                    &mask_tensor,
+                    env.available_actions_ids(),
+                    -1.,
+                    &mut rng,
+                );
+                env.step(a);
+            }
+            if env.score > 0. {
+                win += 1.;
+            } else {
+                lose += 1.;
+            }
         }
-        if env.score > 0. {
-            win += 1.;
-        } else {
-            lose += 1.;
-        }
+
+        println!("Win: {}, Lose: {}", win, lose);
+        println!("winrate : {}", win / (win + lose));
+        wr += win / (win + lose);
     }
-
-    println!("Win: {}, Lose: {}", win, lose);
-    println!("winrate : {}", win / (win + lose));
+    println!("total winrate : {}", wr / 100.);
 }

@@ -11,9 +11,9 @@ pub mod trajectory {
         pub a_t: Vec<usize>,
         pub r_t: Vec<f32>,
         pub r_cul: Vec<f32>,
-        pub log_prob_t: Vec<Tensor<B, 1>>,
         pub v_s: Vec<Tensor<B, 1>>,
         pub advantage: Vec<Tensor<B, 1>>,
+        pub returns: Vec<Tensor<B, 1>>,
         pub g: Vec<f32>
         //index: usize,
     }
@@ -27,10 +27,10 @@ pub mod trajectory {
                 a_t: Vec::with_capacity(max_size),
                 r_t: Vec::with_capacity(max_size),
                 r_cul: Vec::with_capacity(max_size),
-                log_prob_t: Vec::with_capacity(max_size),
                 v_s: Vec::with_capacity(max_size),
                 //index : 0,
                 advantage: vec![],
+                returns: vec![],
                 g: vec![],
             }
         }
@@ -40,8 +40,6 @@ pub mod trajectory {
             s_t: Tensor<B, 1>,
             a_t: usize,
             r_t: f32,
-            r_cul: f32,
-            log_prob_t: Tensor<B, 1>,
             v_t: Tensor<B, 1>,
         ) {
             if self.size + 1 > self.max_size {
@@ -52,13 +50,13 @@ pub mod trajectory {
             self.a_t.push(a_t);
             self.r_t.push(r_t);
             self.r_cul.push(r_t);
-            self.log_prob_t.push(log_prob_t);
             self.v_s.push(v_t);
         }
 
-        pub fn get_batch(&mut self, batch_size: usize) -> Self {
-            if batch_size > self.size {
-                panic!("batch size greater than size");
+        pub fn get_batch(&mut self, mut batch_size: usize) -> Self {
+            if batch_size >= self.size {
+                //panic!("batch size greater than size");
+                batch_size = self.size - 1;
             }
             //let indexes : Vec<usize> = [0..self.size].choose_multiple(&mut rand::thread_rng(), batch_size).collect();
             let indexes: Vec<usize> =
@@ -71,10 +69,12 @@ pub mod trajectory {
                     self.s_t[i].clone(),
                     self.a_t[i],
                     self.r_t[i],
-                    self.r_cul[i],
-                    self.log_prob_t[i].clone(),
                     self.v_s[i].clone(),
                 );
+                //println!("advantage len {}", self.advantage.len());
+                //println!("other len {}", self.s_t.len());
+                batch.advantage.push(self.advantage[i].clone());
+                batch.returns.push(self.returns[i].clone());
             }
             batch
         }
@@ -118,7 +118,6 @@ pub mod trajectory {
             assert_eq!(trajectory.s_t.capacity(), max_size);
             assert_eq!(trajectory.a_t.capacity(), max_size);
             assert_eq!(trajectory.r_t.capacity(), max_size);
-            assert_eq!(trajectory.log_prob_t.capacity(), max_size);
             assert_eq!(trajectory.v_s.capacity(), max_size);
         }
 
@@ -136,13 +135,12 @@ pub mod trajectory {
                 let log_prob_t = Tensor::<B, 1>::from_floats([0.5], device);
                 let v_t = Tensor::<B, 1>::from_floats([1.0], device);
 
-                trajectory.push(s_t, a_t, r_t, log_prob_t, v_t);
+                trajectory.push(s_t, a_t, r_t, v_t);
 
                 assert_eq!(trajectory.size, i + 1);
                 assert_eq!(trajectory.s_t.len(), i + 1);
                 assert_eq!(trajectory.a_t.len(), i + 1);
                 assert_eq!(trajectory.r_t.len(), i + 1);
-                assert_eq!(trajectory.log_prob_t.len(), i + 1);
                 assert_eq!(trajectory.v_s.len(), i + 1);
             }
         }
@@ -163,7 +161,7 @@ pub mod trajectory {
                 let log_prob_t = Tensor::<B, 1>::from_floats([0.5], device);
                 let v_t = Tensor::<B, 1>::from_floats([1.0], device);
 
-                trajectory.push(s_t, a_t, r_t, log_prob_t, v_t);
+                trajectory.push(s_t, a_t, r_t, v_t);
             }
 
             // Obtenir un batch
@@ -174,7 +172,6 @@ pub mod trajectory {
             assert_eq!(batch.s_t.len(), batch_size);
             assert_eq!(batch.a_t.len(), batch_size);
             assert_eq!(batch.r_t.len(), batch_size);
-            assert_eq!(batch.log_prob_t.len(), batch_size);
             assert_eq!(batch.v_s.len(), batch_size);
         }
     }
