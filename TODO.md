@@ -25,7 +25,7 @@
 - [X] REINFORCE
 - [ ] REINFORCE with mean baseline
 - [ ] REINFORCE with Baseline Learned by a Critic
-- […] PPO A2C style
+- [X] PPO A2C style
 - [ ] RandomRollout
 - [ ] Monte Carlo Tree Search (UCT)
 - [ ] Expert Apprentice

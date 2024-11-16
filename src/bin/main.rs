@@ -12,19 +12,17 @@ use IABD4_reinforcement_learning::environement::environment_traits::DeepDiscrete
 
 //use IABD4_reinforcement_learning::environement::farkle::farkle::{Farkle, NUM_ACTIONS, NUM_STATE_FEATURES};
 
-//use IABD4_reinforcement_learning::environement::farkle_2::farkle_2::{Farkle2, NUM_ACTIONS, NUM_STATE_FEATURES};
+use IABD4_reinforcement_learning::environement::farkle_2::farkle_2::{Farkle2, NUM_ACTIONS, NUM_STATE_FEATURES};
 
-use IABD4_reinforcement_learning::environement::tic_tac_toe::tic_tac_toe::{
-    TicTacToeVersusRandom, NUM_ACTIONS, NUM_STATE_FEATURES,
-};
+//use IABD4_reinforcement_learning::environement::tic_tac_toe::tic_tac_toe::{ TicTacToeVersusRandom, NUM_ACTIONS, NUM_STATE_FEATURES, };
 
 use IABD4_reinforcement_learning::ml_core::mlp::MyQMLP;
 use IABD4_reinforcement_learning::reinforcement_learning_functions::deep_reinforcement_learning_functions::deep_q_learning::deep_q_learning;
 use IABD4_reinforcement_learning::reinforcement_learning_functions::deep_reinforcement_learning_functions::ppo::ppo;
 use IABD4_reinforcement_learning::reinforcement_learning_functions::deep_reinforcement_learning_functions::utils::epsilon_greedy_action;
 
-type GameEnv = TicTacToeVersusRandom;
-//type GameEnv = Farkle2;
+//type GameEnv = TicTacToeVersusRandom;
+type GameEnv = Farkle2;
 
 type MyBackend = burn_tch::LibTorch;
 type MyAutodiffBackend = Autodiff<MyBackend>;
@@ -83,6 +81,13 @@ fn main() {
         let model = MyQMLP::<MyAutodiffBackend>::new(&device, NUM_STATE_FEATURES, NUM_ACTIONS);
         let mut value_model = MyQMLP::<MyAutodiffBackend>::new(&device, NUM_STATE_FEATURES, 1);
 
+
+        /*
+        let model = ppo::<NUM_STATE_FEATURES, NUM_ACTIONS, _, MyAutodiffBackend, GameEnv>(
+            model.clone(), value_model.clone(), 100, 3e-5, 0.999f32,0.95, 2048, 2,64, 10, 1.0f32, 1e-5f32, &device
+        );
+
+         */
         /*
         let model = reinforce::<NUM_STATE_FEATURES, NUM_ACTIONS, _, MyAutodiffBackend, GameEnv>(
             model,
@@ -97,21 +102,6 @@ fn main() {
 
         // Let's play some games (press enter to show the next game)
         /*
-        let model = ppo::<NUM_STATE_FEATURES, NUM_ACTIONS, _, MyAutodiffBackend, GameEnv>(
-            model.clone(),
-            value_model.clone(),
-            100,
-            3e-4,
-            0.999f32,
-            0.95,
-            2048,
-            2,
-            64,
-            10,
-            1.0f32,
-            1e-5f32,
-            &device,
-        );
 
          */
 
