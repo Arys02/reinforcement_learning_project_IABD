@@ -65,7 +65,6 @@ where
     let mut best_score: f32 = f32::MIN;
     let mut log_total_time: Duration = Duration::new(0, 0);
     let mut log_total_loss: f32 = 0.0;
-    let mut log_total_td_error: f32 = 0.0;
     let mut log_total_reward: f32 = 0.0;
 
     let mut i_replay: usize = 0;
@@ -205,8 +204,6 @@ where
                                                           x.clone().as_slice()
                                                       }, device);
 
-            let y_clone_for_error = y.clone();
-            let y_clone_for_error = y_clone_for_error.detach();
             let y = y.detach();
 
             let loss = y.powf_scalar(2f32);
@@ -219,8 +216,7 @@ where
             episode_reward += r;
             episode_steps += 1;
 
-            log_total_loss += loss.clone().mean().into_scalar();
-            log_total_td_error += y_clone_for_error.mean().into_scalar();
+            log_total_loss += loss.mean().into_scalar();
         }
         let episode_duration = episode_start_time.elapsed();
 
@@ -242,7 +238,6 @@ where
             let average_steps_per_episode = log_total_steps as f32 / log_interval as f32;
             let average_time = log_total_time.as_secs_f32() / log_interval as f32;
             let average_loss = log_total_loss / log_interval as f32;
-            let mean_td_error = log_total_td_error / log_interval as f32;
             let current_epsilon = decayed_epsilon;
 
             observer.on_event(&TrainingEvent::LoggingSummary {
@@ -251,11 +246,11 @@ where
                 average_score_per_episode,
                 average_steps_per_episode,
                 average_loss,
-                mean_td_error,
                 epsilon: current_epsilon,
                 win_count,
                 best_score,
                 average_time,
+                epoch: ep_id + 1,
             });
 
             println!(
@@ -265,7 +260,6 @@ where
                 - Avg Steps per Episode: {:.2}
                 - Avg Time per Episode: {:.2}s
                 - Avg Loss: {:.4}
-                - Mean TD Error: {:.4}
                 - Epsilon: {:.4}
                 - Wins: {}
                 - Best Score: {:.2}",
@@ -275,7 +269,6 @@ where
                 average_steps_per_episode,
                 average_time,
                 average_loss,
-                mean_td_error,
                 current_epsilon,
                 win_count,
                 best_score
@@ -286,7 +279,6 @@ where
             log_total_time = Duration::new(0, 0);
             win_count = 0;
             log_total_loss = 0.0;
-            log_total_td_error = 0.0;
         }
     }
 

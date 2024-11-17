@@ -16,11 +16,11 @@ pub enum TrainingEvent{
         average_score_per_episode: f32,
         average_steps_per_episode: f32,
         average_loss: f32,
-        mean_td_error: f32,
         epsilon: f32,
         win_count: usize,
         best_score: f32,
         average_time: f32,
+        epoch: usize,
     },
 }
 

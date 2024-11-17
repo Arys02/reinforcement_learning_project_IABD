@@ -66,14 +66,14 @@ fn main() {
 
 
     let hyperparameters = Hyperparameters {
-        num_episodes: 10_000,
-        replay_capacity: 10_0,
+        num_episodes: 5000,
+        replay_capacity: 500,
         gamma: 0.999f32,
-        alpha: 3e-3,
+        alpha: 1e-3,
         start_epsilon: 1.0f32,
         final_epsilon: 1e-5f32,
-        batch_size: 40,
-        log_interval: 200,
+        batch_size: 32,
+        log_interval: 50,
     };
 
 
