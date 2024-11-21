@@ -64,6 +64,7 @@ where
     let mut env = Env::default();
 
     //LOGGER
+    #[cfg(feature = "logging")]
     let hyperparameters = Hyperparameters {
         num_episodes,
         replay_capacity,
@@ -76,17 +77,37 @@ where
     };
 
 
+
+    #[cfg(feature = "logging")]
     let log_interval = hyperparameters.log_interval;
+
+    #[cfg(feature = "logging")]
     let model_name = "dqn_log_tester_reduced_2";
+
+    #[cfg(feature = "logging")]
     let mut observer = Logger::new(model_name);
+
+    #[cfg(feature = "logging")]
     observer.on_event(&TrainingEvent::HyperparametersLogged {
         hyperparameters: hyperparameters.clone(),
     });
+
+    #[cfg(feature = "logging")]
     let mut log_total_score: f32 = 0.0;
+
+    #[cfg(feature = "logging")]
     let mut log_total_steps: usize = 0;
+
+    #[cfg(feature = "logging")]
     let mut win_count: usize = 0;
+
+    #[cfg(feature = "logging")]
     let mut best_score: f32 = f32::MIN;
+
+    #[cfg(feature = "logging")]
     let mut log_total_time: Duration = Duration::new(0, 0);
+
+    #[cfg(feature = "logging")]
     let mut log_total_loss: f32 = 0.0;
 
 
@@ -221,59 +242,77 @@ where
             let grads = GradientsParams::from_grads(grad_loss, &model);
             model = optimizer.step(alpha.into(), model, grads);
 
-            //LOGGER
+
+
             episode_reward += r;
             episode_steps += 1;
 
 
             //LOGGER
-            log_total_loss += loss.mean().into_scalar();
+
+
+            #[cfg(feature = "logging")] {
+                log_total_loss += loss.mean().into_scalar();
+            }
 
         }
         //LOGGER
+
+        #[cfg(feature = "logging")]
         let episode_duration = episode_start_time.elapsed();
 
         //LOGGER
-        log_total_score += episode_reward;
-        log_total_steps += episode_steps;
-        log_total_time += episode_duration;
 
-        //LOGGER
-        let win = episode_reward > 0.0;
-        if win {
-            win_count += 1;
+        #[cfg(feature = "logging")] {
+            log_total_score += episode_reward;
+            log_total_steps += episode_steps;
+            log_total_time += episode_duration;
         }
 
-        //LOGGER
-        if episode_reward > best_score {
-            best_score = episode_reward;
-        }
+
+
 
         //LOGGER
-        if (ep_id + 1) % log_interval == 0 && ep_id != 0 {
-            let average_score_per_episode = log_total_score / log_interval as f32;
-            let average_steps_per_episode = log_total_steps as f32 / log_interval as f32;
-            let average_time = log_total_time.as_secs_f32() / log_interval as f32;
-            let average_loss = log_total_loss / log_interval as f32;
-            let current_epsilon = decayed_epsilon;
+
+        #[cfg(feature = "logging")] {
+            let win = episode_reward > 0.0;
+
+            if win {
+                win_count += 1;
+            }
 
             //LOGGER
-            observer.on_event(&TrainingEvent::LoggingSummary {
-                episodes: ep_id + 1,
-                total_score: log_total_score,
-                average_score_per_episode,
-                average_steps_per_episode,
-                average_loss,
-                epsilon: current_epsilon,
-                win_count,
-                best_score,
-                average_time,
-                epoch: ep_id + 1,
-            });
+
+            if episode_reward > best_score {
+                best_score = episode_reward;
+            }
 
             //LOGGER
-            println!(
-                "Summary after {} episodes:
+
+            if (ep_id + 1) % log_interval == 0 && ep_id != 0 {
+                let average_score_per_episode = log_total_score / log_interval as f32;
+                let average_steps_per_episode = log_total_steps as f32 / log_interval as f32;
+                let average_time = log_total_time.as_secs_f32() / log_interval as f32;
+                let average_loss = log_total_loss / log_interval as f32;
+                let current_epsilon = decayed_epsilon;
+
+                //LOGGER
+                observer.on_event(&TrainingEvent::LoggingSummary {
+                    episodes: ep_id + 1,
+                    total_score: log_total_score,
+                    average_score_per_episode,
+                    average_steps_per_episode,
+                    average_loss,
+                    epsilon: current_epsilon,
+                    win_count,
+                    best_score,
+                    average_time,
+                    epoch: ep_id + 1,
+                });
+
+                //LOGGER
+                println!(
+                    "Summary after {} episodes:
                 - Total Score: {:.2}
                 - Avg Score per Episode: {:.2}
                 - Avg Steps per Episode: {:.2}
@@ -282,28 +321,30 @@ where
                 - Epsilon: {:.4}
                 - Wins: {}
                 - Best Score: {:.2}",
-                ep_id + 1,
-                log_total_score,
-                average_score_per_episode,
-                average_steps_per_episode,
-                average_time,
-                average_loss,
-                current_epsilon,
-                win_count,
-                best_score
-            );
+                    ep_id + 1,
+                    log_total_score,
+                    average_score_per_episode,
+                    average_steps_per_episode,
+                    average_time,
+                    average_loss,
+                    current_epsilon,
+                    win_count,
+                    best_score
+                );
 
-            //LOGGER
-            log_total_score = 0.0;
-            log_total_steps = 0;
-            log_total_time = Duration::new(0, 0);
-            win_count = 0;
-            log_total_loss = 0.0;
+                //LOGGER
+                log_total_score = 0.0;
+                log_total_steps = 0;
+                log_total_time = Duration::new(0, 0);
+                win_count = 0;
+                log_total_loss = 0.0;
+            }
         }
     }
 
 
     //LOGGER
+    #[cfg(feature = "logging")]
     observer.close();
 
     model

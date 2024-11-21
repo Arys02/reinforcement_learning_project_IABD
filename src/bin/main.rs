@@ -21,8 +21,6 @@ use IABD4_reinforcement_learning::ml_core::mlp::MyQMLP;
 use IABD4_reinforcement_learning::reinforcement_learning_functions::deep_reinforcement_learning_functions::deep_q_learning::deep_q_learning;
 use IABD4_reinforcement_learning::reinforcement_learning_functions::deep_reinforcement_learning_functions::reinforce::reinforce;
 use IABD4_reinforcement_learning::reinforcement_learning_functions::deep_reinforcement_learning_functions::utils::epsilon_greedy_action;
-use IABD4_reinforcement_learning::logger::Logger;
-use IABD4_reinforcement_learning::training_observer::{Hyperparameters, TrainingObserver};
 
 //type GameEnv = TicTacToeVersusRandom;
 type GameEnv = TicTacToeVersusRandom;
