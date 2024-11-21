@@ -33,7 +33,6 @@ fn main() {
     //let device = &LibTorchDevice::Cuda(0);
     let device = &Default::default();
 
-
     // Create the model
     let model = MyQMLP::<MyAutodiffBackend>::new(&device,
                                                  NUM_STATE_FEATURES,
@@ -59,24 +58,29 @@ fn main() {
         );
 
      */
-    let model =
-        deep_q_learning::<
-            NUM_STATE_FEATURES,
-            NUM_ACTIONS,
-            _,
-            MyAutodiffBackend,
-            GameEnv,
-        >(
-            model,
-            100_00,
-            0.999f32,
-            10000,
-            200,
-            3e-3,
-            1.0f32,
-            1e-5f32,
-            &device,
-        );
+
+
+
+
+    let trained_model = deep_q_learning::<
+        NUM_STATE_FEATURES,
+        NUM_ACTIONS,
+        _,
+        MyAutodiffBackend,
+        GameEnv,
+    >(
+        model,
+        10_000,
+        100,
+        0.999f32,
+        3e-3f32,
+        1.0f32,
+        1e-5f32,
+        40,
+        &device,
+    );
+
+
     /*
     let model = reinforce::<NUM_STATE_FEATURES, NUM_ACTIONS, _, MyAutodiffBackend, GameEnv>(
         model,
@@ -90,7 +94,6 @@ fn main() {
      */
 
     // Let's play some games (press enter to show the next game)
-    let device = &Default::default();
     let mut env = GameEnv::default();
     let mut rng = Xoshiro256PlusPlus::from_entropy();
 
@@ -104,11 +107,16 @@ fn main() {
 
             let mask = env.action_mask();
             let mask_tensor: Tensor<MyBackend, 1> = Tensor::from(mask).to_device(device);
-            let q_s = model.valid().forward(s_tensor);
+            let q_s = trained_model.valid().forward(s_tensor);
 
 
-            let a = epsilon_greedy_action::<MyBackend, NUM_STATE_FEATURES, NUM_ACTIONS>(&q_s,
-                                                                                        &mask_tensor, env.available_actions_ids(), -1., &mut rng);
+            let a = epsilon_greedy_action::<MyBackend, NUM_STATE_FEATURES, NUM_ACTIONS>(
+                &q_s,
+                &mask_tensor,
+                env.available_actions_ids(),
+                -1.,
+                &mut rng);
+
             env.step(a);
         }
         if env.score > 0. {

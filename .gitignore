@@ -20,4 +20,5 @@ Cargo.lock
 .idea/
 
 record/*
+logs/
 
