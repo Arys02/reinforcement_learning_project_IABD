@@ -61,20 +61,7 @@ fn main() {
 
      */
 
-    let model_name = "dqn_log_tester_reduced_2";
-    let mut logger = Logger::new(model_name);
 
-
-    let hyperparameters = Hyperparameters {
-        num_episodes: 5000,
-        replay_capacity: 500,
-        gamma: 0.999f32,
-        alpha: 1e-3,
-        start_epsilon: 1.0f32,
-        final_epsilon: 1e-5f32,
-        batch_size: 32,
-        log_interval: 50,
-    };
 
 
     let trained_model = deep_q_learning::<
@@ -83,15 +70,18 @@ fn main() {
         _,
         MyAutodiffBackend,
         GameEnv,
-        Logger,
     >(
         model,
-        &hyperparameters,
+        10_000,
+        100,
+        0.999f32,
+        3e-3f32,
+        1.0f32,
+        1e-5f32,
+        40,
         &device,
-        &mut logger,
     );
 
-    logger.close();
 
     /*
     let model = reinforce::<NUM_STATE_FEATURES, NUM_ACTIONS, _, MyAutodiffBackend, GameEnv>(

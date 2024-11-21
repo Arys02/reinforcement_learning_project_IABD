@@ -1,0 +1,13 @@
+{
+  "hyperparameters": {
+    "alpha": 0.003000000026077032,
+    "batch_size": 40,
+    "final_epsilon": 9.999999747378752e-6,
+    "gamma": 0.9990000128746033,
+    "log_interval": 500,
+    "num_episodes": 10000,
+    "replay_capacity": 100,
+    "start_epsilon": 1.0
+  },
+  "timestamp": "2024-11-21T11:37:44.295291097+01:00"
+}
