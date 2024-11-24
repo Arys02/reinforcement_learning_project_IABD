@@ -66,6 +66,7 @@ where
             let mut pi_s = model.forward(s_tensor);
 
 
+            //TODO change to get a softmax random action
             let a = epsilon_greedy_action::<B, NUM_STATE_FEATURES, NUM_ACTIONS>(
                 &pi_s,
                 &mask_tensor,

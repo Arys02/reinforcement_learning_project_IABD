@@ -162,6 +162,10 @@ pub mod grid_world {
     }
 
     impl BaseEnv for GridWorld {
+        fn get_name(&self) -> String {
+           String::from("gridworld")
+        }
+
         fn is_terminal(&self) -> bool {
             match self.agent_pos {
                 x if x < 8 => true,

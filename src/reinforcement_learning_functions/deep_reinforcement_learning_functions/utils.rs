@@ -25,25 +25,48 @@ pub fn epsilon_greedy_action<
         masked_q_s.clone().argmax(0).into_scalar() as usize
     }
 }
-/*
-pub fn soft_max_with_mask<
+
+pub fn soft_max_with_mask_action<
     B: Backend<FloatElem = f32, IntElem = i64>,
     const NUM_STATES_FEATURES: usize,
     const NUM_ACTIONS: usize,
 >(
-    q_s: &Tensor<B, 1>,
-    mask_tensor: &Tensor<B, 1>,
-    available_actions: impl Iterator<Item = usize>,
-) -> usize {
-    let positiv_x = q_s - q_s.clone().min();
-    let masked_pos_x = positiv_x * mask_tensor.clone();
+    X: &Tensor<B, 1>,
+    M: &Tensor<B, 1>,
+) -> Tensor<B, 1> {
+    // Étape 1 : Décaler X pour que toutes les valeurs soient positives
+    let min_x = X.clone().min();
+    let positive_x = X.clone().sub(min_x);
 
-    let negativ_x = masked_pos_x - mask_tensor.clone();
-    let exp_x = negativ_x.exp();
+    // Étape 2 : Appliquer le masque
+    let masked_positive_X = positive_x.mul(M.clone());
 
+    // Étape 3 : Décaler masked_positive_X en soustrayant son maximum
+    let max_masked_positive_X = masked_positive_X.clone().max();
+    let negative_masked_X = masked_positive_X.sub(max_masked_positive_X);
 
+    // Étape 4 : Calculer l'exponentielle
+    let exp_X = negative_masked_X.exp();
+
+    // Étape 5 : Appliquer le masque à nouveau
+    let filtered_exp_X = exp_X.mul(M.clone());
+
+    // Étape 6 : Calculer la somme des exponentielles filtrées
+    let sum_filtered_exp_X = filtered_exp_X.clone().sum();
+
+    // Étape 7 : Diviser les exponentielles filtrées par la somme pour obtenir les probabilités
+    let output = filtered_exp_X.div(sum_filtered_exp_X);
+
+    output
 
 }
 
+//source : https://burn.dev/blog/burn-rusty-approach-to-tensor-handling/
 
- */
+fn softmax<const D: usize, B: Backend>(tensor: Tensor<B, D>, dim: usize) -> Tensor<B, D> {
+    log_softmax(tensor, dim).exp()
+}
+
+fn log_softmax<const D: usize, B: Backend>(tensor: Tensor<B, D>, dim: usize) -> Tensor<B, D> {
+    tensor.clone() - tensor.exp().sum_dim(dim).log()
+}

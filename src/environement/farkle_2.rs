@@ -128,7 +128,7 @@ pub mod farkle_2 {
         }
 
 
-        fn getScore(&mut self, action_id: usize) -> f32 {
+        fn getActionScore(&mut self, action_id: usize) -> f32 {
             if action_id >= DICE_ACTION_VALUE.len() {
                 DICE_ACTION_VALUE[action_id - DICE_ACTION_VALUE.len()].1
             } else {
@@ -277,7 +277,7 @@ pub mod farkle_2 {
                 panic!("Action unavailable : {}", action);
             }
 
-            self.score += self.getScore(action);
+            self.score += self.getActionScore(action);
 
             if self.total_score[0] >= MAX_SCORE || self.total_score[1] >= MAX_SCORE {
                 //println!("{:?}", self);
@@ -346,6 +346,10 @@ pub mod farkle_2 {
     }
 
     impl BaseEnv for Farkle2 {
+        fn get_name(&self) -> String {
+            String::from("farkle2")
+        }
+
         fn is_terminal(&self) -> bool {
             self.is_game_over
         }
@@ -373,8 +377,6 @@ pub mod farkle_2 {
     impl DeepDiscreteActionsEnv<NUM_STATE_FEATURES, NUM_ACTIONS> for Farkle2 {
         fn state_description(&self) -> [f32; NUM_STATE_FEATURES] {
             let mut output = [0f32; NUM_STATE_FEATURES];
-            let mut v: Vec<f32> = Vec::with_capacity(36);
-            v.append(&mut vec![1., 2., 3.]);
             let mut j = 0;
             for i in 0..6 {
                 if self.board[i] != 0 {

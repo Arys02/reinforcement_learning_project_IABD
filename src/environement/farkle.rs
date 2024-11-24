@@ -364,6 +364,10 @@ pub mod farkle {
     }
 
     impl BaseEnv for Farkle {
+        fn get_name(&self) -> String {
+            "farkle".parse().unwrap()
+        }
+
         fn is_terminal(&self) -> bool {
             self.is_game_over
         }

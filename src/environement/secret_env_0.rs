@@ -33,6 +33,10 @@ impl Default for SecretEnv0 {
 }
 
 impl BaseEnv for SecretEnv0 {
+    fn get_name(&self) -> String {
+        "secret0".to_string()
+    }
+
     fn is_terminal(&self) -> bool {
         let secret_env_0_is_game_over: libloading::Symbol<
             unsafe extern "C" fn(*const c_void) -> bool,
