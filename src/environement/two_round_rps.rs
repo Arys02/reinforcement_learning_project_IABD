@@ -5,7 +5,7 @@ pub mod two_round_rps {
     use ndarray_rand::rand::SeedableRng;
     use rand::prelude::StdRng;
     use rand::Rng;
-
+    use serde::__private::de::IdentifierDeserializer;
     use crate::environement::environment_traits::{ActionEnv, BaseEnv, Environment};
 
     pub const NUM_ACTIONS: usize = 19;
@@ -126,6 +126,10 @@ pub mod two_round_rps {
     }
 
     impl BaseEnv for TwoRoundRPS {
+        fn get_name(&self) -> String {
+            "tworoundrps".to_string()
+        }
+
         fn is_terminal(&self) -> bool {
             match self.agent_pos {
                 x if x > 9 => true,

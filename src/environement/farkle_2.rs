@@ -346,6 +346,10 @@ pub mod farkle_2 {
     }
 
     impl BaseEnv for Farkle2 {
+        fn get_name(&self) -> String {
+            String::from("farkle2")
+        }
+
         fn is_terminal(&self) -> bool {
             self.is_game_over
         }

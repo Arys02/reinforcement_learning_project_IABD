@@ -69,6 +69,10 @@ pub mod monty_hall {
     }
 
     impl BaseEnv for MontyHall1 {
+        fn get_name(&self) -> String {
+            "MontyHall1".to_string()
+        }
+
         fn is_terminal(&self) -> bool {
             match self.state {
                 4 => true,

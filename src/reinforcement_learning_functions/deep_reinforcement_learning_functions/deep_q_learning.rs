@@ -39,8 +39,6 @@ where
 {
 
 
-
-
     let mut optimizer = SgdConfig::new()
         .with_weight_decay(Some(WeightDecayConfig::new(1e-7)))
         .init();
@@ -75,10 +73,10 @@ where
     let log_interval = hyperparameters.log_interval;
 
     #[cfg(feature = "logging")]
-    let model_name = "dqn_v3";
+    let model_name = format!("dqnv3_{}_model2", env.get_name());
 
     #[cfg(feature = "logging")]
-    let mut observer = Logger::new(model_name);
+    let mut observer = Logger::new(&model_name);
 
     #[cfg(feature = "logging")]
     observer.on_event(&TrainingEvent::HyperparametersLogged {

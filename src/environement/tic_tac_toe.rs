@@ -99,6 +99,10 @@ pub mod tic_tac_toe {
     }
 
     impl BaseEnv for TicTacToeVersusRandom {
+        fn get_name(&self) -> String {
+            "tictactoe".to_string()
+        }
+
         fn is_terminal(&self) -> bool {
             self.is_game_over
         }

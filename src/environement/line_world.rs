@@ -78,6 +78,10 @@ pub mod line_world {
     }
 
     impl BaseEnv for LineWorld {
+        fn get_name(&self) -> String {
+            "LineWorld".to_string()
+        }
+
         fn is_terminal(&self) -> bool {
             match self.agent_pos {
                 1 | 2 | 3 => false,

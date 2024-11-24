@@ -93,6 +93,7 @@ usize> : Default + Clone + BaseEnv + ActionEnv<NUM_ACTIONS> {
 
 
 pub trait BaseEnv : Default + Clone {
+    fn get_name(&self) -> String;
     fn is_terminal(&self) -> bool;
     fn score(&self) -> f32;
     fn reset(&mut self);

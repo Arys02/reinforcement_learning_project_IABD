@@ -11,12 +11,12 @@ pub struct MyQMLP<B: Backend> {
 
 impl<B: burn::prelude::Backend> MyQMLP<B> {
     pub fn new(device: &B::Device, input_state_features: usize, output_actions: usize) -> Self {
-        let linear1 = nn::LinearConfig::new(input_state_features, 500)
+        let linear1 = nn::LinearConfig::new(input_state_features, 128)
             .with_bias(true)
             .init(device);
-        let linear2 = nn::LinearConfig::new(500, 300).with_bias(true).init(device);
-        let linear3 = nn::LinearConfig::new(300, 100).with_bias(true).init(device);
-        let output_layer = nn::LinearConfig::new(100, output_actions)
+        let linear2 = nn::LinearConfig::new(128, 64).with_bias(true).init(device);
+        let linear3 = nn::LinearConfig::new(64, 32).with_bias(true).init(device);
+        let output_layer = nn::LinearConfig::new(32, output_actions)
             .with_bias(true)
             .init(device);
         MyQMLP {
