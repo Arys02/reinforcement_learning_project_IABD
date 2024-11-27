@@ -2,9 +2,7 @@ use crate::environement::environment_traits::DeepDiscreteActionsEnv;
 use std::fmt::{Debug, Display};
 
 use crate::ml_core::ml_traits::Forward;
-use crate::reinforcement_learning_functions::deep_reinforcement_learning_functions::utils::epsilon_greedy_action;
 
-use crate::reinforcement_learning_functions::deep_reinforcement_learning_functions::ppo_trajectory::trajectory::Trajectory;
 
 use burn::module::AutodiffModule;
 
@@ -16,6 +14,8 @@ use burn::tensor::backend::AutodiffBackend;
 use kdam::tqdm;
 use rand::SeedableRng;
 use rand_xoshiro::Xoshiro256PlusPlus;
+use crate::reinforcement_learning_functions::deep_reinforcement_learning_functions::utils::ppo_trajectory::trajectory::Trajectory;
+use crate::reinforcement_learning_functions::deep_reinforcement_learning_functions::utils::utils::epsilon_greedy_action;
 
 pub fn ppo<
     const NUM_STATE_FEATURES: usize,

@@ -1,6 +1,10 @@
 use burn::prelude::{Backend, Tensor};
+use rand::distributions::WeightedIndex;
+use rand::distributions::Distribution;
 use rand::prelude::IteratorRandom;
 use rand::Rng;
+use rand_xoshiro::rand_core::SeedableRng;
+use rand_xoshiro::Xoshiro256PlusPlus;
 
 pub fn epsilon_greedy_action<
     B: Backend<FloatElem = f32, IntElem = i64>,
@@ -33,7 +37,8 @@ pub fn soft_max_with_mask_action<
 >(
     X: &Tensor<B, 1>,
     M: &Tensor<B, 1>,
-) -> Tensor<B, 1> {
+) -> usize {
+    let mut rng = Xoshiro256PlusPlus::from_entropy();
     // Étape 1 : Décaler X pour que toutes les valeurs soient positives
     let min_x = X.clone().min();
     let positive_x = X.clone().sub(min_x);
@@ -56,9 +61,10 @@ pub fn soft_max_with_mask_action<
 
     // Étape 7 : Diviser les exponentielles filtrées par la somme pour obtenir les probabilités
     let output = filtered_exp_X.div(sum_filtered_exp_X);
+    let soft_prob : Vec<f32>=  output.to_data().to_vec().unwrap();
+    let mut dist_ = WeightedIndex::new(&soft_prob).unwrap();
 
-    output
-
+    dist_.sample(&mut rng)
 }
 
 //source : https://burn.dev/blog/burn-rusty-approach-to-tensor-handling/

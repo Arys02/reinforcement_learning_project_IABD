@@ -32,7 +32,7 @@ pub struct Logger {
 }
 
 impl Logger {
-    pub fn new(model_name: &str) -> Self {
+    pub fn new(model_name: &str, run_name: &str) -> Self {
         let now: DateTime<Local> = Local::now();
         let datetime_str = now.format("%Y%m%d_%H%M%S").to_string();
 
@@ -44,10 +44,10 @@ impl Logger {
         create_dir_all(&metrics_dir_path).expect("Failed to create directory");
         create_dir_all(&hyperparameters_dir_path).expect("Failed to create directory");
 
-        let metrics_file_name = format!("{}_{}.csv", model_name, datetime_str);
+        let metrics_file_name = format!("{}_{}_{}.csv", model_name, run_name, datetime_str);
         let metrics_file_path = format!("{}/{}", metrics_dir_path, metrics_file_name);
 
-        let hyperparameters_file_name = format!("{}_{}_hyperparameters.json", model_name, datetime_str);
+        let hyperparameters_file_name = format!("{}_{}_{}_hyperparameters.json", model_name, run_name, datetime_str);
         let hyperparameters_file_path = format!("{}/{}", hyperparameters_dir_path, hyperparameters_file_name);
 
         let metrics_file = File::create(&metrics_file_path).expect("Failed to create log file");

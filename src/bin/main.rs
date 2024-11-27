@@ -71,8 +71,7 @@ fn main() {
      */
     let mut wr = 0.;
 
-    for _ in tqdm!(0..100) {
-        let model = MyQMLP::<MyAutodiffBackend>::new(&device, NUM_STATE_FEATURES, NUM_ACTIONS);
+    for _ in tqdm!(0..1) {
         let mut value_model = MyQMLP::<MyAutodiffBackend>::new(&device, NUM_STATE_FEATURES, 1);
 
         /*
@@ -117,6 +116,8 @@ fn main() {
                 if batch >= rep {
                     continue;
                 }
+
+                let model = MyQMLP::<MyAutodiffBackend>::new(&device, NUM_STATE_FEATURES, NUM_ACTIONS);
                 deep_q_learning::<NUM_STATE_FEATURES, NUM_ACTIONS, _, MyAutodiffBackend, GameEnv>(
                     model.clone(),
                     100_000,
