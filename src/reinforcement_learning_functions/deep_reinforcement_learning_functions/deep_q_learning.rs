@@ -3,8 +3,6 @@ use crate::training_observer::{Hyperparameters, TrainingEvent, TrainingObserver}
 use std::fmt::{Debug, Display};
 
 use crate::ml_core::ml_traits::Forward;
-use crate::reinforcement_learning_functions::deep_reinforcement_learning_functions::dqn_trajectory::trajectory::Trajectory;
-use crate::reinforcement_learning_functions::deep_reinforcement_learning_functions::utils::epsilon_greedy_action;
 use burn::module::AutodiffModule;
 use burn::optim::decay::WeightDecayConfig;
 use burn::optim::{GradientsParams, Optimizer, SgdConfig};
@@ -16,6 +14,8 @@ use rand::SeedableRng;
 use rand_xoshiro::Xoshiro256PlusPlus;
 use std::time::{Duration, Instant};
 use crate::logger::Logger;
+use crate::reinforcement_learning_functions::deep_reinforcement_learning_functions::utils::dqn_trajectory::trajectory::Trajectory;
+use crate::reinforcement_learning_functions::deep_reinforcement_learning_functions::utils::utils::epsilon_greedy_action;
 
 pub fn deep_q_learning<
     const NUM_STATE_FEATURES: usize,
@@ -76,7 +76,7 @@ where
     let model_name = format!("dqnv3_{}_model2", env.get_name());
 
     #[cfg(feature = "logging")]
-    let mut observer = Logger::new(&model_name);
+    let mut observer = Logger::new(&model_name, &format!("{}_{}_{}_{}_{}", num_episodes, replay_capacity, batch_size, gamma, alpha));
 
     #[cfg(feature = "logging")]
     observer.on_event(&TrainingEvent::HyperparametersLogged {
@@ -104,6 +104,7 @@ where
     for ep_id in tqdm!(0..num_episodes) {
         env.reset();
 
+        //LOGGER ?
         let mut episode_reward = 0.0;
         let mut episode_steps = 0;
 
@@ -246,7 +247,6 @@ where
 
 
         //LOGGER
-
         #[cfg(feature = "logging")] {
             let win = episode_reward > 0.0;
 
