@@ -62,9 +62,14 @@ pub fn soft_max_with_mask_action<
     // Étape 7 : Diviser les exponentielles filtrées par la somme pour obtenir les probabilités
     let output = filtered_exp_X.div(sum_filtered_exp_X);
     let soft_prob : Vec<f32>=  output.to_data().to_vec().unwrap();
-    let mut dist_ = WeightedIndex::new(&soft_prob).unwrap();
+    let mut dist_ = WeightedIndex::new(&soft_prob);
+    if dist_.is_ok() {
+        dist_.unwrap().sample(&mut rng)
+    }else {
+        dist_.unwrap().sample(&mut rng)
+    }
 
-    dist_.sample(&mut rng)
+
 }
 
 //source : https://burn.dev/blog/burn-rusty-approach-to-tensor-handling/

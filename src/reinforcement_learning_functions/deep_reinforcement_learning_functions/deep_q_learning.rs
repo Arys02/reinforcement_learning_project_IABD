@@ -73,7 +73,7 @@ where
     let log_interval = hyperparameters.log_interval;
 
     #[cfg(feature = "logging")]
-    let model_name = format!("dqnv3_{}_model2", env.get_name());
+    let model_name = format!("dqnv3_{}_model2_2", env.get_name());
 
     #[cfg(feature = "logging")]
     let mut observer = Logger::new(&model_name, &format!("{}_{}_{}_{}_{}", num_episodes, replay_capacity, batch_size, gamma, alpha));

@@ -1,4 +1,4 @@
-pub mod farkle_2 {
+pub mod farkle_3 {
     use crate::environement::environment_traits::{ActionEnv, BaseEnv, DeepDiscreteActionsEnv, Playable};
     use colored::*;
     use rand::prelude::IteratorRandom;
@@ -25,18 +25,19 @@ pub mod farkle_2 {
 
 
     #[derive(Clone, Debug)]
-    pub struct Farkle2 {
+    pub struct Farkle3 {
         pub board: [u8; 6],
         pub player: u8,
         pub remaining_dice: u8,
         pub action_counts: [[usize; 6]; NUM_ACTIONS],
         pub total_score: [usize; 2],
+        pub turn_score : f32,
         pub round: u8,
         pub score: f32,
         pub is_game_over: bool,
     }
 
-    impl Farkle2 {
+    impl Farkle3 {
         fn roll(&mut self) {
             self.board = [0u8; 6];
             let mut rng = rand::thread_rng();
@@ -138,7 +139,6 @@ pub mod farkle_2 {
 
         fn endTurn(&mut self) {
             self.total_score[self.player as usize] += self.score as usize;
-            self.score = 0.;
             self.remaining_dice = 6;
 
             self.roll();
@@ -147,6 +147,9 @@ pub mod farkle_2 {
                 self.roll();
             }
             if self.player == 0 {
+                self.turn_score = self.score;
+                self.score = 0.;
+
                 self.player = 1;
                 // random move
                 let mut rng = rand::thread_rng();
@@ -158,6 +161,8 @@ pub mod farkle_2 {
             } else {
                 self.round += 1;
                 self.player = 0;
+
+                self.turn_score -= self.score;
             }
             self.score = 0.;
         }
@@ -209,7 +214,7 @@ pub mod farkle_2 {
         }
     }
 
-    impl Default for Farkle2 {
+    impl Default for Farkle3 {
         fn default() -> Self {
             let mut actions_count: [[usize; 6]; NUM_ACTIONS] = [[0usize; 6]; NUM_ACTIONS];
             for (i, (str, _)) in DICE_ACTION_VALUE.iter().enumerate() {
@@ -233,6 +238,7 @@ pub mod farkle_2 {
                 remaining_dice: 6,
                 action_counts: actions_count,
                 total_score: [0; 2],
+                turn_score: 0.,
                 round: 0,
                 score: 0.0,
                 is_game_over: false,
@@ -246,7 +252,7 @@ pub mod farkle_2 {
         }
     }
 
-    impl ActionEnv<NUM_ACTIONS> for Farkle2 {
+    impl ActionEnv<NUM_ACTIONS> for Farkle3 {
         fn available_actions_ids(&self) -> impl Iterator<Item=usize> {
             let mut v = vec![None; NUM_ACTIONS];
             for i in 0..DICE_ACTION_VALUE.len() {
@@ -346,9 +352,9 @@ pub mod farkle_2 {
         }
     }
 
-    impl BaseEnv for Farkle2 {
+    impl BaseEnv for Farkle3 {
         fn get_name(&self) -> String {
-            String::from("farkle2")
+            String::from("farkle3")
         }
 
         fn is_terminal(&self) -> bool {
@@ -356,7 +362,7 @@ pub mod farkle_2 {
         }
 
         fn score(&self) -> f32 {
-            self.total_score[0] as f32 - self.total_score[1] as f32
+            self.turn_score as f32
         }
 
         fn reset(&mut self) {
@@ -364,6 +370,7 @@ pub mod farkle_2 {
             self.player = 0;
             self.remaining_dice = 6;
             self.total_score = [0; 2];
+            self.turn_score = 0.;
             self.round = 0;
             self.score = 0.0;
             self.is_game_over = false;
@@ -375,7 +382,7 @@ pub mod farkle_2 {
         }
     }
 
-    impl DeepDiscreteActionsEnv<NUM_STATE_FEATURES, NUM_ACTIONS> for Farkle2 {
+    impl DeepDiscreteActionsEnv<NUM_STATE_FEATURES, NUM_ACTIONS> for Farkle3 {
         fn state_description(&self) -> [f32; NUM_STATE_FEATURES] {
             let mut output = [0f32; NUM_STATE_FEATURES];
             let mut j = 0;
@@ -399,7 +406,7 @@ pub mod farkle_2 {
     }
 
 
-    impl Display for Farkle2 {
+    impl Display for Farkle3 {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             writeln!(
                 f,
@@ -526,7 +533,7 @@ pub mod farkle_2 {
     /// utilizing all the provided methods to facilitate a complete game session.
     ///
 
-    impl Playable for Farkle2 {
+    impl Playable for Farkle3 {
         /*
         const ACTION_DESCRIPTIONS: [&str; 12] = [
             "Take 1 die of 1",
@@ -570,7 +577,7 @@ pub mod farkle_2 {
                 use std::io::{self, Write};
                 io::stdout().flush().unwrap();
             }
-            let mut env: Farkle2 = Farkle2::default();
+            let mut env: Farkle3 = Farkle3::default();
 
             writeln!(std::io::stdout(), "Welcome to the Land of Farkle\nYour adventure begins now")
                 .expect("Failed to write welcome message");
@@ -588,7 +595,7 @@ pub mod farkle_2 {
         }
 
         fn play_as_random_ai() -> [usize; 2] {
-            let mut env: Farkle2 = Farkle2::default();
+            let mut env: Farkle3 = Farkle3::default();
             while !env.is_game_over {
                 let aa = env.available_actions_ids().choose(&mut rand::thread_rng()).unwrap();
                 env.step(aa);
@@ -597,85 +604,5 @@ pub mod farkle_2 {
         }
     }
 
-
-    #[cfg(test)]
-    mod tests {
-        use super::*;
-
-        #[test]
-        fn test_default_initialization() {
-            let game = Farkle2::default();
-            assert_eq!(game.board, [0u8; 6]);
-            assert_eq!(game.player, 0);
-            assert_eq!(game.remaining_dice, 0);
-            assert_eq!(game.total_score, [0; 2]);
-            assert_eq!(game.round, 0);
-            assert_eq!(game.score, 0.0);
-            assert!(!game.is_game_over);
-        }
-
-        #[test]
-        fn play_with_human_test() {
-            Farkle2::play_as_human();
-        }
-        #[test]
-        fn test_available_actions_ids() {
-            let mut game = Farkle2::default();
-            game.board = [1, 0, 3, 0, 0, 1]; // Trois '1'
-
-            let actions: Vec<usize> = game.available_actions_ids().collect();
-            println!("Available Actions:{:?} which is : {:?}", actions, actions.iter().map(|x|
-                { if *x < 135 { DICE_ACTION_VALUE[*x].0 } else { "" } }).collect::<Vec<&str>>());
-
-        }
-
-
-        #[test]
-        fn test_step_action_scoring() {
-            let mut game = Farkle2::default();
-            game.board = [1, 0, 0, 0, 0, 0];
-            game.remaining_dice = 1;
-
-            // Action pour '1' (index 0)
-            game.step(0);
-            assert_eq!(game.score, 100.0);
-            assert_eq!(game.remaining_dice, 0);
-            assert_eq!(game.board, [0, 0, 0, 0, 0, 0]);
-            println!("{:?}", game);
-
-
-            // Comme 'reroll_allowed' est vrai, 'roll' n'est pas disponible
-            let actions: Vec<usize> = game.available_actions_ids().collect();
-            //assert_eq!(actions, vec![]); // Seulement 'stop' est disponible
-
-            // Action 'stop' (index 11)
-            game.step(11);
-            assert_eq!(game.total_score[0], 100);
-            assert_eq!(game.score, 0.0);
-            assert_eq!(game.player, 1); // Changement de joueur
-        }
-
-        #[test]
-        fn test_actions() {
-            let x = Farkle2::getAllAction();
-            println!("{:?}\n{:?}", x, x.len())
-        }
-
-        #[test]
-        fn test_roll() {
-            /*
-            let mut game = Farkle::default();
-            println!("{:?}", game);
-            game.step(game.available_actions_ids().nth(0).unwrap());
-            println!("{:?}", game);
-            game.roll();
-            println!("{:?}", game);
-
-             */
-
-            // Utiliser un RNG avec une graine fixe pour des résultats reproductibles
-
-        }
-    }
 }
 
