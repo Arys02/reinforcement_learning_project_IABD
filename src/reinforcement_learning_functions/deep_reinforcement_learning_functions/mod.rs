@@ -5,3 +5,4 @@ pub mod reinforce;
 pub mod ppo;
 pub mod ppo_trajectory;
 pub mod dqn_trajectory;
+pub mod double_deep_q_learning_experience_replay;

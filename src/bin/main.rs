@@ -13,7 +13,7 @@ use IABD4_reinforcement_learning::environement::tic_tac_toe::tic_tac_toe::{
 
 
 use IABD4_reinforcement_learning::ml_core::mlp::MyQMLP;
-use IABD4_reinforcement_learning::reinforcement_learning_functions::deep_reinforcement_learning_functions::deep_q_learning::deep_q_learning;
+use IABD4_reinforcement_learning::reinforcement_learning_functions::deep_reinforcement_learning_functions::double_deep_q_learning_experience_replay::deep_double_q_learning;
 
 type GameEnv = TicTacToeVersusRandom;
 //type GameEnv = Farkle2;
@@ -71,8 +71,9 @@ fn main() {
      */
     let mut wr = 0.;
 
-    for _ in tqdm!(0..100) {
-        let model = MyQMLP::<MyAutodiffBackend>::new(&device, NUM_STATE_FEATURES, NUM_ACTIONS);
+    for _ in tqdm!(0..1) {
+        let online_model = MyQMLP::<MyAutodiffBackend>::new(&device, NUM_STATE_FEATURES, NUM_ACTIONS);
+        let target_model = online_model.clone();
         let mut value_model = MyQMLP::<MyAutodiffBackend>::new(&device, NUM_STATE_FEATURES, 1);
 
         /*
@@ -110,22 +111,26 @@ fn main() {
         );
          */
 
-        let replay_capacity = vec![10, 100, 1000, 10000];
-        let batch_size = vec![5, 10, 20, 50, 100];
-        for rep in replay_capacity.clone() {
-            for batch in batch_size.clone() {
-                if batch >= rep {
-                    continue;
-                }
-                deep_q_learning::<NUM_STATE_FEATURES, NUM_ACTIONS, _, MyAutodiffBackend, GameEnv>(
-                    model.clone(),
+        //let replay_capacity = vec![10, 100, 1000];
+        //let batch_size = vec![5, 10, 20, 50, 100];
+        //for rep in replay_capacity.clone() {
+            //for batch in batch_size.clone() {
+            //     if batch >= rep {
+            //         continue;
+            //     }
+                deep_double_q_learning::<NUM_STATE_FEATURES, NUM_ACTIONS, _, MyAutodiffBackend, GameEnv>(
+                    online_model.clone(),
+                    target_model.clone(),
                     100_000,
-                    rep,
+                    5000,
+                    //rep,
                     0.999f32,
                     3e-3f32,
                     1.0f32,
                     1e-5f32,
-                    batch,
+                    //batch,
+                    10,
+                    250,
                     &device,
                 );
             }
@@ -169,6 +174,6 @@ fn main() {
         println!("winrate : {}", win / (win + lose));
         wr += win / (win + lose);
          */
-    }
-    println!("total winrate : {}", wr / 100.);
-}
+    //}
+    //println!("total winrate : {}", wr / 100.);
+//}
