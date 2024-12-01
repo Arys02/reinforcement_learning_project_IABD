@@ -69,14 +69,14 @@ where
         start_epsilon,
         final_epsilon,
         batch_size,
-        log_interval: 1000,
+        log_interval: 100,
     };
 
     #[cfg(feature = "logging")]
     let log_interval = hyperparameters.log_interval;
 
     #[cfg(feature = "logging")]
-    let model_name = format!("ddqn_adam_250_update{}_model", env.get_name());
+    let model_name = format!("ddqn_exp_rep_farkle{}_model", env.get_name());
 
     #[cfg(feature = "logging")]
     let mut observer = Logger::new(&model_name);

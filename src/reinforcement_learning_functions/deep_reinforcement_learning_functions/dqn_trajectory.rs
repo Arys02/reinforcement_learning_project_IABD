@@ -278,7 +278,7 @@ pub mod prioritized_trajectory {
                 indices.push(idx);
 
                 let prob = priority / self.sum_tree.total();
-                let weight = ((prob / min_prob).powf(-self.beta) * batch_size as f32).min(5.0);
+                let weight = ((prob / min_prob).powf(-self.beta) * batch_size as f32).min(20.0);
                 weights.push(weight);
 
                 batch.push(

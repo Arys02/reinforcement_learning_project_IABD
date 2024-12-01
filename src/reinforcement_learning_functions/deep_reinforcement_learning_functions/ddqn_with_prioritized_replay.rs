@@ -7,7 +7,7 @@ use crate::reinforcement_learning_functions::deep_reinforcement_learning_functio
 use crate::reinforcement_learning_functions::deep_reinforcement_learning_functions::utils::epsilon_greedy_action;
 use burn::module::AutodiffModule;
 use burn::optim::decay::WeightDecayConfig;
-use burn::optim::{AdamConfig, GradientsParams, Optimizer};
+use burn::optim::{AdamConfig, GradientsParams, Optimizer, SgdConfig};
 
 use burn::prelude::*;
 use burn::tensor::backend::AutodiffBackend;
@@ -48,6 +48,10 @@ where
         .with_epsilon(1e-8)
         .init();
 
+    // let mut optimizer = SgdConfig::new()
+    //     .with_weight_decay(Some(WeightDecayConfig::new(1e-7)))
+    //     .init();
+
     // Use PrioritizedTrajectory instead of regular Trajectory
     let mut replay_memory: PrioritizedTrajectory<B> = PrioritizedTrajectory::new(
         replay_capacity,
@@ -71,14 +75,14 @@ where
         start_epsilon,
         final_epsilon,
         batch_size,
-        log_interval: 1000,
+        log_interval: 100,
     };
 
     #[cfg(feature = "logging")]
     let log_interval = hyperparameters.log_interval;
 
     #[cfg(feature = "logging")]
-    let model_name = format!("ddqn_per_adam_150_update{}_model", env.get_name());
+    let model_name = format!("ddqn_per_farkle{}_model", env.get_name());
 
     #[cfg(feature = "logging")]
     let mut observer = Logger::new(&model_name);

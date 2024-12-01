@@ -5,18 +5,17 @@ use kdam::tqdm;
 
 //use IABD4_reinforcement_learning::environement::farkle::farkle::{Farkle, NUM_ACTIONS, NUM_STATE_FEATURES};
 
-//use IABD4_reinforcement_learning::environement::farkle_2::farkle_2::{Farkle2, NUM_ACTIONS, NUM_STATE_FEATURES};
+use IABD4_reinforcement_learning::environement::farkle_2::farkle_2::{Farkle2, NUM_ACTIONS, NUM_STATE_FEATURES};
 
-use IABD4_reinforcement_learning::environement::tic_tac_toe::tic_tac_toe::{
-    TicTacToeVersusRandom, NUM_ACTIONS, NUM_STATE_FEATURES,
-};
+//use IABD4_reinforcement_learning::environement::tic_tac_toe::tic_tac_toe::{ TicTacToeVersusRandom, NUM_ACTIONS, NUM_STATE_FEATURES, };
 
 
 use IABD4_reinforcement_learning::ml_core::mlp::MyQMLP;
 use IABD4_reinforcement_learning::reinforcement_learning_functions::deep_reinforcement_learning_functions::ddqn_with_prioritized_replay::deep_double_q_learning_per;
+use IABD4_reinforcement_learning::reinforcement_learning_functions::deep_reinforcement_learning_functions::double_deep_q_learning_experience_replay::deep_double_q_learning;
 
-type GameEnv = TicTacToeVersusRandom;
-//type GameEnv = Farkle2;
+//type GameEnv = TicTacToeVersusRandom;
+type GameEnv = Farkle2;
 
 type MyBackend = burn_tch::LibTorch;
 type MyAutodiffBackend = Autodiff<MyBackend>;
@@ -118,17 +117,17 @@ fn main() {
             //     if batch >= rep {
             //         continue;
             //     }
-            deep_double_q_learning_per::<NUM_STATE_FEATURES, NUM_ACTIONS, _, MyAutodiffBackend, GameEnv>(
+        deep_double_q_learning_per::<NUM_STATE_FEATURES, NUM_ACTIONS, _, MyAutodiffBackend, GameEnv>(
                     online_model.clone(),
                     target_model.clone(),
-                    100_000,
+                    500_0,
                     5000,
                     0.99,
-                    0.999f32,
-                    3e-3f32,
+                    0.001f32,
+                    1e-5f32,
                     1.0f32,
-                    25,
-                    250,
+                    32,
+                    20,
                     0.6,
                     0.4,
                     &device,
