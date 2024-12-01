@@ -13,7 +13,7 @@ use IABD4_reinforcement_learning::environement::tic_tac_toe::tic_tac_toe::{
 
 
 use IABD4_reinforcement_learning::ml_core::mlp::MyQMLP;
-use IABD4_reinforcement_learning::reinforcement_learning_functions::deep_reinforcement_learning_functions::double_deep_q_learning_experience_replay::deep_double_q_learning;
+use IABD4_reinforcement_learning::reinforcement_learning_functions::deep_reinforcement_learning_functions::double_deep_q_no_replay::deep_double_q_learning;
 
 type GameEnv = TicTacToeVersusRandom;
 //type GameEnv = Farkle2;
@@ -122,15 +122,13 @@ fn main() {
                     online_model.clone(),
                     target_model.clone(),
                     100_000,
-                    5000,
+                    0.99,
                     //rep,
                     0.999f32,
                     3e-3f32,
                     1.0f32,
-                    1e-5f32,
-                    //batch,
-                    10,
                     250,
+                    //batch,
                     &device,
                 );
             }
