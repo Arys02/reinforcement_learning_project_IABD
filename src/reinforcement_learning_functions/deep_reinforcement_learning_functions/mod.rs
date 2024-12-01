@@ -7,3 +7,4 @@ pub mod ppo_trajectory;
 pub mod dqn_trajectory;
 pub mod double_deep_q_learning_experience_replay;
 pub mod double_deep_q_no_replay;
+pub mod ddqn_with_prioritized_replay;
