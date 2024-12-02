@@ -10,3 +10,4 @@ pub mod tic_tac_toe;
 pub mod two_round_rps;
 pub mod farkle;
 pub mod farkle_2;
+pub mod farkle_3;

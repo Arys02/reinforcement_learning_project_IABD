@@ -1,12 +1,10 @@
 pub mod grid_world {
-    extern crate rand;
-
     use ndarray::{Array4, ArrayBase, Ix4, OwnedRepr};
     use ndarray_rand::rand::SeedableRng;
     use rand::prelude::StdRng;
     use rand::Rng;
 
-    use crate::environement::environment_traits::{ActionEnv, BaseEnv, Environment};
+    use crate::environement::environment_traits::{ActionEnv, BaseEnv, DeepDiscreteActionsEnv, Environment};
     pub const NUM_ACTIONS: usize = 4;
     pub const NUM_STATES: usize = 49;
     pub const NUM_REWARDS: usize = 4;
@@ -29,6 +27,16 @@ pub mod grid_world {
     #[derive(Clone, Debug)]
     pub struct GridWorld {
         agent_pos: usize,
+    }
+
+    impl DeepDiscreteActionsEnv<NUM_STATES, NUM_ACTIONS> for GridWorld {
+        fn state_description(&self) -> [f32; NUM_STATES] {
+            todo!()
+        }
+
+        fn action_mask(&self) -> [f32; NUM_ACTIONS] {
+            todo!()
+        }
     }
 
     impl GridWorld {

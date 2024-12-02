@@ -8,6 +8,13 @@ use kdam::tqdm;
 use IABD4_reinforcement_learning::environement::farkle_2::farkle_2::{Farkle2, NUM_ACTIONS, NUM_STATE_FEATURES};
 
 //use IABD4_reinforcement_learning::environement::tic_tac_toe::tic_tac_toe::{ TicTacToeVersusRandom, NUM_ACTIONS, NUM_STATE_FEATURES, };
+/*
+use IABD4_reinforcement_learning::environement::tic_tac_toe::tic_tac_toe::{
+    TicTacToeVersusRandom, NUM_ACTIONS, NUM_STATE_FEATURES,
+};
+>>>>>>> 11bfc8a (impl reinforce with mean_baseline)
+
+ */
 
 
 use IABD4_reinforcement_learning::ml_core::mlp::MyQMLP;

@@ -104,6 +104,16 @@ pub mod trajectory {
                 Tensor::from_floats(self.r_t.as_slice(), device).detach(),
             )
         }
+        pub fn get_as_vector(
+            &mut self,
+        ) -> Vec<(Tensor<B, 1>, f32, f32, Tensor<B, 1>, f32, f32)>
+         {
+             let mut vec  = Vec::new();
+             for i in 0..self.len {
+                 vec.push((self.s_t[i].clone(), self.a_t[i], self.r_t[i], self.s_p_t[i].clone(), self.a_p_t[i], self.is_terminal[i]));
+             }
+             vec
+        }
     }
 }
 /*

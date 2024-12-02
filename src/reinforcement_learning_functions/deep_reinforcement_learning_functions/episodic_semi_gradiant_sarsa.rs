@@ -11,7 +11,7 @@ use rand::prelude::IteratorRandom;
 use rand::{Rng, SeedableRng};
 use rand_xoshiro::Xoshiro256PlusPlus;
 use crate::ml_core::ml_traits::Forward;
-use crate::reinforcement_learning_functions::deep_reinforcement_learning_functions::utils::epsilon_greedy_action;
+use crate::reinforcement_learning_functions::deep_reinforcement_learning_functions::utils::utils::epsilon_greedy_action;
 
 pub fn episodic_semi_gradient_sarsa<
     const NUM_STATE_FEATURES: usize,

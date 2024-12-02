@@ -9,7 +9,7 @@ use rand::distributions::Distribution;
 
 use burn::module::AutodiffModule;
 use burn::optim::decay::WeightDecayConfig;
-use burn::optim::{GradientsParams, SgdConfig};
+use burn::optim::{AdamConfig, GradientsParams, SgdConfig};
 use burn::optim::Optimizer;
 use burn::prelude::*;
 use burn::tensor::backend::AutodiffBackend;
@@ -18,10 +18,11 @@ use rand::distributions::WeightedIndex;
 use rand::SeedableRng;
 use rand_xoshiro::Xoshiro256PlusPlus;
 use crate::logger::Logger;
+use crate::ml_core::mlp::MyQMLP;
 use crate::reinforcement_learning_functions::deep_reinforcement_learning_functions::utils::utils::{epsilon_greedy_action, soft_max_with_mask_action};
 use crate::training_observer::{Hyperparameters, TrainingEvent};
 
-pub fn reinforce<
+pub fn reinforce_with_mean_baseline<
     const NUM_STATE_FEATURES: usize,
     const NUM_ACTIONS: usize,
     M: Forward<B=B> + AutodiffModule<B>,
@@ -29,6 +30,7 @@ pub fn reinforce<
     Env: DeepDiscreteActionsEnv<NUM_STATE_FEATURES, NUM_ACTIONS> + Debug + Display,
 >(
     mut model: M,
+    mut value_model: M,
     num_episodes: usize,
     alpha: f32,
     gamma: f32,
@@ -57,7 +59,7 @@ where
     let log_interval = hyperparameters.log_interval;
 
     #[cfg(feature = "logging")]
-    let model_name = format!("reinforce2_{}_model2", env.get_name());
+    let model_name = format!("reinforce_MeanBaseline_{}_model2", env.get_name());
 
     #[cfg(feature = "logging")]
     let mut observer = Logger::new(&model_name, &format!("{}_{}_{}", num_episodes, gamma, alpha));
@@ -85,16 +87,11 @@ where
     #[cfg(feature = "logging")]
     let mut log_total_loss: f32 = 0.0;
 
-
-    let mut optimizer = SgdConfig::new()
+    let mut optimizer = AdamConfig::new()
         .with_weight_decay(Some(WeightDecayConfig::new(1e-7)))
-        .init();
-
-
-    let mut rng = Xoshiro256PlusPlus::from_entropy();
+        .init::<B, M>();
 
     let mut total_score = 0.0;
-
 
     for ep_id in tqdm!(0..num_episodes) {
         env.reset();
@@ -121,7 +118,7 @@ where
 
             let mask = env.action_mask();
             let mask_tensor: Tensor<B, 1> = Tensor::from(mask).to_device(device);
-            let mut pi_s = model.forward(s_tensor.clone());
+            let pi_s = model.forward(s_tensor.clone());
 
 
             let a : usize =  soft_max_with_mask_action::<B, NUM_STATE_FEATURES, NUM_ACTIONS>(
@@ -134,6 +131,7 @@ where
             let r = env.score() - prev_score;
 
 
+            //let prob = pi_s.clone().slice([a..(a+1)]).log().detach();
 
             trajectory.push(
                 (
@@ -143,30 +141,44 @@ where
                 ));
         }
 
+        //let mut trajectory_g = Vec::new();
 
 
+        total_score += env.score();
         let mut g = 0.;
         //   t          pi(s | a, Φ)
-        for (t, (s, a , _)) in trajectory.iter().enumerate() {
+        for (t, (s, a,r)) in trajectory.iter().enumerate() {
             for i in (t + 1)..trajectory.len() {
                 //g = g + γ^(k - t - 1) * Rk
                 g = g + gamma.powf((i - t - 1) as f32) * trajectory[i].2;
+                //trajectory_g.push(g);
             }
-
+            //println!("g: {:?}", g);
+            //println!("vm : {:?}", value_model.clone().forward(s.clone()));
+            let delta = value_model.forward(s.clone()).sub_scalar(g).mul_scalar(-1).into_scalar();
 
             let pi_s = model.forward(s.clone());
+            //println!("{:?}", pi_s.clone());
             let pi_s_a = pi_s.slice([*a..(*a+1)]).log();
-            let loss = pi_s_a.clone().mul_scalar(g);
-
+            let loss = pi_s_a.clone();
             let grad_loss = loss.backward();
             let grads = GradientsParams::from_grads(grad_loss, &model);
-            model = optimizer.step((alpha * gamma.powf(t as f32)).into(), model, grads);
+            model = optimizer.step((alpha * gamma.powf(t as f32)*delta).into(), model, grads);
+
+            let v_s = value_model.forward(s.clone());
+
+            //println!("{:?}", v_s.clone());
+
+            //println!("{:?}", delta);
+            let grad_loss = v_s.clone().backward();
+            let grads = GradientsParams::from_grads(grad_loss, &value_model);
+            value_model = optimizer.step((alpha * delta).into(), value_model, grads);
+
 
             #[cfg(feature = "logging")] {
                 log_total_loss += loss.mean().into_scalar();
             }
         }
-
 
 
         episode_reward += env.score();

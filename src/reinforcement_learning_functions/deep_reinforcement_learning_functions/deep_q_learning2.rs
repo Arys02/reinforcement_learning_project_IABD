@@ -17,7 +17,7 @@ use crate::logger::Logger;
 use crate::reinforcement_learning_functions::deep_reinforcement_learning_functions::utils::dqn_trajectory::trajectory::Trajectory;
 use crate::reinforcement_learning_functions::deep_reinforcement_learning_functions::utils::utils::epsilon_greedy_action;
 
-pub fn deep_q_learning<
+pub fn deep_q_learning2<
     const NUM_STATE_FEATURES: usize,
     const NUM_ACTIONS: usize,
     M: Forward<B = B> + AutodiffModule<B>,
@@ -27,6 +27,7 @@ pub fn deep_q_learning<
     mut model: M,
     num_episodes: usize,
     replay_capacity: usize,
+    epoch: usize,
     gamma: f32,
     alpha: f32,
     start_epsilon: f32,
@@ -73,7 +74,7 @@ where
     let log_interval = hyperparameters.log_interval;
 
     #[cfg(feature = "logging")]
-    let model_name = format!("dqnv3_{}_model2_2", env.get_name());
+    let model_name = format!("dqnv4_{}_{}_model2_2", env.get_name(), epoch);
 
     #[cfg(feature = "logging")]
     let mut observer = Logger::new(&model_name, &format!("{}_{}_{}_{}_{}", num_episodes, replay_capacity, batch_size, gamma, alpha));
@@ -173,62 +174,70 @@ where
                 continue;
             }
 
-            //                Φ_s          a       r   Φ_s_p         a_max  is_terminal
-            let mut batch = replay_memory.get_batch(batch_size);
-            //t2_2 += now.elapsed().as_secs_f32();
-            //let now = Instant::now();
+            for _ in 0..epoch {
+                let mut batch = replay_memory.get_batch(batch_size);
+                //t2_2 += now.elapsed().as_secs_f32();
+                //let now = Instant::now();
 
-            let (t_a, s_tensor, a_p_tensor, s_p_tensor, r_tensor, is_terminal_tensor) =
-                batch.get_as_tensor(device);
-            //t2_3 += now.elapsed().as_secs_f32();
-            //let now = Instant::now();
-
-            let a: Tensor<B, 2, Int> = t_a.unsqueeze_dim(1);
-
-            let q_s_a = model.forward(s_tensor.clone()).detach();
-            let b_q_s_a_scalar: Tensor<B, 1> =q_s_a.clone().gather(1, a).squeeze(1);
-
-            let t_a_p: Tensor<B, 2, Int> = a_p_tensor.unsqueeze_dim(1);
-            let q_s_p_a_p = model.forward(s_p_tensor.clone());
-            let b_q_s_p_a_p_scalar: Tensor<B, 1> = q_s_p_a_p.clone().gather(1, t_a_p).squeeze(1);
-
-            let y_is_t = b_q_s_a_scalar
-                .clone()
-                .sub(r_tensor.clone())
-                .mul(is_terminal_tensor.clone())
-                .detach();
-
-            let y_no_t = b_q_s_p_a_p_scalar
-                .mul_scalar(gamma)
-                .add(r_tensor)
-                .sub(b_q_s_a_scalar)
-                .mul(is_terminal_tensor.sub_scalar(1.))
-                .detach();
-
-            let y = y_is_t.add(y_no_t).detach();
-
-            let loss = y.powf_scalar(2f32);
-
-            //t3 += now.elapsed().as_secs_f32();
-
-            //let now = Instant::now();
-
-            let grad_loss = loss.backward();
-            let grads = GradientsParams::from_grads(grad_loss, &model);
-            model = optimizer.step(alpha.into(), model, grads);
+                let batch_ =
+                    batch.get_as_vector();
+                //t2_3 += now.elapsed().as_secs_f32();
+                //let now = Instant::now();
+                let batch_s_tensor: Tensor<B, 2> = Tensor::from(Tensor::stack(batch.s_t, 0));
+                let batch_s_p_tensor: Tensor<B, 2> = Tensor::from(Tensor::stack(batch.s_p_t, 0));
 
 
-            episode_reward += r;
-            episode_steps += 1;
+                ///////////////////
+                let b_q_s_a = model.forward(batch_s_tensor.clone()).detach();
+                let b_q_s_p_a_p = model.forward(batch_s_p_tensor.clone());
 
 
-            //LOGGER
+                let y: Tensor<B, 1> = Tensor::from_floats({
+                                                              let x: Vec<f32> = batch_.into_iter()
+                                                                  .enumerate().map(
+                                                                  |(i, (_, a, r, _,
+                                                                      a_p_max, is_terminal))|
+                                                                      {
+                                                                          let a = a as usize;
+                                                                          let q_s_a = b_q_s_a.clone()
+                                                                              .slice([i..(i + 1), a..(a + 1)])
+                                                                              .into_scalar();
+
+                                                                          if is_terminal == 1. {
+                                                                              q_s_a - r
+                                                                          } else {
+                                                                              let a_p_max = a_p_max as usize;
+                                                                              let q_s_p_a_p =
+                                                                                  b_q_s_p_a_p.clone()
+                                                                                      .slice([i..(i + 1), a_p_max..
+                                                                                          (a_p_max + 1)])
+                                                                                      .into_scalar();
+
+                                                                              q_s_p_a_p * gamma * r - q_s_a
+                                                                          }
+                                                                      }
+                                                              ).collect();
+                                                              x.clone().as_slice()
+                                                          }, device);
+
+                let y = y.detach();
+
+                let loss = y.powf_scalar(2f32);
+
+                let grad_loss = loss.backward();
+                let grads = GradientsParams::from_grads(grad_loss, &model);
+                model = optimizer.step(alpha.into(), model, grads);
 
 
-            #[cfg(feature = "logging")] {
-                log_total_loss += loss.mean().into_scalar();
+
+                //LOGGER
+                episode_reward += r;
+                episode_steps += 1;
+
+                #[cfg(feature = "logging")] {
+                    log_total_loss += loss.mean().into_scalar();
+                }
             }
-
         }
         //LOGGER
 
@@ -263,10 +272,10 @@ where
             //LOGGER
 
             if (ep_id + 1) % log_interval == 0 && ep_id != 0 {
-                let average_score_per_episode = log_total_score / log_interval as f32;
-                let average_steps_per_episode = log_total_steps as f32 / log_interval as f32;
+                let average_score_per_episode = log_total_score / (log_interval * epoch) as f32;
+                let average_steps_per_episode = log_total_steps as f32 / (log_interval * epoch) as f32;
                 let average_time = log_total_time.as_secs_f32() / log_interval as f32;
-                let average_loss = log_total_loss / log_interval as f32;
+                let average_loss = log_total_loss / (log_interval * epoch) as f32;
                 let current_epsilon = decayed_epsilon;
 
                 //LOGGER

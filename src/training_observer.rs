@@ -1,8 +1,5 @@
 // src/training_observer.rs
 
-use burn::tensor::backend::Backend;
-use burn::tensor::Tensor;
-use std::time::Duration;
 use serde::Serialize;
 
 pub enum TrainingEvent{
