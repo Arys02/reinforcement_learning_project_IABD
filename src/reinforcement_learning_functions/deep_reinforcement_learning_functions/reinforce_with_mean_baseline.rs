@@ -153,12 +153,12 @@ where
                 g = g + gamma.powf((i - t - 1) as f32) * trajectory[i].2;
                 //trajectory_g.push(g);
             }
-            println!("g: {:?}", g);
-            println!("vm : {:?}", value_model.clone().forward(s.clone()));
+            //println!("g: {:?}", g);
+            //println!("vm : {:?}", value_model.clone().forward(s.clone()));
             let delta = value_model.forward(s.clone()).sub_scalar(g).mul_scalar(-1).into_scalar();
 
             let pi_s = model.forward(s.clone());
-            println!("{:?}", pi_s.clone());
+            //println!("{:?}", pi_s.clone());
             let pi_s_a = pi_s.slice([*a..(*a+1)]).log();
             let loss = pi_s_a.clone();
             let grad_loss = loss.backward();
@@ -167,9 +167,9 @@ where
 
             let v_s = value_model.forward(s.clone());
 
-            println!("{:?}", v_s.clone());
+            //println!("{:?}", v_s.clone());
 
-            println!("{:?}", delta);
+            //println!("{:?}", delta);
             let grad_loss = v_s.clone().backward();
             let grads = GradientsParams::from_grads(grad_loss, &value_model);
             value_model = optimizer.step((alpha * delta).into(), value_model, grads);
