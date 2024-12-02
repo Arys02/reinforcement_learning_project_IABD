@@ -225,7 +225,7 @@ where
 
             let grad_loss = loss.backward();
             let grads = GradientsParams::from_grads(grad_loss, &model);
-            model = optimizer.step(alpha.into(), model, grads);
+            model = optimizer.step((-alpha).into(), model, grads);
 
 
             episode_reward += r;
