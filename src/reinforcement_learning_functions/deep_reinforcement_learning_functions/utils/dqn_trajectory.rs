@@ -212,7 +212,7 @@ pub mod prioritized_trajectory {
         pub is_terminal: Vec<f32>,
         sum_tree: SumTree,
         alpha: f32,
-        beta: f32,
+        pub(crate) beta: f32,
         max_priority: f32,
     }
 

@@ -79,7 +79,7 @@ fn main() {
     for _ in tqdm!(0..1) {
         let online_model = MyQMLP::<MyAutodiffBackend>::new(&device, NUM_STATE_FEATURES, NUM_ACTIONS);
         let target_model = online_model.clone();
-        let mut value_model = MyQMLP::<MyAutodiffBackend>::new(&device, NUM_STATE_FEATURES, 1);
+        //let mut value_model = MyQMLP::<MyAutodiffBackend>::new(&device, NUM_STATE_FEATURES, 1);
 
         /*
         let model = ppo::<NUM_STATE_FEATURES, NUM_ACTIONS, _, MyAutodiffBackend, GameEnv>(
@@ -126,14 +126,14 @@ fn main() {
         deep_double_q_learning_per::<NUM_STATE_FEATURES, NUM_ACTIONS, _, MyAutodiffBackend, GameEnv>(
                     online_model.clone(),
                     target_model.clone(),
-                    500_0,
-                    5000,
+                    10_000,
+                    5_000,
                     0.99,
-                    0.001f32,
-                    1e-5f32,
-                    1.0f32,
-                    32,
-                    20,
+                    0.0001f32,
+                    1.0,
+                    0.01,
+                    64,
+                    200,
                     0.6,
                     0.4,
                     &device,
