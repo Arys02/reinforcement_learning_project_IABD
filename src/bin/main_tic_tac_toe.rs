@@ -148,9 +148,8 @@ fn main() {
     }
 
      */
-    /*
 
-    let num_episodes = vec![1_000, 10_000, 100_000, 1_000_000];
+    let num_episodes = vec![100_000];
     for num_episode in num_episodes {
         let mut model = MyQMLP::<MyAutodiffBackend>::new(&device, NUM_STATE_FEATURES, NUM_ACTIONS);
         model = reinforce::<NUM_STATE_FEATURES, NUM_ACTIONS, _, MyAutodiffBackend, GameEnv>(
@@ -164,7 +163,7 @@ fn main() {
         );
     }
 
-     */
+    /*
 
     let num_episodes = vec![1_000, 10_000, 100_000, 1_000_000];
     for num_episode in num_episodes {
@@ -185,5 +184,7 @@ fn main() {
             &device,
         );
     }
+
+     */
 
 }

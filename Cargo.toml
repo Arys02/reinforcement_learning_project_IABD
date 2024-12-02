@@ -32,6 +32,7 @@ codegen-units = 1
 [features]
 print = []
 logging = []
+logging2= []
 
 [dependencies]
 rand = "0.8.5"
@@ -52,3 +53,4 @@ kdam = "0.5.2"
 itertools = "0.10.5"
 chrono = { version = "0.4", features = ["serde"] }
 serde_json = "1.0"
+tensorboard-rs = "0.5.9"

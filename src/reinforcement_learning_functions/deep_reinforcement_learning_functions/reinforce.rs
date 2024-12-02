@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use crate::training_observer::TrainingObserver;
 use crate::environement::environment_traits::DeepDiscreteActionsEnv;
 use std::fmt::{Debug, Display};
@@ -17,6 +18,7 @@ use kdam::tqdm;
 use rand::distributions::WeightedIndex;
 use rand::SeedableRng;
 use rand_xoshiro::Xoshiro256PlusPlus;
+use tensorboard_rs::summary_writer::SummaryWriter;
 use crate::logger::Logger;
 use crate::reinforcement_learning_functions::deep_reinforcement_learning_functions::utils::utils::{epsilon_greedy_action, soft_max_with_mask_action};
 use crate::training_observer::{Hyperparameters, TrainingEvent};
@@ -40,6 +42,10 @@ where
     M::InnerModule: Forward<B=B::InnerBackend>,
 {
     let mut env = Env::default();
+
+    let mut writer = SummaryWriter::new(&("./logdir".to_string()));
+
+    let mut map = HashMap::new();
 
     #[cfg(feature = "logging")]
     let hyperparameters = Hyperparameters {
@@ -94,6 +100,9 @@ where
     let mut rng = Xoshiro256PlusPlus::from_entropy();
 
     let mut total_score = 0.0;
+    let mut mean_nb_step = 0.0;
+
+    let mut episode_duration = 0.0;
 
 
     for ep_id in tqdm!(0..num_episodes) {
@@ -107,10 +116,7 @@ where
         let progress = ep_id as f32 / num_episodes as f32;
         let decayed_epsilon = (1.0 - progress) * start_epsilon + progress * final_epsilon;
 
-        if ep_id % 1000 == 0 {
-            println!("Mean Score: {}", total_score / 1000.0);
-            total_score = 0.0;
-        }
+
 
         let mut trajectory = Vec::new();
 
@@ -169,18 +175,42 @@ where
 
 
 
+
+
+        total_score += env.score();
+        mean_nb_step += trajectory.len() as f32;
+
         episode_reward += env.score();
         episode_steps += 1;
-        #[cfg(feature = "logging")]
-        let episode_duration = episode_start_time.elapsed();
+        //#[cfg(feature = "logging")]
+        //let mut episode_duration = episode_start_time.elapsed();
+
+        #[cfg(feature = "logging2")] {
+            episode_duration += episode_start_time.elapsed().as_secs_f32();
+
+            if ep_id % 1000 == 0 {
+                map.insert("Mean Score".to_string(), total_score / 1000.0);
+                map.insert("Mean nb steps".to_string(), mean_nb_step / 1000.0);
+                map.insert("average time per step".to_string(), episode_duration / 1000.0 );
+                writer.add_scalars(&format!("reinforce/{}/{}_{}_{}", env.get_name(), num_episodes, alpha, gamma), &map, ep_id);
+                println!("Mean Score: {}", total_score / 1000.0);
+                total_score = 0.0;
+                mean_nb_step = 0.0;
+                episode_duration = 0.0;
+            }
+        }
+
 
         //LOGGER
 
+        /*
         #[cfg(feature = "logging")] {
             log_total_score += episode_reward;
             log_total_steps += episode_steps;
             log_total_time += episode_duration;
         }
+
+         */
         //LOGGER
         #[cfg(feature = "logging")] {
             let win = episode_reward > 0.0;
@@ -216,6 +246,7 @@ where
                     average_time,
                     epoch: ep_id + 1,
                 });
+
 
                 //LOGGER
                 println!(
@@ -253,5 +284,8 @@ where
 
     }
 
+
+
+    writer.flush();
     model
 }
