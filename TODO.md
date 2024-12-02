@@ -19,8 +19,8 @@
 - [X] TabularQLearning (quand possible)
 - [X] DeepQLearning
 - -- explorer avec adam ? 
-- [ ] DoubleDeepQLearning
-- [ ] DoubleDeepQLearningWithExperienceReplay
+- [X] DoubleDeepQLearning
+- [X] DoubleDeepQLearningWithExperienceReplay
 - [ ] DoubleDeepQLearningWithPrioritizedExperienceReplay
 - [X] REINFORCE
 - [ ] REINFORCE with mean baseline
