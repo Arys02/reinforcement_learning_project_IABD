@@ -22,7 +22,7 @@ pub fn deep_double_q_learning_per<
     const NUM_ACTIONS: usize,
     M: Forward<B = B> + AutodiffModule<B> + Clone,
     B: AutodiffBackend<FloatElem = f32, IntElem = i64>,
-    Env: DeepDiscreteActionsEnv<NUM_STATE_FEATURES, NUM_ACTIONS> + Debug + Display,
+    Env: DeepDiscreteActionsEnv<NUM_STATE_FEATURES, NUM_ACTIONS> + Debug,
 >(
     mut online_model: M,
     mut target_model: M,

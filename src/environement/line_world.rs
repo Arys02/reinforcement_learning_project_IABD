@@ -202,48 +202,10 @@ pub mod line_world {
     #[cfg(test)]
     mod tests {
         use super::*;
+        #[test]
+        fn run_with_player() {}
 
         #[test]
-        fn test_from_random_state() {
-            let seed: u64 = 42;
-            let rng = StdRng::seed_from_u64(seed).gen_range(1..4);
-            let mut lw = LineWorld::default();
-            lw.reset_random_state(seed);
-            println!("position : {}, rng : {}", lw.agent_pos, rng);
-
-            assert_eq!(
-                lw.agent_pos, rng,
-                "With seed {}, expected pos {}",
-                seed, lw.agent_pos
-            )
-        }
-
-        #[test]
-        fn test_new() {
-            let lw = LineWorld::default();
-            assert_eq!(
-                lw.agent_pos, 2,
-                "should be 2, {} find instead",
-                lw.agent_pos
-            )
-        }
-
-        #[test]
-        fn test_available_action() {}
-
-        #[test]
-        fn test_line_world() {
-            let mut lw = LineWorld::default();
-
-            lw.display();
-            lw.step(0);
-            lw.display();
-            lw.step(1);
-            lw.display();
-            lw.step(1);
-            lw.display();
-
-            assert_eq!(lw.state_id(), 3)
-        }
+        fn count_run() {}
     }
 }

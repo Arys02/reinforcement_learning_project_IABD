@@ -17,7 +17,7 @@ use crate::logger::Logger;
 use crate::reinforcement_learning_functions::deep_reinforcement_learning_functions::utils::dqn_trajectory::trajectory::Trajectory;
 use crate::reinforcement_learning_functions::deep_reinforcement_learning_functions::utils::utils::epsilon_greedy_action;
 
-pub fn deep_double_q_learning<
+pub fn deep_double_q_learning_ler<
     const NUM_STATE_FEATURES: usize,
     const NUM_ACTIONS: usize,
     M: Forward<B = B> + AutodiffModule<B> + Clone,

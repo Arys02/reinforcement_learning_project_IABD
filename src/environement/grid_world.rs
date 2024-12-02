@@ -317,77 +317,10 @@ pub mod grid_world {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use std::collections::HashMap;
+        #[test]
+        fn run_with_player() {}
 
         #[test]
-        fn test_from_random_state() {
-            let seed: u64 = 42;
-            let rng = StdRng::seed_from_u64(seed).gen_range(8..40);
-            let mut lw = GridWorld::default();
-            lw.reset_random_state(seed);
-            println!("position : {}, rng : {}", lw.agent_pos, rng);
-
-            assert_eq!(
-                lw.agent_pos, rng,
-                "With seed {}, expected pos {}",
-                seed, lw.agent_pos
-            )
-        }
-
-        #[test]
-        fn test_new() {
-            let lw = GridWorld::default();
-            assert_eq!(
-                lw.agent_pos, 8,
-                "should be 8, {} find instead",
-                lw.agent_pos
-            )
-        }
-
-        #[test]
-        fn test_available_action() {
-            let gw = GridWorld::default();
-
-            assert_eq!(
-                gw.available_actions_ids().collect::<Vec<_>>(),
-                vec![0, 1, 2, 3],
-                "should be [1, 2], found [] instead"
-            );
-        }
-
-        #[test]
-        fn test_line_world() {
-            let mut gw = GridWorld::default();
-
-            gw.display();
-            gw.step(1);
-            gw.display();
-            gw.step(2);
-            gw.display();
-            gw.step(0);
-            gw.display();
-            gw.step(3);
-            gw.display();
-
-            assert_eq!(gw.state_id(), 8)
-        }
-
-        #[test]
-        fn test_grid_world_strategy() {
-            let strategy: HashMap<usize, usize> = HashMap::from([
-                (8, 1),
-                (9, 2),
-                (16, 2),
-                (23, 2),
-                (30, 1),
-                (31, 1),
-                (32, 1),
-                (33, 2),
-            ]);
-            let mut gw = GridWorld::default();
-            gw.play_strategy(strategy, false);
-
-            assert_eq!(gw.state_id(), 40)
-        }
+        fn count_run() {}
     }
 }

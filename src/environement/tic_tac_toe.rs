@@ -162,4 +162,14 @@ pub mod tic_tac_toe {
             Ok(())
         }
     }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+        #[test]
+        fn run_with_player() {}
+
+        #[test]
+        fn count_run() {}
+    }
 }

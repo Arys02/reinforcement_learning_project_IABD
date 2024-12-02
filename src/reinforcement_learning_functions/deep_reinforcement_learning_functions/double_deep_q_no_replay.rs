@@ -21,7 +21,7 @@ pub fn deep_double_q_learning<
     const NUM_ACTIONS: usize,
     M: Forward<B = B> + AutodiffModule<B> + Clone,
     B: AutodiffBackend<FloatElem = f32, IntElem = i64>,
-    Env: DeepDiscreteActionsEnv<NUM_STATE_FEATURES, NUM_ACTIONS> + Debug + Display,
+    Env: DeepDiscreteActionsEnv<NUM_STATE_FEATURES, NUM_ACTIONS> + Debug,
 >(
     mut online_model: M,
     mut target_model: M,
@@ -55,7 +55,7 @@ where
         start_epsilon,
         final_epsilon,
         batch_size: 1,      // Single step updates
-        log_interval: 1000,
+        log_interval: 500,
     };
 
     #[cfg(feature = "logging")]

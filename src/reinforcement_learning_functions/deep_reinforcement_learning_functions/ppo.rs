@@ -1,6 +1,6 @@
 use crate::environement::environment_traits::DeepDiscreteActionsEnv;
 use std::fmt::{Debug, Display};
-
+use std::time::Duration;
 use crate::ml_core::ml_traits::Forward;
 
 
@@ -14,15 +14,17 @@ use burn::tensor::backend::AutodiffBackend;
 use kdam::tqdm;
 use rand::SeedableRng;
 use rand_xoshiro::Xoshiro256PlusPlus;
+use crate::logger::Logger;
 use crate::reinforcement_learning_functions::deep_reinforcement_learning_functions::utils::ppo_trajectory::trajectory::Trajectory;
-use crate::reinforcement_learning_functions::deep_reinforcement_learning_functions::utils::utils::epsilon_greedy_action;
+use crate::reinforcement_learning_functions::deep_reinforcement_learning_functions::utils::utils::{epsilon_greedy_action, soft_max_with_mask_action};
+use crate::training_observer::{Hyperparameters, TrainingEvent, TrainingObserver};
 
 pub fn ppo<
     const NUM_STATE_FEATURES: usize,
     const NUM_ACTIONS: usize,
     M: Forward<B = B> + AutodiffModule<B>,
     B: AutodiffBackend<FloatElem = f32, IntElem = i64>,
-    Env: DeepDiscreteActionsEnv<NUM_STATE_FEATURES, NUM_ACTIONS> + Debug + Display,
+    Env: DeepDiscreteActionsEnv<NUM_STATE_FEATURES, NUM_ACTIONS> + Debug,
 >(
     mut model: M,
     mut value_fct: M,
@@ -45,7 +47,8 @@ where
         .with_weight_decay(Some(WeightDecayConfig::new(1e-7)))
         .init::<B, M>();
 
-    let mut rng = Xoshiro256PlusPlus::from_entropy();
+
+
 
     let mut total_score = 0.0;
     let mut nb_score = 0.0;
@@ -54,20 +57,62 @@ where
 
     let mut old_pi: M = model.clone();
 
+    #[cfg(feature = "logging")]
+    let hyperparameters = Hyperparameters {
+        num_episodes,
+        gamma,
+        alpha,
+        start_epsilon,
+        final_epsilon,
+        log_interval: 10,
+        replay_capacity: 0,
+        batch_size: 0,
+    };
+    #[cfg(feature = "logging")]
+    let log_interval = hyperparameters.log_interval;
+
+    #[cfg(feature = "logging")]
+    let model_name = format!("ppo_{}_model2", env.get_name());
+
+    #[cfg(feature = "logging")]
+    let mut observer = Logger::new(&model_name, &format!("{}_{}_{}_{}_{}_{}_{}_{}", num_episodes, gamma, alpha, gae_lmd, horizon, n_actors,batch_size, num_epochs));
+
+    #[cfg(feature = "logging")]
+    observer.on_event(&TrainingEvent::HyperparametersLogged {
+        hyperparameters: hyperparameters.clone(),
+    });
+
+    #[cfg(feature = "logging")]
+    let mut log_total_score: f32 = 0.0;
+
+    #[cfg(feature = "logging")]
+    let mut log_total_steps: usize = 0;
+
+    #[cfg(feature = "logging")]
+    let mut win_count: usize = 0;
+
+    #[cfg(feature = "logging")]
+    let mut best_score: f32 = f32::MIN;
+
+    #[cfg(feature = "logging")]
+    let mut log_total_time: Duration = Duration::new(0, 0);
+
+    #[cfg(feature = "logging")]
+    let mut log_total_loss: f32 = 0.0;
+
+
+    let mut total_score = 0.0;
+    let mut mean_step = 0.0;
+
+    let mut nb_steps = 0.0;
+    let mut episode_reward = 0.0;
     //for iteration = 1, 2, ... do
     for ep_id in tqdm!(0..num_episodes) {
         env.reset();
 
-        let progress = ep_id as f32 / num_episodes as f32;
-        let decayed_epsilon = (1.0 - progress) * start_epsilon + progress * final_epsilon;
 
-        if ep_id % 10 == 0 {
-            println!("Mean Score: {}", total_score / nb_score);
-            total_score = 0.0;
-            nb_score = 0.0;
-        }
 
-        let mut g = 0.;
+
         let mut trajectory_vec = Vec::new();
 
         for _ in 0..n_actors {
@@ -81,15 +126,11 @@ where
 
                 let mask = env.action_mask();
                 let mask_tensor: Tensor<B, 1> = Tensor::from(mask).to_device(device);
-                let pi_s = old_pi.forward(s_tensor.clone());
+                let pi_s =  old_pi.forward(s_tensor.clone());
                 let v_s = value_fct.forward(s_tensor.clone());
 
-                let a = epsilon_greedy_action::<B, NUM_STATE_FEATURES, NUM_ACTIONS>(
-                    &pi_s,
-                    &mask_tensor,
-                    env.available_actions_ids(),
-                    decayed_epsilon,
-                    &mut rng,
+                let a = soft_max_with_mask_action::<B, NUM_STATE_FEATURES, NUM_ACTIONS>(
+                    &pi_s, &mask_tensor
                 );
 
                 let prev_score = env.score();
@@ -99,7 +140,6 @@ where
 
                 let r = env.score() - prev_score;
 
-                g = r + gamma * g;
 
                 trajectory.push(s_tensor.clone(), a, r, v_s.clone());
 
@@ -239,6 +279,27 @@ where
             value_fct = optimizer.step(alpha.into(), value_fct, value_grads);
         }
         old_pi = model.clone();
+
+
+        #[cfg(feature = "logging")]
+        if ep_id % 10 == 0 {
+            println!("Mean Score: {}", total_score / nb_score);
+            observer.on_event(&TrainingEvent::LoggingSummary {
+                episodes: ep_id + 1,
+                total_score: log_total_score,
+                average_score_per_episode: total_score / (nb_score * 10.),
+                average_steps_per_episode,
+                average_loss,
+                epsilon: 0.,
+                win_count,
+                best_score,
+                average_time,
+                epoch: ep_id + 1,
+            });
+            total_score = 0.0;
+            nb_score = 0.0;
+        }
+
     }
 
     model

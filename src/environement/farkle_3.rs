@@ -1,12 +1,13 @@
 pub mod farkle_3 {
     use crate::environement::environment_traits::{ActionEnv, BaseEnv, DeepDiscreteActionsEnv, Playable};
     use colored::*;
-    use rand::prelude::IteratorRandom;
+    use rand::prelude::{IteratorRandom, StdRng};
     use rand::Rng;
     use std::collections::{HashMap, HashSet};
     use std::fmt::Display;
     use std::io;
     use std::io::Write;
+    use crate::environement::line_world::line_world::LineWorld;
 
     pub const NUM_STATE_FEATURES: usize = 36;
     pub const NUM_ACTIONS: usize = 268;
@@ -604,5 +605,14 @@ pub mod farkle_3 {
         }
     }
 
+
+    mod tests {
+        use super::*;
+        #[test]
+        fn run_with_player() {}
+
+        #[test]
+        fn count_run() {}
+    }
 }
 
