@@ -3,8 +3,6 @@ use crate::training_observer::{Hyperparameters, TrainingEvent, TrainingObserver}
 use std::fmt::{Debug, Display};
 
 use crate::ml_core::ml_traits::Forward;
-use crate::reinforcement_learning_functions::deep_reinforcement_learning_functions::dqn_trajectory::prioritized_trajectory::PrioritizedTrajectory;
-use crate::reinforcement_learning_functions::deep_reinforcement_learning_functions::utils::epsilon_greedy_action;
 use burn::module::AutodiffModule;
 use burn::optim::decay::WeightDecayConfig;
 use burn::optim::{AdamConfig, GradientsParams, Optimizer, SgdConfig};
@@ -16,6 +14,8 @@ use rand::SeedableRng;
 use rand_xoshiro::Xoshiro256PlusPlus;
 use std::time::{Duration, Instant};
 use crate::logger::Logger;
+use crate::reinforcement_learning_functions::deep_reinforcement_learning_functions::utils::dqn_trajectory::prioritized_trajectory::PrioritizedTrajectory;
+use crate::reinforcement_learning_functions::deep_reinforcement_learning_functions::utils::utils::epsilon_greedy_action;
 
 pub fn deep_double_q_learning_per<
     const NUM_STATE_FEATURES: usize,
@@ -82,10 +82,10 @@ where
     let log_interval = hyperparameters.log_interval;
 
     #[cfg(feature = "logging")]
-    let model_name = format!("ddqn_per_farkle{}_model", env.get_name());
+    let model_name = format!("ddqn_prioritized_{}_model2_2", env.get_name());
 
     #[cfg(feature = "logging")]
-    let mut observer = Logger::new(&model_name);
+    let mut observer = Logger::new(&model_name, &format!("{}_{}_{}_{}_{}", num_episodes, replay_capacity, batch_size, gamma, alpha));
 
     #[cfg(feature = "logging")]
     observer.on_event(&TrainingEvent::HyperparametersLogged {
