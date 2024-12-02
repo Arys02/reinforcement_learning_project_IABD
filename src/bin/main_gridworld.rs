@@ -26,7 +26,7 @@ fn main() {
 
 
     /** DQN without epochs */
-    let mut model = MyQMLP::<MyAutodiffBackend>::new(&device, IABD4_reinforcement_learning::environement::line_world::line_world::NUM_STATE_FEATURES, IABD4_reinforcement_learning::environement::line_world::line_world::NUM_ACTIONS);
+    let mut model = MyQMLP::<MyAutodiffBackend>::new(&device, NUM_STATE_FEATURES, NUM_ACTIONS);
     model = deep_q_learning::<NUM_STATE_FEATURES, NUM_ACTIONS, _, MyAutodiffBackend, GameEnv>(
         model.clone(),
         100_000,
@@ -40,7 +40,7 @@ fn main() {
     );
 
     /** DDQN no replay */
-    let online_model = MyQMLP::<MyAutodiffBackend>::new(&device, IABD4_reinforcement_learning::environement::line_world::line_world::NUM_STATE_FEATURES, IABD4_reinforcement_learning::environement::line_world::line_world::NUM_ACTIONS);
+    let online_model = MyQMLP::<MyAutodiffBackend>::new(&device, NUM_STATE_FEATURES, NUM_ACTIONS);
     let target_model = online_model.clone();
     deep_double_q_learning::<NUM_STATE_FEATURES, NUM_ACTIONS, _, MyAutodiffBackend, GameEnv>(
         online_model.clone(),
@@ -55,7 +55,7 @@ fn main() {
     );
 
     /** DDQN Learning EXP Replay */
-    let online_model = MyQMLP::<MyAutodiffBackend>::new(&device, IABD4_reinforcement_learning::environement::line_world::line_world::NUM_STATE_FEATURES, IABD4_reinforcement_learning::environement::line_world::line_world::NUM_ACTIONS);
+    let online_model = MyQMLP::<MyAutodiffBackend>::new(&device, NUM_STATE_FEATURES, NUM_ACTIONS);
     let target_model = online_model.clone();
 
     deep_double_q_learning_per::<NUM_STATE_FEATURES, NUM_ACTIONS, _, MyAutodiffBackend, GameEnv>(
@@ -78,7 +78,7 @@ fn main() {
     /** Reinforce **/
     let num_episodes = vec![100_000];
     for num_episode in num_episodes {
-        let mut model = MyQMLP::<MyAutodiffBackend>::new(&device, IABD4_reinforcement_learning::environement::line_world::line_world::NUM_STATE_FEATURES, IABD4_reinforcement_learning::environement::line_world::line_world::NUM_ACTIONS);
+        let mut model = MyQMLP::<MyAutodiffBackend>::new(&device, NUM_STATE_FEATURES, NUM_ACTIONS);
         model = reinforce::<NUM_STATE_FEATURES, NUM_ACTIONS, _, MyAutodiffBackend, GameEnv>(
             model,
             num_episode,
@@ -95,10 +95,10 @@ fn main() {
     //let num_episodes = vec![1_000, 10_000, 100_000, 1_000_000];
     let num_episodes = vec![100_000];
     for num_episode in num_episodes {
-        let mut model = MyQMLP::<MyAutodiffBackend>::new(&device, IABD4_reinforcement_learning::environement::line_world::line_world::NUM_STATE_FEATURES, IABD4_reinforcement_learning::environement::line_world::line_world::NUM_ACTIONS);
+        let mut model = MyQMLP::<MyAutodiffBackend>::new(&device, NUM_STATE_FEATURES, NUM_ACTIONS);
         let mut value_model = MyQMLP::<MyAutodiffBackend>::new(
             &device,
-            IABD4_reinforcement_learning::environement::line_world::line_world::NUM_STATE_FEATURES,
+            NUM_STATE_FEATURES,
             1,
         );
         model = reinforce_with_mean_baseline::<NUM_STATE_FEATURES, NUM_ACTIONS, _, MyAutodiffBackend, GameEnv>(
@@ -121,8 +121,8 @@ fn main() {
     );
     let model = MyQMLP::<MyAutodiffBackend>::new(
         &device,
-        IABD4_reinforcement_learning::environement::line_world::line_world::NUM_STATE_FEATURES,
-        IABD4_reinforcement_learning::environement::line_world::line_world::NUM_ACTIONS,
+        NUM_STATE_FEATURES,
+        NUM_ACTIONS,
     );
 
     let model =

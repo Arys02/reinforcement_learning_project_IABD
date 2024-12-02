@@ -19,7 +19,6 @@ use IABD4_reinforcement_learning::environement::tic_tac_toe::tic_tac_toe::{
 
 use IABD4_reinforcement_learning::ml_core::mlp::MyQMLP;
 use IABD4_reinforcement_learning::reinforcement_learning_functions::deep_reinforcement_learning_functions::ddqn_with_prioritized_replay::deep_double_q_learning_per;
-use IABD4_reinforcement_learning::reinforcement_learning_functions::deep_reinforcement_learning_functions::double_deep_q_learning_experience_replay::deep_double_q_learning;
 
 //type GameEnv = TicTacToeVersusRandom;
 type GameEnv = Farkle2;

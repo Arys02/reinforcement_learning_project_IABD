@@ -288,12 +288,12 @@ where
                 episodes: ep_id + 1,
                 total_score: log_total_score,
                 average_score_per_episode: total_score / (nb_score * 10.),
-                average_steps_per_episode,
-                average_loss,
+                average_steps_per_episode: 0.,
+                average_loss: 0.,
                 epsilon: 0.,
                 win_count,
                 best_score,
-                average_time,
+                average_time: 0.,
                 epoch: ep_id + 1,
             });
             total_score = 0.0;
