@@ -121,27 +121,12 @@ where
 
             let mask = env.action_mask();
             let mask_tensor: Tensor<B, 1> = Tensor::from(mask).to_device(device);
-            let mut pi_s = model.forward(s_tensor);
+            let mut pi_s = model.forward(s_tensor.clone());
 
 
             let a : usize =  soft_max_with_mask_action::<B, NUM_STATE_FEATURES, NUM_ACTIONS>(
                 &pi_s, &mask_tensor
             );
-
-
-
-
-            /*
-            //TODO change to get a softmax random action
-            let a = epsilon_greedy_action::<B, NUM_STATE_FEATURES, NUM_ACTIONS>(
-                &pi_s,
-                &mask_tensor,
-                env.available_actions_ids(),
-                decayed_epsilon,
-                &mut rng,
-            );
-
-             */
 
             let prev_score = env.score();
             //execute action a_t in emulator and observe reward r_t
@@ -149,26 +134,28 @@ where
             let r = env.score() - prev_score;
 
 
-            let prob = pi_s.clone().slice([a..(a+1)]).log().detach();
 
             trajectory.push(
                 (
-                    prob,
+                    s_tensor.clone(),
+                    a,
                     r,
                 ));
         }
 
 
 
-        total_score += env.score();
         let mut g = 0.;
         //   t          pi(s | a, Φ)
-        for (t, (pi_s_a,_)) in trajectory.iter().enumerate() {
+        for (t, (s, a , _)) in trajectory.iter().enumerate() {
             for i in (t + 1)..trajectory.len() {
                 //g = g + γ^(k - t - 1) * Rk
-                g = g + gamma.powf((i - t - 1) as f32) * trajectory[i].1;
+                g = g + gamma.powf((i - t - 1) as f32) * trajectory[i].2;
             }
 
+
+            let pi_s = model.forward(s.clone());
+            let pi_s_a = pi_s.slice([*a..(*a+1)]).log();
             let loss = pi_s_a.clone().mul_scalar(g);
 
             let grad_loss = loss.backward();
@@ -179,6 +166,7 @@ where
                 log_total_loss += loss.mean().into_scalar();
             }
         }
+
 
 
         episode_reward += env.score();

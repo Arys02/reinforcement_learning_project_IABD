@@ -7,3 +7,4 @@ pub mod double_deep_q_no_replay;
 pub mod ddqn_with_prioritized_replay;
 pub mod utils;
 pub mod reinforce_with_mean_baseline;
+pub mod deep_q_learning2;

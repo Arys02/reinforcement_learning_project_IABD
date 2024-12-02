@@ -7,6 +7,7 @@ use IABD4_reinforcement_learning::environement::tic_tac_toe::tic_tac_toe::NUM_AC
 use IABD4_reinforcement_learning::environement::tic_tac_toe::tic_tac_toe::NUM_STATE_FEATURES;
 
 use IABD4_reinforcement_learning::ml_core::mlp::MyQMLP;
+use IABD4_reinforcement_learning::reinforcement_learning_functions::deep_reinforcement_learning_functions::deep_q_learning2::deep_q_learning2;
 use IABD4_reinforcement_learning::reinforcement_learning_functions::deep_reinforcement_learning_functions::deep_q_learning::deep_q_learning;
 use IABD4_reinforcement_learning::reinforcement_learning_functions::deep_reinforcement_learning_functions::ppo::ppo;
 use IABD4_reinforcement_learning::reinforcement_learning_functions::deep_reinforcement_learning_functions::reinforce::reinforce;
@@ -90,6 +91,37 @@ fn main() {
         }
     }
      */
+    /*
+    let replay_capacity = vec![10, 100, 1000, 10000];
+    let batch_size = vec![5, 10, 20, 50, 100];
+    let epoch_size = vec![1, 2, 16, 64, 124];
+
+    for rep in replay_capacity.clone() {
+        for batch in batch_size.clone() {
+            for epoch in epoch_size.clone() {
+                if batch >= rep {
+                    continue;
+                }
+                let model = MyQMLP::<MyAutodiffBackend>::new(&device, NUM_STATE_FEATURES, NUM_ACTIONS);
+                deep_q_learning2::<NUM_STATE_FEATURES, NUM_ACTIONS, _, MyAutodiffBackend, GameEnv>(
+                    model.clone(),
+                    100_000,
+                    rep,
+                    epoch,
+                    0.999f32,
+                    3e-3f32,
+                    1.0f32,
+                    1e-5f32,
+                    batch,
+                    &device,
+                );
+
+            }
+
+        }
+    }
+
+     */
 
     /*
     let replay_capacity = vec![10, 100, 1000, 10000];
@@ -115,6 +147,9 @@ fn main() {
         }
     }
 
+     */
+    /*
+
     let num_episodes = vec![1_000, 10_000, 100_000, 1_000_000];
     for num_episode in num_episodes {
         let mut model = MyQMLP::<MyAutodiffBackend>::new(&device, NUM_STATE_FEATURES, NUM_ACTIONS);
@@ -130,7 +165,7 @@ fn main() {
     }
 
      */
-    /*
+
     let num_episodes = vec![1_000, 10_000, 100_000, 1_000_000];
     for num_episode in num_episodes {
         let mut model = MyQMLP::<MyAutodiffBackend>::new(&device, NUM_STATE_FEATURES, NUM_ACTIONS);
@@ -143,7 +178,7 @@ fn main() {
             model,
             value_model,
             num_episode,
-            3e-3,
+            1e-4,
             0.999f32,
             1.0f32,
             1e-5f32,
@@ -151,44 +186,4 @@ fn main() {
         );
     }
 
-     */
-
-    /*
-    // Let's play some games (press enter to show the next game)
-    let device = &Default::default();
-    let mut env = GameEnv::default();
-    let mut rng = Xoshiro256PlusPlus::from_entropy();
-
-    let mut win = 0.;
-    let mut lose = 0.;
-    for _ in 0..1000 {
-        env.reset();
-        while !env.is_terminal() {
-            let s = env.state_description();
-            let s_tensor: Tensor<MyBackend, 1> = Tensor::from_floats(s.as_slice(), device);
-
-            let mask = env.action_mask();
-            let mask_tensor: Tensor<MyBackend, 1> = Tensor::from(mask).to_device(device);
-            let q_s = model.valid().forward(s_tensor);
-
-            let a = epsilon_greedy_action::<MyBackend, NUM_STATE_FEATURES, NUM_ACTIONS>(
-                &q_s,
-                &mask_tensor,
-                env.available_actions_ids(),
-                -1.,
-                &mut rng,
-            );
-            env.step(a);
-        }
-        if env.score > 0. {
-            win += 1.;
-        } else {
-            lose += 1.;
-        }
-    }
-
-    println!("Win: {}, Lose: {}", win, lose);
-    println!("winrate : {}", win / (win + lose));
-    wr += win / (win + lose);
-     */
 }
