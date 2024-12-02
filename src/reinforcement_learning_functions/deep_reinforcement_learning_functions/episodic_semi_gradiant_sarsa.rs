@@ -45,7 +45,7 @@ where
         let decayed_epsilon = (1.0 - progress) * start_epsilon + progress * final_epsilon;
 
         if ep_id % 1000 == 0 {
-            //println!("Mean Score: {}", total_score / 1000.0);
+            println!("Mean Score: {}", total_score / 1000.0);
             total_score = 0.0;
         }
         env.reset();

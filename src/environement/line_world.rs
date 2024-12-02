@@ -5,9 +5,12 @@ pub mod line_world {
     use rand::prelude::StdRng;
     use rand::{Rng, SeedableRng};
 
-    use crate::environement::environment_traits::{ActionEnv, BaseEnv, Environment};
-    pub const NUM_ACTIONS: usize = 5;
-    pub const NUM_STATES: usize = 2;
+    use crate::environement::environment_traits::{
+        ActionEnv, BaseEnv, DeepDiscreteActionsEnv, Environment,
+    };
+    pub const NUM_ACTIONS: usize = 2;
+    pub const NUM_STATES: usize = 5;
+    pub const NUM_STATE_FEATURES: usize = 5;
     pub const NUM_REWARDS: usize = 3;
 
     // The `LineWorld` struct represents a linear environment where an agent can navigate along a vector of fixed size.
@@ -71,9 +74,7 @@ pub mod line_world {
 
     impl Default for LineWorld {
         fn default() -> Self {
-            LineWorld {
-                agent_pos: 2,
-            }
+            LineWorld { agent_pos: 2 }
         }
     }
 
@@ -101,10 +102,10 @@ pub mod line_world {
     }
 
     impl ActionEnv<NUM_ACTIONS> for LineWorld {
-        fn available_actions_ids(&self) -> impl Iterator<Item=usize> {
+        fn available_actions_ids(&self) -> impl Iterator<Item = usize> {
             match self.agent_pos {
                 1 | 2 | 3 => 0..=1,
-                _ => 0..=0
+                _ => 0..=0,
             }
         }
         fn step(&mut self, action: usize) {
@@ -132,7 +133,6 @@ pub mod line_world {
             }
         }
 
-
         fn num_states() -> usize {
             5
         }
@@ -159,23 +159,19 @@ pub mod line_world {
             return tm[[s, a, s_p, r]];
         }
 
-
         fn reset_random_state(&mut self, seed: u64) {
             let mut rng = StdRng::seed_from_u64(seed);
             let agent_pos_: usize = rng.gen_range(1..4);
             self.agent_pos = agent_pos_
         }
 
-
         fn available_action_delete(&self) {
             todo!()
         }
 
-
         fn delete(&mut self) {
             todo!()
         }
-
 
         fn display(&self) {
             for i in 0..5 {
@@ -188,6 +184,21 @@ pub mod line_world {
         }
     }
 
+    impl DeepDiscreteActionsEnv<NUM_STATES, NUM_ACTIONS> for LineWorld {
+        fn state_description(&self) -> [f32; NUM_STATES] {
+            std::array::from_fn(|idx| if self.agent_pos == idx { 1.0 } else { 0.0 })
+        }
+
+        fn action_mask(&self) -> [f32; NUM_ACTIONS] {
+            std::array::from_fn(|idx| {
+                if (self.agent_pos == 1 || self.agent_pos == 2 || self.agent_pos == 3) {
+                    1.0
+                } else {
+                    0.0
+                }
+            })
+        }
+    }
     #[cfg(test)]
     mod tests {
         use super::*;

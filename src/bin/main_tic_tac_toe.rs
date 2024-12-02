@@ -21,6 +21,22 @@ type MyAutodiffBackend = Autodiff<MyBackend>;
 fn main() {
     let device = &Default::default();
 
+    //let num_episodes = vec![1_000, 10_000, 100_000, 1_000_000];
+    let num_episodes = vec![100_000];
+    for num_episode in num_episodes {
+        let mut model = MyQMLP::<MyAutodiffBackend>::new(&device, NUM_STATE_FEATURES, NUM_ACTIONS);
+        model = reinforce::<NUM_STATE_FEATURES, NUM_ACTIONS, _, MyAutodiffBackend, GameEnv>(
+            model,
+            num_episode,
+            1e-3,
+            0.999f32,
+            1.0f32,
+            1e-5f32,
+            &device,
+        );
+    }
+    return;
+
     // Train the model
     /* SARSA
     let model =
@@ -91,10 +107,14 @@ fn main() {
         }
     }
      */
-    /*
-    let replay_capacity = vec![10, 100, 1000, 10000];
-    let batch_size = vec![5, 10, 20, 50, 100];
-    let epoch_size = vec![1, 2, 16, 64, 124];
+    //let replay_capacity = vec![10, 100, 1000, 10000];
+    //let batch_size = vec![5, 10, 20, 50, 100];
+    //let epoch_size = vec![1, 2, 16, 64, 124];
+
+    let replay_capacity = vec![10000];
+    let batch_size = vec![10];
+    let epoch_size = vec![1];
+
 
     for rep in replay_capacity.clone() {
         for batch in batch_size.clone() {
@@ -121,7 +141,6 @@ fn main() {
         }
     }
 
-     */
 
     /*
     let replay_capacity = vec![10, 100, 1000, 10000];
@@ -166,6 +185,7 @@ fn main() {
 
      */
 
+    /*
     let num_episodes = vec![1_000, 10_000, 100_000, 1_000_000];
     for num_episode in num_episodes {
         let mut model = MyQMLP::<MyAutodiffBackend>::new(&device, NUM_STATE_FEATURES, NUM_ACTIONS);
@@ -185,5 +205,7 @@ fn main() {
             &device,
         );
     }
+
+     */
 
 }

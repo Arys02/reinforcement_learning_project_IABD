@@ -4,9 +4,12 @@ pub mod grid_world {
     use rand::prelude::StdRng;
     use rand::Rng;
 
-    use crate::environement::environment_traits::{ActionEnv, BaseEnv, DeepDiscreteActionsEnv, Environment};
+    use crate::environement::environment_traits::{
+        ActionEnv, BaseEnv, DeepDiscreteActionsEnv, Environment,
+    };
     pub const NUM_ACTIONS: usize = 4;
     pub const NUM_STATES: usize = 49;
+    pub const NUM_STATE_FEATURES: usize = 49;
     pub const NUM_REWARDS: usize = 4;
 
     /// The `GridWorld` struct represents a grid-based environment where an agent can navigate a 5x5 grid.
@@ -27,16 +30,6 @@ pub mod grid_world {
     #[derive(Clone, Debug)]
     pub struct GridWorld {
         agent_pos: usize,
-    }
-
-    impl DeepDiscreteActionsEnv<NUM_STATES, NUM_ACTIONS> for GridWorld {
-        fn state_description(&self) -> [f32; NUM_STATES] {
-            todo!()
-        }
-
-        fn action_mask(&self) -> [f32; NUM_ACTIONS] {
-            todo!()
-        }
     }
 
     impl GridWorld {
@@ -163,15 +156,13 @@ pub mod grid_world {
 
     impl Default for GridWorld {
         fn default() -> Self {
-            GridWorld {
-                agent_pos: 8,
-            }
+            GridWorld { agent_pos: 8 }
         }
     }
 
     impl BaseEnv for GridWorld {
         fn get_name(&self) -> String {
-           String::from("gridworld")
+            String::from("gridworld")
         }
 
         fn is_terminal(&self) -> bool {
@@ -194,14 +185,13 @@ pub mod grid_world {
             }
         }
 
-
         fn reset(&mut self) {
             self.agent_pos = 8;
         }
     }
 
     impl ActionEnv<NUM_ACTIONS> for GridWorld {
-        fn available_actions_ids(&self) -> impl Iterator<Item=usize> {
+        fn available_actions_ids(&self) -> impl Iterator<Item = usize> {
             0..4
         }
 
@@ -219,6 +209,26 @@ pub mod grid_world {
         }
     }
 
+    impl DeepDiscreteActionsEnv<NUM_STATE_FEATURES, NUM_ACTIONS> for GridWorld {
+        fn state_description(&self) -> [f32; NUM_STATE_FEATURES] {
+            std::array::from_fn(|idx| if self.agent_pos == idx { 1.0 } else { 0.0 })
+        }
+
+        fn action_mask(&self) -> [f32; NUM_ACTIONS] {
+            std::array::from_fn(|idx| {
+                if self.agent_pos > 7
+                    && self.agent_pos < 40
+                    && self.agent_pos % 7 != 0
+                    && self.agent_pos % 7 != 6
+                    && self.agent_pos != 12
+                {
+                    1.0
+                } else {
+                    0.0
+                }
+            })
+        }
+    }
     impl Environment<NUM_STATES, NUM_ACTIONS, NUM_REWARDS> for GridWorld {
         fn state_id(&self) -> usize {
             self.agent_pos as usize
@@ -234,11 +244,8 @@ pub mod grid_world {
                 agent_pos = rng.gen_range(8..40);
             }
 
-            GridWorld {
-                agent_pos,
-            }
+            GridWorld { agent_pos }
         }
-
 
         fn num_states() -> usize {
             NUM_STATES
@@ -276,16 +283,13 @@ pub mod grid_world {
             self.agent_pos = agent_pos
         }
 
-
         fn available_action_delete(&self) {
             todo!()
         }
 
-
         fn delete(&mut self) {
             todo!()
         }
-
 
         fn display(&self) {
             for j in 0..7 {

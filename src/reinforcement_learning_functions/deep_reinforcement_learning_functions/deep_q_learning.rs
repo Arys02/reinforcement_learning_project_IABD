@@ -13,6 +13,7 @@ use kdam::tqdm;
 use rand::SeedableRng;
 use rand_xoshiro::Xoshiro256PlusPlus;
 use std::time::{Duration, Instant};
+use burn::tensor::activation::relu;
 use crate::logger::Logger;
 use crate::reinforcement_learning_functions::deep_reinforcement_learning_functions::utils::dqn_trajectory::trajectory::Trajectory;
 use crate::reinforcement_learning_functions::deep_reinforcement_learning_functions::utils::utils::epsilon_greedy_action;
@@ -22,7 +23,7 @@ pub fn deep_q_learning<
     const NUM_ACTIONS: usize,
     M: Forward<B = B> + AutodiffModule<B>,
     B: AutodiffBackend<FloatElem = f32, IntElem = i64>,
-    Env: DeepDiscreteActionsEnv<NUM_STATE_FEATURES, NUM_ACTIONS> + Debug + Display,
+    Env: DeepDiscreteActionsEnv<NUM_STATE_FEATURES, NUM_ACTIONS> + Debug,
 >(
     mut model: M,
     num_episodes: usize,
@@ -101,6 +102,9 @@ where
     #[cfg(feature = "logging")]
     let mut log_total_loss: f32 = 0.0;
 
+    let mut total_score = 0.;
+    let mut nb_steps = 0.;
+
     for ep_id in tqdm!(0..num_episodes) {
         env.reset();
 
@@ -113,6 +117,12 @@ where
 
         let episode_start_time = Instant::now();
 
+        if ep_id % 1000 == 0 {
+            println!("Mean Score: {}, Mean nb_steps : {}", total_score / 1000.0, nb_steps / 1000.);
+            total_score = 0.0;
+            nb_steps = 0.0;
+        }
+
         while !env.is_terminal() {
 
             let s = env.state_description();
@@ -120,7 +130,7 @@ where
 
             let mask = env.action_mask();
             let mask_tensor: Tensor<B, 1> = Tensor::from(mask).to_device(device);
-            let q_s = model.forward(s_tensor.clone());
+            let q_s = relu(model.forward(s_tensor.clone()));
 
             let mut a = epsilon_greedy_action::<B, NUM_STATE_FEATURES, NUM_ACTIONS>(
                 &q_s,
@@ -185,7 +195,7 @@ where
 
             let a: Tensor<B, 2, Int> = t_a.unsqueeze_dim(1);
 
-            let q_s_a = model.forward(s_tensor.clone()).detach();
+            let q_s_a = relu(model.forward(s_tensor.clone())).detach();
             let b_q_s_a_scalar: Tensor<B, 1> =q_s_a.clone().gather(1, a).squeeze(1);
 
             let t_a_p: Tensor<B, 2, Int> = a_p_tensor.unsqueeze_dim(1);

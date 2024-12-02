@@ -13,6 +13,7 @@ use kdam::tqdm;
 use rand::SeedableRng;
 use rand_xoshiro::Xoshiro256PlusPlus;
 use std::time::{Duration, Instant};
+use burn::tensor::activation::relu;
 use crate::logger::Logger;
 use crate::reinforcement_learning_functions::deep_reinforcement_learning_functions::utils::dqn_trajectory::trajectory::Trajectory;
 use crate::reinforcement_learning_functions::deep_reinforcement_learning_functions::utils::utils::epsilon_greedy_action;
@@ -22,7 +23,7 @@ pub fn deep_q_learning2<
     const NUM_ACTIONS: usize,
     M: Forward<B = B> + AutodiffModule<B>,
     B: AutodiffBackend<FloatElem = f32, IntElem = i64>,
-    Env: DeepDiscreteActionsEnv<NUM_STATE_FEATURES, NUM_ACTIONS> + Debug + Display,
+    Env: DeepDiscreteActionsEnv<NUM_STATE_FEATURES, NUM_ACTIONS> + Debug,
 >(
     mut model: M,
     num_episodes: usize,
@@ -102,6 +103,9 @@ where
     #[cfg(feature = "logging")]
     let mut log_total_loss: f32 = 0.0;
 
+    let mut total_score = 0.0;
+    let mut nb_steps = 0.0;
+
     for ep_id in tqdm!(0..num_episodes) {
         env.reset();
 
@@ -114,14 +118,22 @@ where
 
         let episode_start_time = Instant::now();
 
-        while !env.is_terminal() {
+        if ep_id % 1000 == 0 {
+            println!("Mean Score: {}, Mean nb_steps : {}", total_score / 1000.0, nb_steps / 1000.);
+            total_score = 0.0;
+            nb_steps = 0.0;
+        }
 
+        let mut count_max_step = 0;
+        while !env.is_terminal() && count_max_step <= 100 {
+            nb_steps += 1.;
+            count_max_step += 1;
             let s = env.state_description();
             let s_tensor: Tensor<B, 1> = Tensor::from_floats(s.as_slice(), device);
 
             let mask = env.action_mask();
             let mask_tensor: Tensor<B, 1> = Tensor::from(mask).to_device(device);
-            let q_s = model.forward(s_tensor.clone());
+            let q_s = relu(model.forward(s_tensor.clone()));
 
             let mut a = epsilon_greedy_action::<B, NUM_STATE_FEATURES, NUM_ACTIONS>(
                 &q_s,
@@ -145,7 +157,7 @@ where
             let mask_p_tensor: Tensor<B, 1> = Tensor::from(mask_p).to_device(device);
 
             //phi  Φ t+1
-            let q_s_p = Tensor::from_inner(model.valid().forward(s_p_tensor.clone().inner()));
+            let q_s_p = Tensor::from_inner(relu(model.valid().forward(s_p_tensor.clone().inner())));
 
             //we want the best action for s_p
             let mut a_p_max = epsilon_greedy_action::<B, NUM_STATE_FEATURES, NUM_ACTIONS>(
@@ -174,6 +186,9 @@ where
                 continue;
             }
 
+
+            total_score += env.score();
+
             for _ in 0..epoch {
                 let mut batch = replay_memory.get_batch(batch_size);
                 //t2_2 += now.elapsed().as_secs_f32();
@@ -188,8 +203,8 @@ where
 
 
                 ///////////////////
-                let b_q_s_a = model.forward(batch_s_tensor.clone()).detach();
-                let b_q_s_p_a_p = model.forward(batch_s_p_tensor.clone());
+                let b_q_s_a = relu(model.forward(batch_s_tensor.clone())).detach();
+                let b_q_s_p_a_p = relu(model.forward(batch_s_p_tensor.clone())).detach();
 
 
                 let y: Tensor<B, 1> = Tensor::from_floats({

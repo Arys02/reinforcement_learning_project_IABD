@@ -9,11 +9,13 @@ use rand::distributions::Distribution;
 
 use burn::module::AutodiffModule;
 use burn::optim::decay::WeightDecayConfig;
-use burn::optim::{GradientsParams, SgdConfig};
+use burn::optim::{AdamConfig, GradientsParams, SgdConfig};
 use burn::optim::Optimizer;
 use burn::prelude::*;
+use burn::tensor::activation::log_softmax;
 use burn::tensor::backend::AutodiffBackend;
 use kdam::tqdm;
+use ndarray_rand::rand_distr::num_traits::Pow;
 use rand::distributions::WeightedIndex;
 use rand::SeedableRng;
 use rand_xoshiro::Xoshiro256PlusPlus;
@@ -26,7 +28,7 @@ pub fn reinforce<
     const NUM_ACTIONS: usize,
     M: Forward<B=B> + AutodiffModule<B>,
     B: AutodiffBackend<FloatElem=f32, IntElem=i64>,
-    Env: DeepDiscreteActionsEnv<NUM_STATE_FEATURES, NUM_ACTIONS> + Debug + Display,
+    Env: DeepDiscreteActionsEnv<NUM_STATE_FEATURES, NUM_ACTIONS> + Debug,
 >(
     mut model: M,
     num_episodes: usize,
@@ -86,7 +88,13 @@ where
     let mut log_total_loss: f32 = 0.0;
 
 
+    /*
     let mut optimizer = SgdConfig::new()
+        .with_weight_decay(Some(WeightDecayConfig::new(1e-7)))
+        .init();
+
+     */
+    let mut optimizer = AdamConfig::new()
         .with_weight_decay(Some(WeightDecayConfig::new(1e-7)))
         .init();
 
@@ -94,6 +102,7 @@ where
     let mut rng = Xoshiro256PlusPlus::from_entropy();
 
     let mut total_score = 0.0;
+    let mut mean_step = 0.0;
 
 
     for ep_id in tqdm!(0..num_episodes) {
@@ -107,15 +116,21 @@ where
         let progress = ep_id as f32 / num_episodes as f32;
         let decayed_epsilon = (1.0 - progress) * start_epsilon + progress * final_epsilon;
 
-        if ep_id % 1000 == 0 {
-            println!("Mean Score: {}", total_score / 1000.0);
+
+        if ep_id % 100 == 0 {
+            println!("Mean Score: {}, Mean nb_steps : {}", total_score / 100.0, mean_step / 100.);
             total_score = 0.0;
+            mean_step = 0.0;
         }
+
 
         let mut trajectory = Vec::new();
 
+        let mut nb_max_step = 0.0;
         //generate an episode
-        while !env.is_terminal() {
+        while !env.is_terminal() && nb_max_step < 100.0 {
+            mean_step += 1.;
+            nb_max_step += 1.;
             let s = env.state_description();
             let s_tensor: Tensor<B, 1> = Tensor::from_floats(s.as_slice(), device);
 
@@ -133,8 +148,6 @@ where
             env.step(a);
             let r = env.score() - prev_score;
 
-
-
             trajectory.push(
                 (
                     s_tensor.clone(),
@@ -143,24 +156,26 @@ where
                 ));
         }
 
+        total_score += env.score();
+
+
+
+        //   t          pi(s | a, Φ)
 
 
         let mut g = 0.;
-        //   t          pi(s | a, Φ)
-        for (t, (s, a , _)) in trajectory.iter().enumerate() {
-            for i in (t + 1)..trajectory.len() {
-                //g = g + γ^(k - t - 1) * Rk
-                g = g + gamma.powf((i - t - 1) as f32) * trajectory[i].2;
-            }
+        for (t, (s, a , r)) in trajectory.iter().enumerate().rev() {
+            g =  r + g * gamma;
 
+            //println!("{}", g * alpha * gamma.powf(t as f32));
 
-            let pi_s = model.forward(s.clone());
-            let pi_s_a = pi_s.slice([*a..(*a+1)]).log();
-            let loss = pi_s_a.clone().mul_scalar(g);
+            let pi_s = log_softmax(model.forward(s.clone()), 0);
+            let pi_s_a = pi_s.slice([*a..(*a+1)]);
+            let loss = pi_s_a.clone();
 
             let grad_loss = loss.backward();
             let grads = GradientsParams::from_grads(grad_loss, &model);
-            model = optimizer.step((alpha * gamma.powf(t as f32)).into(), model, grads);
+            model = optimizer.step((-alpha * gamma.powf(t as f32) * g).into(), model, grads);
 
             #[cfg(feature = "logging")] {
                 log_total_loss += loss.mean().into_scalar();

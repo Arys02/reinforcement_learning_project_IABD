@@ -12,6 +12,7 @@ use burn::optim::decay::WeightDecayConfig;
 use burn::optim::{AdamConfig, GradientsParams, SgdConfig};
 use burn::optim::Optimizer;
 use burn::prelude::*;
+use burn::tensor::activation::{log_softmax, relu};
 use burn::tensor::backend::AutodiffBackend;
 use kdam::tqdm;
 use rand::distributions::WeightedIndex;
@@ -27,7 +28,7 @@ pub fn reinforce_with_mean_baseline<
     const NUM_ACTIONS: usize,
     M: Forward<B=B> + AutodiffModule<B>,
     B: AutodiffBackend<FloatElem=f32, IntElem=i64>,
-    Env: DeepDiscreteActionsEnv<NUM_STATE_FEATURES, NUM_ACTIONS> + Debug + Display,
+    Env: DeepDiscreteActionsEnv<NUM_STATE_FEATURES, NUM_ACTIONS> + Debug,
 >(
     mut model: M,
     mut value_model: M,
@@ -92,6 +93,7 @@ where
         .init::<B, M>();
 
     let mut total_score = 0.0;
+    let mut mean_step = 0.0;
 
     for ep_id in tqdm!(0..num_episodes) {
         env.reset();
@@ -105,14 +107,18 @@ where
         let decayed_epsilon = (1.0 - progress) * start_epsilon + progress * final_epsilon;
 
         if ep_id % 1000 == 0 {
-            println!("Mean Score: {}", total_score / 1000.0);
+            println!("Mean Score: {}, Mean nb_steps : {}", total_score / 1000.0, mean_step / 1000.);
             total_score = 0.0;
+            mean_step = 0.0;
         }
 
         let mut trajectory = Vec::new();
 
+        let mut max_step = 0.0;
         //generate an episode
-        while !env.is_terminal() {
+        while !env.is_terminal() &&  max_step < 100.0 {
+            max_step += 1.;
+            mean_step += 1.;
             let s = env.state_description();
             let s_tensor: Tensor<B, 1> = Tensor::from_floats(s.as_slice(), device);
 
@@ -145,25 +151,25 @@ where
 
 
         total_score += env.score();
+
         let mut g = 0.;
         //   t          pi(s | a, Φ)
-        for (t, (s, a,r)) in trajectory.iter().enumerate() {
-            for i in (t + 1)..trajectory.len() {
-                //g = g + γ^(k - t - 1) * Rk
-                g = g + gamma.powf((i - t - 1) as f32) * trajectory[i].2;
-                //trajectory_g.push(g);
-            }
+        for (t, (s, a,r)) in trajectory.iter().enumerate().rev() {
+
+            g =  r + g * gamma;
+
             //println!("g: {:?}", g);
             //println!("vm : {:?}", value_model.clone().forward(s.clone()));
-            let delta = value_model.forward(s.clone()).sub_scalar(g).mul_scalar(-1).into_scalar();
+            let delta = relu(value_model.forward(s.clone())).sub_scalar(g).mul_scalar(-1).into_scalar();
 
-            let pi_s = model.forward(s.clone());
+
+            let pi_s = log_softmax(model.forward(s.clone()), 0);
             //println!("{:?}", pi_s.clone());
-            let pi_s_a = pi_s.slice([*a..(*a+1)]).log();
+            let pi_s_a = pi_s.slice([*a..(*a+1)]);
             let loss = pi_s_a.clone();
             let grad_loss = loss.backward();
             let grads = GradientsParams::from_grads(grad_loss, &model);
-            model = optimizer.step((alpha * gamma.powf(t as f32)*delta).into(), model, grads);
+            model = optimizer.step((-alpha * gamma.powf(t as f32)*delta).into(), model, grads);
 
             let v_s = value_model.forward(s.clone());
 
