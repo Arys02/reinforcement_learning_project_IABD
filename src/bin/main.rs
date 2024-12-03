@@ -126,8 +126,8 @@ fn main() {
         deep_double_q_learning_per::<NUM_STATE_FEATURES, NUM_ACTIONS, _, MyAutodiffBackend, GameEnv>(
                     online_model.clone(),
                     target_model.clone(),
-                    10_000,
                     5_000,
+                    50_000,
                     0.99,
                     0.0001f32,
                     1.0,

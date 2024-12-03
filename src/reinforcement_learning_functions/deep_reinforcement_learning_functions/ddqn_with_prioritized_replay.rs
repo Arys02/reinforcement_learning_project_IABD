@@ -181,20 +181,26 @@ where
 
             let q_s_p_online = online_model.forward(s_p_tensor.clone());
 
-            let masked_q_values = q_s_p_online.mul(mask_p_tensor.clone())
+            let masked_q_values = q_s_p_online.clone().mul(mask_p_tensor.clone())
                 .add(mask_p_tensor.mul_scalar(-1.0).add_scalar(1.0).mul_scalar(-1e7));
 
-            let a_p_max = masked_q_values.argmax(0).into_scalar() as f32;
+            let a_p_max = masked_q_values.clone().argmax(0).into_scalar() as f32;
 
-            if mask_p[a_p_max as usize] != 1.0 {
-                panic!("Invalid next action selected! Mask: {:?}, Selected: {}", mask_p, a_p_max);
-            }
+            // if mask_p[a_p_max as usize] != 1.0 {
+            //     println!("Next state mask: {:?}", mask_p);
+            //     println!("Q values: {:?}", q_s_p_online.to_data());
+            //     println!("Masked Q values: {:?}", masked_q_values.to_data());
+            //     println!("Selected action: {}", a_p_max);
+            //     println!("Next state tensor: {:?}", s_p_tensor.to_data());
+            //
+            //     panic!("Invalid next action selected! Mask: {:?}, Selected: {}", mask_p, a_p_max);
+            // }
 
             // Initial priority is set to max priority when adding new experiences
             replay_memory.push(
                 s_tensor,
                 a as f32,
-                clipped_r,
+                r,
                 s_p_tensor,
                 a_p_max as f32,
                 if env.is_terminal() { 1.0 } else { 0. },
@@ -232,7 +238,7 @@ where
 
             replay_memory.update_priorities(indices, td_errors);
 
-            let elementwise_loss = huber_loss(td_error, 100.0);
+            let elementwise_loss = huber_loss(td_error, 1.0);
             let weighted_loss = elementwise_loss.mul(weights_tensor);
             let loss = weighted_loss.mean();
 

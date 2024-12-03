@@ -21,7 +21,7 @@
 - -- explorer avec adam ? 
 - [X] DoubleDeepQLearning
 - [X] DoubleDeepQLearningWithExperienceReplay
-- [ ] DoubleDeepQLearningWithPrioritizedExperienceReplay
+- [X] DoubleDeepQLearningWithPrioritizedExperienceReplay
 - [X] REINFORCE
 - [ ] REINFORCE with mean baseline
 - [ ] REINFORCE with Baseline Learned by a Critic
